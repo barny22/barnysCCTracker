@@ -1,0 +1,13 @@
+<Bindings>
+  <Layer name="SI_KEYBINDINGS_LAYER_GENERAL">
+    <Category name="|ce11212b|c3645d6arny|rs|ce11212CC|rTracker">
+      <Action name="Reset CCTracker">
+        <Down>
+			CCTracker.ccActive = {}
+			CCTracker.UI.ApplyIcons()
+		</Down>
+        <Up></Up>
+      </Action>
+    </Category>
+  </Layer>
+</Bindings>
