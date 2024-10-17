@@ -1,10 +1,10 @@
-## Title: |ce11212b|c3645d6arny|rs|ce11212CC|rTracker
-## Description: Tracker for CC
-## Author: |ce11212b|c3645d6arny|r
+## Title: |ce11212b|rarnys|ce11212CC|rTracker
+## Description: Tracker for CC with icons and stuff
+## Author: |ce11212b|rarny
 ## Version: 1.0.0
 ## AddOnVersion: 010000
 ## APIVersion: 101043
-## SavedVariables: CombatMetronomeSavedVars
+## SavedVariables: CCTrackerSV
 ## DependsOn: LibAddonMenu-2.0>=35 libAddonKeybinds>=5
 
 ; This Add-on is not created by, affiliated with or sponsored by ZeniMax

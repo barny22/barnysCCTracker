@@ -30,6 +30,7 @@ CCTracker.DEFAULT_SAVED_VARS = {
 	},
 	["settings"] = {
 		["tracked"] = {},
+		["unlocked"] = true,
 	},
 	["debug"] = {
 		["enabled"] = false,
@@ -79,10 +80,13 @@ end
 
 function CCTracker:CreateMenuIconsPath(ControlName)
 	local number = 0
-	for i, entry in ipairs(barnysCCTrackerOptions.controlsToRefresh) do
-		if ControlName == entry.data.name then
-			number = i
+	if barnysCCTrackerOptions then
+		for i, entry in ipairs(barnysCCTrackerOptions.controlsToRefresh) do
+			if ControlName == entry.data.name then
+				number = i
+			end
 		end
+	else return
 	end
 	return number
 end

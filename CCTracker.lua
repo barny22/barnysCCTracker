@@ -8,7 +8,8 @@ CCTracker = {
 	},
 	["menu"] = {},
 	["SV"] = {},
-	["cc"] = {},
+	["ccActive"] = {},
+	["UI"] = {},
 }
 
 local function OnAddOnLoaded(eventCode, addOnName)
@@ -20,9 +21,9 @@ local function OnAddOnLoaded(eventCode, addOnName)
  
     --create the default table
     --create the saved variable access object here and assign it to savedVars
-	CCTracker.SV = ZO_SavedVars:NewCharacterIdSettings(CCTracker.name.."SV", 1, nil, CCTracker.DEFAULT_SAVED_VARS, GetWorldName())
+	CCTracker.SV = ZO_SavedVars:NewCharacterIdSettings("CCTrackerSV", 1, nil, CCTracker.DEFAULT_SAVED_VARS, GetWorldName())
 	if global then
-		CCTracker.SV = ZO_SavedVars:NewAccountWide(CCTracker.name.."SV", 1, nil, CCTracker.DEFAULT_SAVED_VARS, GetWorldName())
+		CCTracker.SV = ZO_SavedVars:NewAccountWide("CCTrackerSV", 1, nil, CCTracker.DEFAULT_SAVED_VARS, GetWorldName())
 		CCTracker.SV.global = true
 	end
 	CCTracker:Init()
@@ -43,16 +44,18 @@ function CCTracker:Init()
 		[32] = {["icon"] = "/esoui/art/icons/ability_debuff_disorient.dds", ["tracked"] = self.SV.settings.tracked.Disoriented, ["res"] = 2340, ["active"] = false, ["name"] = "Disoriented",}, --ABILITY_TYPE_DISORIENT
 		[27] = {["icon"] = "/esoui/art/icons/ability_debuff_fear.dds", ["tracked"] = self.SV.settings.tracked.Fear, ["res"] = 2320, ["active"] = false, ["name"] = "Fear",}, --ABILITY_TYPE_FEAR
 		[17] = {["icon"] = "/esoui/art/icons/ability_debuff_knockback.dds", ["tracked"] = self.SV.settings.tracked.Knockback, ["res"] = 2475, ["active"] = false, ["name"] = "Knockback",}, --ABILITY_TYPE_KNOCKBACK
-		[48] = {["icon"] = "/esoui/art/icons/ability_debuff_levitate.dds", ["tracked"] = self.SV.settings.tracked.Levitate, ["res"] = 2400, ["active"] = false, ["name"] = "Levitating",}, --ABILITY_TYPE_LEVITATE
+		[48] = {["icon"] = "/esoui/art/icons/ability_debuff_levitate.dds", ["tracked"] = self.SV.settings.tracked.Levitating, ["res"] = 2400, ["active"] = false, ["name"] = "Levitating",}, --ABILITY_TYPE_LEVITATE
 		[53] = {["icon"] = "/esoui/art/icons/ability_debuff_offbalance.dds", ["tracked"] = self.SV.settings.tracked.Offbalance, ["res"] = 2440, ["active"] = false, ["name"] = "Offbalance",}, --ABILITY_TYPE_OFFBALANCE
 		-- ["rootPlaceholder"] = {["icon"] = "/esoui/art/icons/ability_debuff_root.dds", ["tracked"] = self.SV.settings.tracked.Root, ["res"] = 2480 ["active"] = false, ["name"] = "Rooted",}, --ACTION_RESULT_ROOTED
 		[11] = {["icon"] = "/esoui/art/icons/ability_debuff_silence.dds", ["tracked"] = self.SV.settings.tracked.Silence, ["res"] = 2010, ["active"] = false, ["name"] = "Silence",}, --ABILITY_TYPE_SILENCE
 		[10] = {["icon"] = "/esoui/art/icons/ability_debuff_snare.dds", ["tracked"] = self.SV.settings.tracked.Snare, ["res"] = 2025, ["active"] = false, ["name"] = "Snare",}, --ABILITY_TYPE_SNARE
 		[33] = {["icon"] = "/esoui/art/icons/ability_debuff_stagger.dds", ["tracked"] = self.SV.settings.tracked.Stagger, ["res"] = 2470, ["active"] = false, ["name"] = "Stagger",}, --ABILITY_TYPE_STAGGER
 		[9] = {["icon"] = "/esoui/art/icons/ability_debuff_stun.dds", ["tracked"] = self.SV.settings.tracked.Stun, ["res"] = 2020, ["active"] = false, ["name"] = "Stun",}, --ABILITY_TYPE_STUN
-	},
+	}
 	
 	self.UI = self:BuildUI()
+	self.UI.ApplySize(self.SV.UI.size)
+	self.UI.SetUnlocked(self.SV.settings.unlocked)
 	self:BuildMenu()
 	if self:CheckForCCRegister() then
 		self:Register()
@@ -64,7 +67,7 @@ end
 	-----------------------------
 
 function CCTracker:CheckForCCRegister()
-	for _, check in pairs(CCTracker.SV.CCTracker.tracked) do
+	for _, check in pairs(self.SV.settings.tracked) do
 		if check == true then
 			return true
 		end
