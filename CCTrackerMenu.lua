@@ -128,7 +128,7 @@ function CCTracker:BuildMenu()
         displayName = "|c2a52beb|rarnys|c2a52beCC|rTracker",
         author = "|c2a52beb|rarny",
         version = self.version.patch.."."..self.version.major.."."..self.version.minor,
-		-- website = "https://www.esoui.com/downloads/info2373-selfGCDTracker.html",
+		website = "https://www.esoui.com/downloads/info3971-barnysCCTracker.html",
 		feedback = "https://www.esoui.com/portal.php?&id=386",
         slashCommand = "/bcc",
         registerForRefresh = true,
