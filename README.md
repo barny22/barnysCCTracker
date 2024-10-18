@@ -9,10 +9,10 @@ You can easily access the options menu using the [b]/bcc[/b] slash command. If y
 
 [b]TL;DR:[/b]
 [list]
-[]Tracks crowd control (CC) effects like stuns, snares, and roots in real-time.
-[]Automatically updates when a CC ends.
-[]Includes a keybind option to reset the UI if necessary.
-[]Access options with [b]/bcc[/b].
-[][url=https://www.esoui.com/portal.php?id=386&a=listbugs]Report bugs[/url] and [url=https://www.esoui.com/portal.php?id=386&a=listfeatures]request features[/url] via the ESOUI portal.
-[][url=https://github.com/barny22/barnysCCTracker/tree/development]Beta versions[/url] and the [url=https://github.com/barny22/barnysCCTracker/archive/refs/heads/development.zip]latest updates[/url] available on GitHub.
+[*]Tracks crowd control (CC) effects like stuns, snares, and roots in real-time.
+[*]Automatically updates when a CC ends.
+[*]Includes a keybind option to reset the UI if necessary.
+[*]Access options with [b]/bcc[/b].
+[*][url=https://www.esoui.com/portal.php?id=386&a=listbugs]Report bugs[/url] and [url=https://www.esoui.com/portal.php?id=386&a=listfeatures]request features[/url] via the ESOUI portal.
+[*][url=https://github.com/barny22/barnysCCTracker/tree/development]Beta versions[/url] and the [url=https://github.com/barny22/barnysCCTracker/archive/refs/heads/development.zip]latest beta[/url] available on GitHub.
 [/list]
