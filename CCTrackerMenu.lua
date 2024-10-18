@@ -1,4 +1,5 @@
 local LAM = LibAddonMenu2
+local WM = WINDOW_MANAGER
 CCTracker = CCTracker or {}
 CCTracker.menu = {}
 
@@ -76,7 +77,10 @@ CCTracker.menu.constants = {
 }
 
 local function CreateCCCheckboxes()
-	local CCCheckboxes = {}
+	local position
+	for i, entry in ipairs(CCTracker.menu.options) do
+		if entry.name == "CCs to track" then position = i break end
+	end
 	for i = 1, #CCTracker.menu.constants do
 		local control = {}
 		control.type = "checkbox"
@@ -92,40 +96,39 @@ local function CreateCCCheckboxes()
 			elseif not value and CCTracker.registered and not CCTracker:CheckForCCRegister() then
 				CCTracker:Unregister()
 			end
+			if CCTracker.SV.settings.unlocked then CCTracker.UI.SetUnlocked(true) end
 		end
-		table.insert(CCCheckboxes, control)
-	end
-	return CCCheckboxes
-end
-
-local function CreateCCIcons(panel)
-	if panel == barnysCCTrackerOptions then
-		if not barnysCCTrackerOptions then return end
-		for i = 1, #CCTracker.menu.constants do
-			local number = CCTracker:CreateMenuIconsPath(CCTracker.menu.constants[i].Name)
-			CCTracker.menu.icons[i] = WINDOW_MANAGER:CreateControl(CCTracker.name.."MenuIcon"..i, panel.controlsToRefresh[number].checkbox, CT_TEXTURE)
-			CCTracker.menu.icons[i]:SetAnchor(RIGHT, panel.controlsToRefresh[number].checkbox, LEFT, CCTracker.menu.constants[i].Offset, 0)
-			CCTracker.menu.icons[i]:SetTexture(CCTracker.menu.constants[i].Icon)
-			CCTracker.menu.icons[i]:SetDimensions(CCTracker.menu.constants[i].Dimensions, CCTracker.menu.constants[i].Dimensions)
-		end
-		CALLBACK_MANAGER:UnregisterCallback("LAM-PanelControlsCreated", CreateCCIcons(panel))
+		table.insert(CCTracker.menu.options, position+i, control)
 	end
 end
 
 function CCTracker:BuildMenu()
 	self.menu = self.menu or {}
 	self.menu.icons = {}
-	-- local CreateIcons = CreateCCIcons(panel)
-	local CCCheckboxes = CreateCCCheckboxes()
-	CALLBACK_MANAGER:RegisterCallback("LAM-PanelControlsCreated", CreateCCIcons(panel))
+	local CreateIcons = function(panel)
+		if panel == barnysCCTrackerOptions then
+			if self.SV.debug.chat then CCTracker.debug:Print("Panel was created.") end
+			for i = 1, #self.menu.constants do
+				local number = self:CreateMenuIconsPath(self.menu.constants[i].Name)
+				self.menu.icons[i] = WM:CreateControl(self.name.."MenuIcon"..i, panel.controlsToRefresh[number].checkbox, CT_TEXTURE)
+				self.menu.icons[i]:SetAnchor(RIGHT, panel.controlsToRefresh[number].checkbox, LEFT, self.menu.constants[i].Offset, 0)
+				self.menu.icons[i]:SetTexture(self.menu.constants[i].Icon)
+				self.menu.icons[i]:SetDimensions(self.menu.constants[i].Dimensions, self.menu.constants[i].Dimensions)
+			end
+		CALLBACK_MANAGER:UnregisterCallback("LAM-PanelControlsCreated", CreateIcons)
+		if self.SV.debug.chat then CCTracker.debug:Print("Deleting LAM Callback") end
+		else return
+		end
+	end
+	CALLBACK_MANAGER:RegisterCallback("LAM-PanelControlsCreated", CreateIcons)
 	
 	self.menu.metadata = {
 		type = "panel",
         name = "barnysCCTracker",
-        displayName = "|ce11212b|rarnys|ce11212CC|rTracker",
-        author = "|ce11212b|c3645d6arny|r",
+        displayName = "|c2a52beb|rarnys|c2a52beCC|rTracker",
+        author = "|c2a52beb|rarny",
         version = self.version.patch.."."..self.version.major.."."..self.version.minor,
-		website = "https://www.esoui.com/downloads/info2373-selfGCDTracker.html",
+		-- website = "https://www.esoui.com/downloads/info2373-selfGCDTracker.html",
 		feedback = "https://www.esoui.com/portal.php?&id=386",
         slashCommand = "/bcc",
         registerForRefresh = true,
@@ -161,24 +164,26 @@ function CCTracker:BuildMenu()
 			getFunc = function() return self.SV.settings.unlocked end,
 			setFunc = function(value) self.UI.SetUnlocked(value) end,
 		},
-		{	type = "slider",
+		{
+			type = "slider",
 			name = "Icon size",
-			default = 30,
+			warning = "If you change this ALL icons are being resized to the given size! ALL individual sizes will be overwritten!",
+			default = 50,
 			min = 20,
 			max = 200,
 			step = 1,
 			getFunc = function() return self.SV.UI.size end,
 			setFunc = function(value)
 				self.SV.UI.size = value
-				self.UI.ApplySize(value)
+				for _, entry in pairs(self.variables) do
+					self.SV.UI.sizes[entry.name] = value
+					self.UI.ApplySize(entry.name)
+				end
 			end,
 		},
 		{
-			type = "submenu",
+			type = "header",
 			name = "CCs to track",
-			controls = {
-				unpack(CCCheckboxes),
-			}
 		},
 		{
 			type = "header",
@@ -190,6 +195,8 @@ function CCTracker:BuildMenu()
             getFunc = function() return self.SV.debug.enabled end,
             setFunc = function(value)
                 self.SV.debug.enabled = value
+				self.debug:SetEnabled(value)
+				self.SV.debug.chat = self.debug and self.SV.debug.enabled
 				if not value then
 					self:SetAllDebugFalse()
 				end
@@ -209,6 +216,7 @@ function CCTracker:BuildMenu()
 		},
 	}
 	
+	CreateCCCheckboxes()
 	self.menu.panel = LAM:RegisterAddonPanel(self.name.."Options", self.menu.metadata)
     LAM:RegisterOptionControls(self.name.."Options", self.menu.options)
 end

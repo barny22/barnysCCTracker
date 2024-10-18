@@ -1,3 +1,4 @@
+local WM = WINDOW_MANAGER
 CCTracker = CCTracker or {}
 
 CCTracker.DEFAULT_SAVED_VARS = {
@@ -26,6 +27,17 @@ CCTracker.DEFAULT_SAVED_VARS = {
 			["Stagger"] = 0,
 			["Stun"] = 0,
 		},
+		["sizes"] = {
+			["Disoriented"] = 50,
+			["Fear"] = 50,
+			["Knockback"] = 50,
+			["Levitating"] = 50,
+			["Offbalance"] = 50,
+			["Silence"] = 50,
+			["Snare"] = 50,
+			["Stagger"] = 50,
+			["Stun"] = 50,
+		},
 		["size"] = 50,
 	},
 	["settings"] = {
@@ -35,6 +47,7 @@ CCTracker.DEFAULT_SAVED_VARS = {
 	["debug"] = {
 		["enabled"] = false,
 		["ccCache"] = false,
+		["chat"] = false,
 	},
 }
 
@@ -79,14 +92,11 @@ function CCTracker:IsUnlocked()
 end
 
 function CCTracker:CreateMenuIconsPath(ControlName)
-	local number = 0
-	if barnysCCTrackerOptions then
-		for i, entry in ipairs(barnysCCTrackerOptions.controlsToRefresh) do
-			if ControlName == entry.data.name then
-				number = i
-			end
+	local number
+	for i, entry in ipairs(barnysCCTrackerOptions.controlsToRefresh) do
+		if ControlName == entry.data.name then
+			number = i
 		end
-	else return
 	end
 	return number
 end

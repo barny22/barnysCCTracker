@@ -36,6 +36,7 @@ ZO_CreateStringId("SI_BINDING_NAME_CCTRACKER_RESET", "Reset CCTracker")
 
 function CCTracker:Init()
 	if self.started then return end
+	if LibChatMessage then CCTracker.debug = LibChatMessage("barnysCCTracker", "BCC") end
 	
 	self.started = true
 	
@@ -54,8 +55,9 @@ function CCTracker:Init()
 	}
 	
 	self.UI = self:BuildUI()
-	self.UI.ApplySize(self.SV.UI.size)
+	-- self.UI.ApplySize(self.SV.UI.size)
 	self.UI.SetUnlocked(self.SV.settings.unlocked)
+	self.UI.FadeScenes("UI")
 	self:BuildMenu()
 	if self:CheckForCCRegister() then
 		self:Register()

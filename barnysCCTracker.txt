@@ -1,11 +1,12 @@
-## Title: |ce11212b|rarnys|ce11212CC|rTracker
+## Title: |c2a52beb|rarnys|c2a52beCC|rTracker
 ## Description: Tracker for CC with icons and stuff
-## Author: |ce11212b|rarny
+## Author: |c2a52beb|rarny
 ## Version: 1.0.0
 ## AddOnVersion: 010000
 ## APIVersion: 101043
 ## SavedVariables: CCTrackerSV
 ## DependsOn: LibAddonMenu-2.0>=35 libAddonKeybinds>=5
+## OptionalDependsOn: pChat>=10005030 LibChatMessage>=113
 
 ; This Add-on is not created by, affiliated with or sponsored by ZeniMax
 ; Media Inc. or its affiliates. The Elder Scrolls® and related logos are
