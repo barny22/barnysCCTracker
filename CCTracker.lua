@@ -120,7 +120,7 @@ function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotTyp
 		end
 		for ccType, check in pairs(self.variables) do
 			if check.tracked and check.res == res then
-				-- self.debug:Print("caching cc ability")
+				--  if self.SV.debug.enabled then self.debug:Print("caching cc ability") end
 				self.ccCache = {}
 				local newAbility = {["type"] = ccType, ["recorded"] = GetFrameTimeMilliseconds(), ["id"] = aId,}
 				table.insert(self.ccCache, newAbility)
@@ -144,7 +144,7 @@ end
 	--------------------------------
 
 function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,endTime,_,_,_,buffType,abilityType,_,unitName,_,aId,_)
-	-- self.debug:Print(unitName.." - "..GetUnitName("player"))
+	--  if self.SV.debug.enabled then self.debug:Print(unitName.." - "..GetUnitName("player")) end
 	time = GetFrameTimeMilliseconds()
 	if not (unitTag == "player" or unitName == self.currentCharacterName) then
 		return
@@ -220,7 +220,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				if self.ccActive[i].endTime < time then
 					table.remove(self.ccActive, i)
 					self.ccChanged = true
-					-- self.debug:Print("deleting entries in cc list")
+					--  if self.SV.debug.enabled then self.debug:Print("deleting entries in cc list") end
 				end
 			-- else
 				-- if not self.currentBuffs then

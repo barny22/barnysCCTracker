@@ -107,7 +107,7 @@ function CCTracker:BuildMenu()
 	self.menu.icons = {}
 	local CreateIcons = function(panel)
 		if panel == barnysCCTrackerOptions then
-			if self.SV.debug.chat then CCTracker.debug:Print("Panel was created.") end
+			if self.SV.debug.enabled then CCTracker.debug:Print("Panel was created.") end
 			for i = 1, #self.menu.constants do
 				local number = self:CreateMenuIconsPath(self.menu.constants[i].Name)
 				self.menu.icons[i] = WM:CreateControl(self.name.."MenuIcon"..i, panel.controlsToRefresh[number].checkbox, CT_TEXTURE)
@@ -116,7 +116,7 @@ function CCTracker:BuildMenu()
 				self.menu.icons[i]:SetDimensions(self.menu.constants[i].Dimensions, self.menu.constants[i].Dimensions)
 			end
 		CALLBACK_MANAGER:UnregisterCallback("LAM-PanelControlsCreated", CreateIcons)
-		if self.SV.debug.chat then CCTracker.debug:Print("Deleting LAM Callback") end
+		if self.SV.debug.enabled then CCTracker.debug:Print("Deleting LAM Callback") end
 		else return
 		end
 	end
@@ -236,7 +236,6 @@ function CCTracker:BuildMenu()
             setFunc = function(value)
                 self.SV.debug.enabled = value
 				self.debug:SetEnabled(value)
-				self.SV.debug.chat = self.debug and self.SV.debug.enabled
 				if not value then
 					self:SetAllDebugFalse()
 				end
@@ -246,7 +245,7 @@ function CCTracker:BuildMenu()
 		{	
 			type = "checkbox",
 			name = "Debug CCTracker ccCache",
-			disabled = function() return not self.SV.debug.chat end,
+			disabled = function() return not self.SV.debug.enabled end,
 			getFunc = function() return self.SV.debug.ccCache end,
 			setFunc = function(value)
 				self.SV.debug.ccCache = value
