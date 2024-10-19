@@ -148,7 +148,7 @@ function CCTracker:BuildUI()
 			self.UI.indicator[entry.name].controls.frame:SetHidden(true)
 			self.UI.indicator[entry.name].controls.icon:SetHidden(true)
 		end
-		if self.SV.debug.ccCache then d("Done with hiding CC icons") end
+		if self.SV.debug.ccCache then self.debug:Print("Done with hiding CC icons") end
 		
 		for _, entry in ipairs(self.ccActive) do
 				self.variables[entry.type].active = true
@@ -156,7 +156,7 @@ function CCTracker:BuildUI()
 				self.UI.indicator[self.variables[entry.type].name].controls.icon:SetHidden(false)
 			-- end
 		end
-		if self.SV.debug.ccCache then d("CC icons are shown") end
+		if self.SV.debug.ccCache then self.debug:Print("CC icons are shown") end
 		self.ccChanged = false
 	end
 	

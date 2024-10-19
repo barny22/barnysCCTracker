@@ -231,6 +231,7 @@ function CCTracker:BuildMenu()
         {	
 			type = "checkbox",
             name = "Enable debugging",
+			disabled = function() if self.debug then return false else return true end end,
             getFunc = function() return self.SV.debug.enabled end,
             setFunc = function(value)
                 self.SV.debug.enabled = value
@@ -245,7 +246,7 @@ function CCTracker:BuildMenu()
 		{	
 			type = "checkbox",
 			name = "Debug CCTracker ccCache",
-			disabled = function() return not self.SV.debug.enabled end,
+			disabled = function() return not self.SV.debug.chat end,
 			getFunc = function() return self.SV.debug.ccCache end,
 			setFunc = function(value)
 				self.SV.debug.ccCache = value

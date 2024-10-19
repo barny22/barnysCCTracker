@@ -36,7 +36,7 @@ ZO_CreateStringId("SI_BINDING_NAME_CCTRACKER_RESET", "Reset CCTracker")
 
 function CCTracker:Init()
 	if self.started then return end
-	if LibChatMessage then CCTracker.debug = LibChatMessage("barnysCCTracker", "BCC") end
+	if LibChatMessage then CCTracker.debug = LibChatMessage("barnysCCTracker", "BCC") else self:SetAllDebugFalse() end
 	
 	self.started = true
 	
@@ -120,17 +120,17 @@ function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotTyp
 		end
 		for ccType, check in pairs(self.variables) do
 			if check.tracked and check.res == res then
-				-- d("caching cc ability")
+				-- self.debug:Print("caching cc ability")
 				self.ccCache = {}
 				local newAbility = {["type"] = ccType, ["recorded"] = GetFrameTimeMilliseconds(), ["id"] = aId,}
 				table.insert(self.ccCache, newAbility)
-				if self.SV.debug.ccCache then d("Caching ability "..aName) end
+				if self.SV.debug.ccCache then self.debug:Print("Caching ability "..aName) end
 				break
 			elseif check.tracked and res == "ACTION_RESULT_SNARED" and self:IsPossibleRoot(aId) then
 				self.ccCache = {}
 				local newAbility = {["type"] = "root", ["recorded"] = GetFrameTimeMilliseconds(), ["id"] = aId,}
 				table.insert(self.ccCache, newAbility)
-				if self.SV.debug.ccCache then d("Caching ability "..aName) end
+				if self.SV.debug.ccCache then self.debug:Print("Caching ability "..aName) end
 				break
 			end
 			return
@@ -144,7 +144,7 @@ end
 	--------------------------------
 
 function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,endTime,_,_,_,buffType,abilityType,_,unitName,_,aId,_)
-	-- d(unitName.." - "..GetUnitName("player"))
+	-- self.debug:Print(unitName.." - "..GetUnitName("player"))
 	time = GetFrameTimeMilliseconds()
 	if not (unitTag == "player" or unitName == self.currentCharacterName) then
 		return
@@ -161,7 +161,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				if self.ccCache and self.ccCache[1].type == abilityType then
 					newAbility.cacheId = self.ccCache[1].id
 					self.ccCache = {}
-					if self.SV.debug.ccCache then d("Clearing CC cache") end
+					if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache") end
 				end
 				local inList, num = self:AIdInList(aId)
 				-- if not self:ResInList(abilityType) then
@@ -171,7 +171,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				else
 					self.ccActive[num].endTime = endTime*1000
 				end
-				if self.SV.debug.ccCache then d("New cc "..eName) end
+				if self.SV.debug.ccCache then self.debug:Print("New cc "..eName) end
 				-- end
 			elseif self.variables.root.tracked and abilityType == ABILITY_TYPE_SNARE and self:IsPossibleRoot(aId) then
 				local ending = ((endTime-beginTime~=0) and endTime) or 0
@@ -179,7 +179,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				if self.ccCache and self.ccCache[1].type == "root" then
 					newAbility.cacheId = self.ccCache[1].id
 					self.ccCache = {}
-					if self.SV.debug.ccCache then d("Clearing CC cache") end
+					if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache") end
 				end
 				local inList, num = self:AIdInList(aId)
 				-- if not self:ResInList(abilityType) then
@@ -189,7 +189,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				else
 					self.ccActive[num].endTime = endTime*1000
 				end
-				if self.SV.debug.ccCache then d("New cc "..eName) end
+				if self.SV.debug.ccCache then self.debug:Print("New cc "..eName) end
 			elseif self.ccCache and self.ccCache[1] and self.ccCache[1].recorded == time and not self.variables[abilityType] then
 				local ending = ((endTime-beginTime~=0) and endTime) or 0
 				local newAbility = {["id"] = aId, ["type"] = self.ccCache[1].type, ["endTime"] = ending*1000, ["cacheId"] = self.ccCache[1].id }
@@ -201,9 +201,9 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				else
 					self.ccActive[num].endTime = endTime*1000
 				end
-				if self.SV.debug.ccCache then d("New cc from cache "..eName) end
+				if self.SV.debug.ccCache then self.debug:Print("New cc from cache "..eName) end
 				self.ccCache = {}
-				if self.SV.debug.ccCache then d("Clearing CC cache") end
+				if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache") end
 				-- end
 			end
 		elseif changeType == EFFECT_RESULT_FADED or changeType == EFFECT_RESULT_ITERATION_END or changeType == EFFECT_RESULT_TRANSFER then
@@ -220,7 +220,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				if self.ccActive[i].endTime < time then
 					table.remove(self.ccActive, i)
 					self.ccChanged = true
-					-- d("deleting entries in cc list")
+					-- self.debug:Print("deleting entries in cc list")
 				end
 			-- else
 				-- if not self.currentBuffs then

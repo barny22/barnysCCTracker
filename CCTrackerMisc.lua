@@ -72,9 +72,14 @@ function CCTracker:AIdInList(aId)
 end
 
 function CCTracker:IsPossibleRoot(id)
+	local time = GetFrameTimeMilliseconds()
 	for _, check in ipairs(self.possibleRoots) do
-		if check == id then return true end
+		if check == id then
+			if self.SV.debug.chat then self.debug:Print("Found possible root. It took "..tostring(GetFrameTimeMilliseconds()-time).."ms") end
+			return true
+		end
 	end
+	if self.SV.debug.chat then self.debug:Print("Checked for possible root, looked for "..tostring(GetFrameTimeMilliseconds()-time).."ms, didn't find anything interesting") end
 	return false
 end
 
