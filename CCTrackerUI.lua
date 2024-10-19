@@ -94,7 +94,7 @@ function CCTracker:BuildUI()
 			for _, entry in pairs(CCTracker.variables) do
 				SCENE_MANAGER:GetScene("gameMenuInGame"):AddFragment(CCTracker.UI.indicator[entry.name].controls.fragment)
 			end
-		elseif value == "NotUnlocked" then
+		elseif value == "Locked" then
 			for _, entry in pairs(CCTracker.variables) do
 				SCENE_MANAGER:GetScene("gameMenuInGame"):RemoveFragment(CCTracker.UI.indicator[entry.name].controls.fragment)
 			end
@@ -127,7 +127,7 @@ function CCTracker:BuildUI()
 				indicator[entry.name].controls.tlw:SetClampedToScreen(true)
 			end
 		end
-		if value then self.UI.FadeScenes("Unlocked") else self.UI.FadeScenes("NotUnlocked") end
+		if value then self.UI.FadeScenes("Unlocked") else self.UI.FadeScenes("Locked") end
 		self.SV.settings.unlocked = value
 	end
 	-- indicator.SetUnlocked = SetUnlocked
@@ -159,6 +159,13 @@ function CCTracker:BuildUI()
 		if self.SV.debug.ccCache then d("CC icons are shown") end
 		self.ccChanged = false
 	end
+	
+	local function ApplyAlpha()
+		for _, entry in pairs(self.variables) do
+			indicator[entry.name].controls.icon:SetAlpha(self.SV.UI.alpha/100)
+			indicator[entry.name].controls.frame:SetAlpha(self.SV.UI.alpha/100)
+		end
+	end
 		
 	return {
 	indicator = indicator,
@@ -166,5 +173,6 @@ function CCTracker:BuildUI()
 	ApplySize = ApplySize,
 	SetUnlocked = SetUnlocked,
 	FadeScenes = FadeScenes,
+	ApplyAlpha = ApplyAlpha,
 	}
 end

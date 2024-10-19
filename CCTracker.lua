@@ -47,7 +47,7 @@ function CCTracker:Init()
 		[17] = {["icon"] = "/esoui/art/icons/ability_debuff_knockback.dds", ["tracked"] = self.SV.settings.tracked.Knockback, ["res"] = 2475, ["active"] = false, ["name"] = "Knockback",}, --ABILITY_TYPE_KNOCKBACK
 		[48] = {["icon"] = "/esoui/art/icons/ability_debuff_levitate.dds", ["tracked"] = self.SV.settings.tracked.Levitating, ["res"] = 2400, ["active"] = false, ["name"] = "Levitating",}, --ABILITY_TYPE_LEVITATE
 		[53] = {["icon"] = "/esoui/art/icons/ability_debuff_offbalance.dds", ["tracked"] = self.SV.settings.tracked.Offbalance, ["res"] = 2440, ["active"] = false, ["name"] = "Offbalance",}, --ABILITY_TYPE_OFFBALANCE
-		-- ["rootPlaceholder"] = {["icon"] = "/esoui/art/icons/ability_debuff_root.dds", ["tracked"] = self.SV.settings.tracked.Root, ["res"] = 2480 ["active"] = false, ["name"] = "Rooted",}, --ACTION_RESULT_ROOTED
+		["root"] = {["icon"] = "/esoui/art/icons/ability_debuff_root.dds", ["tracked"] = self.SV.settings.tracked.Root, ["res"] = 2480, ["active"] = false, ["name"] = "Root",}, --ACTION_RESULT_ROOTED
 		[11] = {["icon"] = "/esoui/art/icons/ability_debuff_silence.dds", ["tracked"] = self.SV.settings.tracked.Silence, ["res"] = 2010, ["active"] = false, ["name"] = "Silence",}, --ABILITY_TYPE_SILENCE
 		[10] = {["icon"] = "/esoui/art/icons/ability_debuff_snare.dds", ["tracked"] = self.SV.settings.tracked.Snare, ["res"] = 2025, ["active"] = false, ["name"] = "Snare",}, --ABILITY_TYPE_SNARE
 		[33] = {["icon"] = "/esoui/art/icons/ability_debuff_stagger.dds", ["tracked"] = self.SV.settings.tracked.Stagger, ["res"] = 2470, ["active"] = false, ["name"] = "Stagger",}, --ABILITY_TYPE_STAGGER
@@ -126,6 +126,12 @@ function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotTyp
 				table.insert(self.ccCache, newAbility)
 				if self.SV.debug.ccCache then d("Caching ability "..aName) end
 				break
+			elseif check.tracked and res == "ACTION_RESULT_SNARED" and self:IsPossibleRoot(aId) then
+				self.ccCache = {}
+				local newAbility = {["type"] = "root", ["recorded"] = GetFrameTimeMilliseconds(), ["id"] = aId,}
+				table.insert(self.ccCache, newAbility)
+				if self.SV.debug.ccCache then d("Caching ability "..aName) end
+				break
 			end
 			return
 		end
@@ -149,10 +155,14 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 			self.UI.ApplyIcons()
 			return
 		elseif changeType == EFFECT_RESULT_UPDATED or changeType == EFFECT_RESULT_GAINED or changeType == EFFECT_RESULT_ITERATION_BEGIN or changeType == EFFECT_RESULT_FULL_REFRESH then
-			if self.variables[abilityType] and self.variables[abilityType].tracked then
+			if self.variables[abilityType] and self.variables[abilityType].tracked and not self:IsPossibleRoot(aId) then
 				local ending = ((endTime-beginTime~=0) and endTime) or 0
 				local newAbility = {["id"] = aId, ["type"] = abilityType, ["endTime"] = ending*1000}
-				if self.ccCache and self.ccCache[1].type == abilityType then newAbility.cacheId = self.ccCache[1].id end
+				if self.ccCache and self.ccCache[1].type == abilityType then
+					newAbility.cacheId = self.ccCache[1].id
+					self.ccCache = {}
+					if self.SV.debug.ccCache then d("Clearing CC cache") end
+				end
 				local inList, num = self:AIdInList(aId)
 				-- if not self:ResInList(abilityType) then
 				if not inList then
@@ -163,6 +173,23 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				end
 				if self.SV.debug.ccCache then d("New cc "..eName) end
 				-- end
+			elseif self.variables.root.tracked and abilityType == ABILITY_TYPE_SNARE and self:IsPossibleRoot(aId) then
+				local ending = ((endTime-beginTime~=0) and endTime) or 0
+				local newAbility = {["id"] = aId, ["type"] = "root", ["endTime"] = ending*1000}
+				if self.ccCache and self.ccCache[1].type == "root" then
+					newAbility.cacheId = self.ccCache[1].id
+					self.ccCache = {}
+					if self.SV.debug.ccCache then d("Clearing CC cache") end
+				end
+				local inList, num = self:AIdInList(aId)
+				-- if not self:ResInList(abilityType) then
+				if not inList then
+					self.ccChanged = true
+					table.insert(self.ccActive, newAbility)
+				else
+					self.ccActive[num].endTime = endTime*1000
+				end
+				if self.SV.debug.ccCache then d("New cc "..eName) end
 			elseif self.ccCache and self.ccCache[1] and self.ccCache[1].recorded == time and not self.variables[abilityType] then
 				local ending = ((endTime-beginTime~=0) and endTime) or 0
 				local newAbility = {["id"] = aId, ["type"] = self.ccCache[1].type, ["endTime"] = ending*1000, ["cacheId"] = self.ccCache[1].id }

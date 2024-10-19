@@ -39,13 +39,13 @@ CCTracker.menu.constants = {
 		["Offset"] = -25,
 		["Id"] =  53 --2440
 	},
-	-- {
-		-- ["Name"] = "Root",
-		-- ["Icon"] = "/esoui/art/icons/ability_debuff_root.dds",
-		-- ["Dimensions"] = 35,
-		-- ["Offset"] = -25,
-		-- ["Id"] = 1 --2480
-	-- },
+	{
+		["Name"] = "Root",
+		["Icon"] = "/esoui/art/icons/ability_debuff_root.dds",
+		["Dimensions"] = 35,
+		["Offset"] = -25,
+		["Id"] = "root" --2480
+	},
 	{
 		["Name"] = "Silence",
 		["Icon"] = "/esoui/art/icons/ability_debuff_silence.dds",
@@ -157,12 +157,37 @@ function CCTracker:BuildMenu()
                 self.UI.ApplySize()
             end,
         },
-		{	type = "checkbox",
+		{	
+			type = "checkbox",
 			name = "Unlock CCTracker",
 			tooltip = "Reposition and resize icons by dragging the edges or the center.",
+			disabled = function() return self.SV.settings.sample end,
 			-- width = "half",
 			getFunc = function() return self.SV.settings.unlocked end,
 			setFunc = function(value) self.UI.SetUnlocked(value) end,
+		},
+		{	
+			type = "checkbox",
+			name = "Show sample",
+			tooltip = "Gives you a sample icon so you can see the changes you're making, when adjusting size or alpha.",
+			warning = "Only enabled in locked mode",
+			disabled = function() return self.SV.settings.unlocked end,
+			-- width = "half",
+			getFunc = function() return self.SV.settings.sample end,
+			setFunc = function(value)
+				self.SV.settings.sample = value
+				self.UI.indicator.Stun.controls.tlw:ClearAnchors()
+				self.UI.indicator.Stun.controls.tlw:SetHidden(not value)
+				self.UI.indicator.Stun.controls.icon:SetHidden(not value)
+				self.UI.indicator.Stun.controls.frame:SetHidden(not value)
+				if value then
+					self.UI.indicator.Stun.controls.tlw:SetAnchor(RIGHT, GuiRoot, RIGHT, -GuiRoot:GetWidth()/8, 0)
+					self.UI.FadeScenes("Unlocked")
+				else
+					self.UI.indicator.Stun.controls.tlw:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, self.SV.UI.xOffsets.Stun, self.SV.UI.yOffsets.Stun)
+					self.UI.FadeScenes("Locked")
+				end
+			end,
 		},
 		{
 			type = "slider",
@@ -179,6 +204,20 @@ function CCTracker:BuildMenu()
 					self.SV.UI.sizes[entry.name] = value
 					self.UI.ApplySize(entry.name)
 				end
+			end,
+		},
+		{
+			type = "slider",
+			name = "Icon alpha",
+			tooltip = "The CC icons are too present for you? Simply adjust alpha with this slider to make them disappear.",
+			default = 100,
+			min = 0,
+			max = 100,
+			step = 1,
+			getFunc = function() return self.SV.UI.alpha end,
+			setFunc = function(value)
+				self.SV.UI.alpha = value
+				self.UI.ApplyAlpha()
 			end,
 		},
 		{
