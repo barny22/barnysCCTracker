@@ -151,10 +151,10 @@ function CCTracker:BuildMenu()
                     self.SV.global = true
                     self.SV = ZO_SavedVars:NewAccountWide(self.name.."SV", 1, nil, self.DEFAULT_SAVED_VARS, GetWorldName())
                 else
-                    self.SV = ZO_SavedVars:NewCharacterIdSettings(self.name.."SV", 1, nil, CCTracker.DEFAULT_SAVED_VARS, GetWorldName())
+                    self.SV = ZO_SavedVars:NewCharacterIdSettings(self.name.."SV", 1, nil, self.DEFAULT_SAVED_VARS, GetWorldName())
                     self.SV.global = false
                 end
-                self.UI.ApplySize()
+                for _, entry in pairs(self.variables) do self.UI.ApplySize(entry.name) end
             end,
         },
 		{	
@@ -209,7 +209,7 @@ function CCTracker:BuildMenu()
 		{
 			type = "slider",
 			name = "Icon alpha",
-			tooltip = "The CC icons are too present for you? Simply adjust alpha with this slider to make them disappear.",
+			tooltip = "The CC icons are too prominent for you? Simply adjust alpha with this slider to make them disappear.",
 			default = 100,
 			min = 0,
 			max = 100,

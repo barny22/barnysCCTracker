@@ -22,7 +22,7 @@ local function OnAddOnLoaded(eventCode, addOnName)
     --create the default table
     --create the saved variable access object here and assign it to savedVars
 	CCTracker.SV = ZO_SavedVars:NewCharacterIdSettings("CCTrackerSV", 1, nil, CCTracker.DEFAULT_SAVED_VARS, GetWorldName())
-	if global then
+	if CCTracker.SV.global then
 		CCTracker.SV = ZO_SavedVars:NewAccountWide("CCTrackerSV", 1, nil, CCTracker.DEFAULT_SAVED_VARS, GetWorldName())
 		CCTracker.SV.global = true
 	end
@@ -55,6 +55,7 @@ function CCTracker:Init()
 	}
 	
 	self.UI = self:BuildUI()
+	-- for _, entry in pairs(self.variables) do self.UI.ApplySize(entry.name) end
 	-- self.UI.ApplySize(self.SV.UI.size)
 	self.UI.SetUnlocked(self.SV.settings.unlocked)
 	self.UI.FadeScenes("UI")
@@ -119,21 +120,20 @@ function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotTyp
 			return
 		end
 		for ccType, check in pairs(self.variables) do
-			if check.tracked and check.res == res then
-				--  if self.SV.debug.enabled then self.debug:Print("caching cc ability") end
+			if check.tracked and check.res == res and not self:IsPossibleRoot(aId) then
+				if self.SV.debug.enabled then self.debug:Print("Caching cc result") end
 				self.ccCache = {}
 				local newAbility = {["type"] = ccType, ["recorded"] = GetFrameTimeMilliseconds(), ["id"] = aId,}
 				table.insert(self.ccCache, newAbility)
 				if self.SV.debug.ccCache then self.debug:Print("Caching ability "..aName) end
 				break
-			elseif check.tracked and res == "ACTION_RESULT_SNARED" and self:IsPossibleRoot(aId) then
+			elseif check.tracked and check.name == "Root" and res == "ACTION_RESULT_SNARED" and self:IsPossibleRoot(aId) then
 				self.ccCache = {}
 				local newAbility = {["type"] = "root", ["recorded"] = GetFrameTimeMilliseconds(), ["id"] = aId,}
 				table.insert(self.ccCache, newAbility)
 				if self.SV.debug.ccCache then self.debug:Print("Caching ability "..aName) end
 				break
 			end
-			return
 		end
 	else return
 	end
@@ -220,7 +220,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				if self.ccActive[i].endTime < time then
 					table.remove(self.ccActive, i)
 					self.ccChanged = true
-					--  if self.SV.debug.enabled then self.debug:Print("deleting entries in cc list") end
+					if self.SV.debug.enabled then self.debug:Print("deleting entries in cc list") end
 				end
 			-- else
 				-- if not self.currentBuffs then

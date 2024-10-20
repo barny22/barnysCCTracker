@@ -132,7 +132,7 @@ function CCTracker:BuildUI()
 	end
 	-- indicator.SetUnlocked = SetUnlocked
 	
-	local function ApplySize(name, value)
+	local function ApplySize(name)
 		indicator[name].controls.tlw:SetDimensions(self.SV.UI.sizes[name], self.SV.UI.sizes[name])
 		indicator[name].controls.tlwShadow:SetDimensions(self.SV.UI.sizes[name], self.SV.UI.sizes[name])
 		indicator[name].controls.frame:SetDimensions(self.SV.UI.sizes[name], self.SV.UI.sizes[name])
