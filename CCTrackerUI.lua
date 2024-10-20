@@ -166,6 +166,18 @@ function CCTracker:BuildUI()
 			indicator[entry.name].controls.frame:SetAlpha(self.SV.UI.alpha/100)
 		end
 	end
+	
+	SCENE_MANAGER:RegisterCallback("SceneStateChanged", function(scene, newState)
+		if scene:GetName() == "gameMenuInGame" and newState == "hiding" and self.SV.settings.sample then
+			self.SV.settings.sample = false
+			self.UI.FadeScenes("Locked")
+			self.UI.indicator.Stun.controls.tlw:ClearAnchors()
+			self.UI.indicator.Stun.controls.tlw:SetHidden(true)
+			self.UI.indicator.Stun.controls.icon:SetHidden(true)
+			self.UI.indicator.Stun.controls.frame:SetHidden(true)
+			self.UI.indicator.Stun.controls.tlw:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, self.SV.UI.xOffsets.Stun, self.SV.UI.yOffsets.Stun)
+		end
+	end)
 		
 	return {
 	indicator = indicator,

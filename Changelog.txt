@@ -1,4 +1,5 @@
 2024.10.19 v1.0.1
+! Fixed a bug with accountwide settings. They should now load properly
 + Added debugging system via LibChatMessage
 + Added root ability list, to check for snares possibly being roots
 

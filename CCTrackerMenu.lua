@@ -170,7 +170,7 @@ function CCTracker:BuildMenu()
 			type = "checkbox",
 			name = "Show sample",
 			tooltip = "Gives you a sample icon so you can see the changes you're making, when adjusting size or alpha.",
-			warning = "Only enabled in locked mode",
+			warning = "Only enabled in locked mode. This also disables unlocked mode.",
 			disabled = function() return self.SV.settings.unlocked end,
 			-- width = "half",
 			getFunc = function() return self.SV.settings.sample end,
