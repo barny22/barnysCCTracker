@@ -102,25 +102,28 @@ local function CreateCCCheckboxes()
 	end
 end
 
+function CCTracker.CreateIcons(panel)
+    if panel == barnysCCTrackerOptions then
+        if CCTracker.SV.debug.enabled then CCTracker.debug:Print("Panel was created.") end
+        for i = 1, #CCTracker.menu.constants do
+            local number = CCTracker:CreateMenuIconsPath(CCTracker.menu.constants[i].Name)
+            CCTracker.menu.icons[i] = WM:CreateControl(CCTracker.name.."MenuIcon"..i, panel.controlsToRefresh[number].checkbox, CT_TEXTURE)
+            CCTracker.menu.icons[i]:SetAnchor(RIGHT, panel.controlsToRefresh[number].checkbox, LEFT, CCTracker.menu.constants[i].Offset, 0)
+            CCTracker.menu.icons[i]:SetTexture(CCTracker.menu.constants[i].Icon)
+            CCTracker.menu.icons[i]:SetDimensions(CCTracker.menu.constants[i].Dimensions, CCTracker.menu.constants[i].Dimensions)
+        end
+        CALLBACK_MANAGER:UnregisterCallback("LAM-PanelControlsCreated", CCTracker.CreateIcons)
+        if CCTracker.SV.debug.enabled then CCTracker.debug:Print("Deleting LAM Callback") end
+    else
+        return
+    end
+end
+
 function CCTracker:BuildMenu()
 	self.menu = self.menu or {}
 	self.menu.icons = {}
-	local CreateIcons = function(panel)
-		if panel == barnysCCTrackerOptions then
-			if self.SV.debug.enabled then CCTracker.debug:Print("Panel was created.") end
-			for i = 1, #self.menu.constants do
-				local number = self:CreateMenuIconsPath(self.menu.constants[i].Name)
-				self.menu.icons[i] = WM:CreateControl(self.name.."MenuIcon"..i, panel.controlsToRefresh[number].checkbox, CT_TEXTURE)
-				self.menu.icons[i]:SetAnchor(RIGHT, panel.controlsToRefresh[number].checkbox, LEFT, self.menu.constants[i].Offset, 0)
-				self.menu.icons[i]:SetTexture(self.menu.constants[i].Icon)
-				self.menu.icons[i]:SetDimensions(self.menu.constants[i].Dimensions, self.menu.constants[i].Dimensions)
-			end
-		CALLBACK_MANAGER:UnregisterCallback("LAM-PanelControlsCreated", CreateIcons)
-		if self.SV.debug.enabled then CCTracker.debug:Print("Deleting LAM Callback") end
-		else return
-		end
-	end
-	CALLBACK_MANAGER:RegisterCallback("LAM-PanelControlsCreated", CreateIcons)
+
+	CALLBACK_MANAGER:RegisterCallback("LAM-PanelControlsCreated", self.CreateIcons)
 	
 	self.menu.metadata = {
 		type = "panel",
