@@ -1,2 +1,7 @@
+2024.10.19 v1.0.1
+! Fixed a bug with accountwide settings. They should now load properly
++ Added debugging system via LibChatMessage
++ Added root ability list, to check for snares possibly being roots
+
 2024.10.17 v1.0.0
 + Created CCTracker, lets see how this goes =)

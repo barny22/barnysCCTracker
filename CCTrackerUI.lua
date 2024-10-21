@@ -94,7 +94,7 @@ function CCTracker:BuildUI()
 			for _, entry in pairs(CCTracker.variables) do
 				SCENE_MANAGER:GetScene("gameMenuInGame"):AddFragment(CCTracker.UI.indicator[entry.name].controls.fragment)
 			end
-		elseif value == "NotUnlocked" then
+		elseif value == "Locked" then
 			for _, entry in pairs(CCTracker.variables) do
 				SCENE_MANAGER:GetScene("gameMenuInGame"):RemoveFragment(CCTracker.UI.indicator[entry.name].controls.fragment)
 			end
@@ -127,12 +127,12 @@ function CCTracker:BuildUI()
 				indicator[entry.name].controls.tlw:SetClampedToScreen(true)
 			end
 		end
-		if value then self.UI.FadeScenes("Unlocked") else self.UI.FadeScenes("NotUnlocked") end
+		if value then self.UI.FadeScenes("Unlocked") else self.UI.FadeScenes("Locked") end
 		self.SV.settings.unlocked = value
 	end
 	-- indicator.SetUnlocked = SetUnlocked
 	
-	local function ApplySize(name, value)
+	local function ApplySize(name)
 		indicator[name].controls.tlw:SetDimensions(self.SV.UI.sizes[name], self.SV.UI.sizes[name])
 		indicator[name].controls.tlwShadow:SetDimensions(self.SV.UI.sizes[name], self.SV.UI.sizes[name])
 		indicator[name].controls.frame:SetDimensions(self.SV.UI.sizes[name], self.SV.UI.sizes[name])
@@ -148,7 +148,7 @@ function CCTracker:BuildUI()
 			self.UI.indicator[entry.name].controls.frame:SetHidden(true)
 			self.UI.indicator[entry.name].controls.icon:SetHidden(true)
 		end
-		if self.SV.debug.ccCache then d("Done with hiding CC icons") end
+		if self.SV.debug.ccCache then self.debug:Print("Done with hiding CC icons") end
 		
 		for _, entry in ipairs(self.ccActive) do
 				self.variables[entry.type].active = true
@@ -156,9 +156,28 @@ function CCTracker:BuildUI()
 				self.UI.indicator[self.variables[entry.type].name].controls.icon:SetHidden(false)
 			-- end
 		end
-		if self.SV.debug.ccCache then d("CC icons are shown") end
+		if self.SV.debug.ccCache then self.debug:Print("CC icons are shown") end
 		self.ccChanged = false
 	end
+	
+	local function ApplyAlpha()
+		for _, entry in pairs(self.variables) do
+			indicator[entry.name].controls.icon:SetAlpha(self.SV.UI.alpha/100)
+			indicator[entry.name].controls.frame:SetAlpha(self.SV.UI.alpha/100)
+		end
+	end
+	
+	SCENE_MANAGER:RegisterCallback("SceneStateChanged", function(scene, newState)
+		if scene:GetName() == "gameMenuInGame" and newState == "hiding" and self.SV.settings.sample then
+			self.SV.settings.sample = false
+			self.UI.FadeScenes("Locked")
+			self.UI.indicator.Stun.controls.tlw:ClearAnchors()
+			self.UI.indicator.Stun.controls.tlw:SetHidden(true)
+			self.UI.indicator.Stun.controls.icon:SetHidden(true)
+			self.UI.indicator.Stun.controls.frame:SetHidden(true)
+			self.UI.indicator.Stun.controls.tlw:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, self.SV.UI.xOffsets.Stun, self.SV.UI.yOffsets.Stun)
+		end
+	end)
 		
 	return {
 	indicator = indicator,
@@ -166,5 +185,6 @@ function CCTracker:BuildUI()
 	ApplySize = ApplySize,
 	SetUnlocked = SetUnlocked,
 	FadeScenes = FadeScenes,
+	ApplyAlpha = ApplyAlpha,
 	}
 end
