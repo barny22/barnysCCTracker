@@ -1,0 +1,69 @@
+name: ESO Addon Release
+
+# Auslöser: Bei einem Pull Request auf die master-Branch von development
+on:
+  pull_request:
+    branches:
+      - master
+    types:
+      - closed
+
+jobs:
+  build:
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master' && github.event.pull_request.head.ref == 'development'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Extract API Version and Addon Version
+      id: version_info
+      run: |
+        APIVersion=$(grep -Po '(?<=## APIVersion: )\d+' barnysCCTracker.txt)
+        AddonVersion=$(grep -Po '(?<=## Version: )[\d.]+' barnysCCTracker.txt)
+        echo "API_VERSION=$APIVersion" >> $GITHUB_ENV
+        echo "ADDON_VERSION=$AddonVersion" >> $GITHUB_ENV
+
+    - name: Extract Changelog
+      id: changelog
+      run: |
+        Changelog=$(cat changelog.txt)
+        echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+        echo "$Changelog" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+
+    - name: Extract Addon Description
+      id: description
+      run: |
+        Description=$(cat README.md)
+        echo "DESCRIPTION<<EOF" >> $GITHUB_ENV
+        echo "$Description" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+
+    - name: Zip Addon Files (excluding .gitattributes)
+      run: zip -r my-addon.zip path/to/addon --exclude *.gitattributes
+
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ env.ADDON_VERSION }}
+        release_name: Release ${{ env.ADDON_VERSION }}
+        body: ${{ env.CHANGELOG }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Addon to ESOUI
+      env:
+        API_TOKEN: ${{ secrets.ESOUI_API_TOKEN }}
+      run: |
+        curl -X POST "https://api.esoui.com/addons/upload" \
+          -H "Authorization: Bearer $API_TOKEN" \
+          -F "id=YOUR_ADDON_ID" \
+          -F "file=@./my-addon.zip" \
+          -F "changelog=${{ env.CHANGELOG }}" \
+          -F "compatiblepatch=$API_VERSION" \
+          -F "description=${{ env.DESCRIPTION }}"
