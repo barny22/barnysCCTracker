@@ -62,7 +62,7 @@ jobs:
       run: |
         curl -X POST "https://api.esoui.com/addons/upload" \
           -H "Authorization: Bearer $API_TOKEN" \
-          -F "id=YOUR_ADDON_ID" \
+          -F "id=3971" \
           -F "file=@./my-addon.zip" \
           -F "changelog=${{ env.CHANGELOG }}" \
           -F "compatiblepatch=$API_VERSION" \
