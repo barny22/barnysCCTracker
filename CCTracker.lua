@@ -145,7 +145,7 @@ end
 
 function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,endTime,_,_,_,buffType,abilityType,_,unitName,_,aId,_)
 	--  if self.SV.debug.enabled then self.debug:Print(unitName.." - "..GetUnitName("player")) end
-	time = GetFrameTimeMilliseconds()
+	local time = GetFrameTimeMilliseconds()
 	if not (unitTag == "player" or unitName == self.currentCharacterName) then
 		return
 	else
