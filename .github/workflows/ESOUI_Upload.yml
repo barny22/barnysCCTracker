@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master' && github.event.pull_request.head.ref == 'development' || (github.event_name == 'workflow_dispatch')
+    if: (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master' && github.event.pull_request.head.ref == 'development') || (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
 
     steps:
@@ -23,8 +23,8 @@ jobs:
     - name: Extract API Version and Addon Version
       id: version_info
       run: |
-        APIVersion=$(grep -Po '(?<=## APIVersion: )\d+' barnysCCTracker.txt)
-        AddonVersion=$(grep -Po '(?<=## Version: )[\d.]+' barnysCCTracker.txt)
+        APIVersion=$(grep -Po '(?<=## APIVersion: )\d+' barnysCCTracker/barnysCCTracker.txt)
+        AddonVersion=$(grep -Po '(?<=## Version: )[\d.]+' barnysCCTracker/barnysCCTracker.txt)
         # Ersetze Punkte durch Unterstriche
         AddonVersionWithUnderscores=$(echo $AddonVersion | sed 's/\./_/g')
         echo "API_VERSION=$APIVersion" >> $GITHUB_ENV
@@ -34,7 +34,7 @@ jobs:
     - name: Extract Changelog
       id: changelog
       run: |
-        Changelog=$(cat Changelog.txt)
+        Changelog=$(cat barnysCCTracker/Changelog.txt)
         echo "CHANGELOG<<EOF" >> $GITHUB_ENV
         echo "$Changelog" >> $GITHUB_ENV
         echo "EOF" >> $GITHUB_ENV
@@ -42,13 +42,13 @@ jobs:
     - name: Extract Addon Description
       id: description
       run: |
-        Description=$(cat README.md)
+        Description=$(cat barnysCCTracker/README.md)
         echo "DESCRIPTION<<EOF" >> $GITHUB_ENV
         echo "$Description" >> $GITHUB_ENV
         echo "EOF" >> $GITHUB_ENV
 
     - name: Zip Addon Files (excluding .gitattributes)
-      run: 7z a barnysCCTracker_v${{ env.ADDON_VERSION_UNDERSCORES }}.zip -xr *.gitattributes
+      run: 7z a barnysCCTracker_v${{ env.ADDON_VERSION_UNDERSCORES }}.zip barnysCCTracker/* -xr *.gitattributes
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
@@ -65,7 +65,7 @@ jobs:
       env:
         API_TOKEN: ${{ secrets.ESOUI_API_TOKEN }}
       run: |
-        curl -X POST "https://api.esoui.com/addons/updatetest" \
+        curl -X POST "https://api.esoui.com/addons/update" \
           -H "Authorization: Bearer $API_TOKEN" \
           -F "id=3971" \
           -F "version=${{ env.ADDON_VERSION }}" \
