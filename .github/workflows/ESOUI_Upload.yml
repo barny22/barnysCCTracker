@@ -61,7 +61,7 @@ jobs:
     - name: Upload Addon to ESOUI
       run: |
         curl \
-          -H "x-api-token: ${{ secrets.ESOUI_API_TOKEN }} \
+          -H "x-api-token: ${{ secrets.ESOUI_API_TOKEN }}" \
           -F "id=3971" \
           -F "version=${{ env.ADDON_VERSION }}" \
           -F "updatefile=@./barnysCCTracker.zip" \
