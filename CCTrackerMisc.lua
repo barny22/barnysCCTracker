@@ -52,6 +52,7 @@ CCTracker.DEFAULT_SAVED_VARS = {
 	["debug"] = {
 		["enabled"] = false,
 		["ccCache"] = false,
+		["roots"] = false,
 	},
 }
 
@@ -74,11 +75,11 @@ function CCTracker:IsPossibleRoot(id)
 	local time = GetFrameTimeMilliseconds()
 	for _, check in ipairs(self.possibleRoots) do
 		if check == id then
-			if self.SV.debug.enabled then self.debug:Print("Found possible root. It took "..tostring(GetFrameTimeMilliseconds()-time).."ms") end
+			if self.SV.debug.roots then self.debug:Print("Found possible root. It took "..tostring(GetFrameTimeMilliseconds()-time).."ms") end
 			return true
 		end
 	end
-	if self.SV.debug.enabled then self.debug:Print("Checked for possible root, looked for "..tostring(GetFrameTimeMilliseconds()-time).."ms, didn't find anything interesting") end
+	if self.SV.debug.roots then self.debug:Print("Checked for possible root, looked for "..tostring(GetFrameTimeMilliseconds()-time).."ms, didn't find anything interesting") end
 	return false
 end
 

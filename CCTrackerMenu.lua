@@ -250,14 +250,25 @@ function CCTracker:BuildMenu()
         },
 		{	
 			type = "checkbox",
-			name = "Debug CCTracker ccCache",
+			name = "Debug ccCache",
 			disabled = function() return not self.SV.debug.enabled end,
 			getFunc = function() return self.SV.debug.ccCache end,
 			setFunc = function(value)
 				self.SV.debug.ccCache = value
 				-- self.log = value
 			end,
-			-- width = "half",
+			width = "half",
+		},
+		{	
+			type = "checkbox",
+			name = "Debug root detection",
+			disabled = function() return not self.SV.debug.enabled end,
+			getFunc = function() return self.SV.debug.roots end,
+			setFunc = function(value)
+				self.SV.debug.roots = value
+				-- self.log = value
+			end,
+			width = "half",
 		},
 	}
 	
