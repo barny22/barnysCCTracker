@@ -48,7 +48,7 @@ jobs:
         echo "EOF" >> $GITHUB_ENV
 
     - name: Zip Addon Files (excluding .gitattributes)
-      run: 7z a barnysCCTracker_v${{ env.ADDON_VERSION_UNDERSCORES }}.zip barnysCCTracker/* -x! *.gitattributes
+      run: 7z a barnysCCTracker_v${{ env.ADDON_VERSION_UNDERSCORES }}.zip barnysCCTracker/* -xr .gitattributes
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
