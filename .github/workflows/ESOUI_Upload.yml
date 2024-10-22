@@ -31,7 +31,7 @@ jobs:
     - name: Extract Changelog
       id: changelog
       run: |
-        Changelog=$(cat changelog.txt)
+        Changelog=$(cat Changelog.txt)
         echo "CHANGELOG<<EOF" >> $GITHUB_ENV
         echo "$Changelog" >> $GITHUB_ENV
         echo "EOF" >> $GITHUB_ENV
