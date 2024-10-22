@@ -15,7 +15,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Extract API Version and Addon Version
       id: version_info
@@ -48,8 +48,7 @@ jobs:
       run: zip -r barnysCCTracker_v${{ env.ADDON_VERSION_UNDERSCORES }}.zip ./barnysCCTracker/ --exclude *.gitattributes
 
     - name: Create GitHub Release
-      id: create_release
-      uses: actions/create-release@v1
+      uses: softprops/action-gh-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
