@@ -17,6 +17,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+        with:
+          path: 'barnysCCTracker'
 
     - name: Extract API Version and Addon Version
       id: version_info
@@ -46,7 +48,7 @@ jobs:
         echo "EOF" >> $GITHUB_ENV
 
     - name: Zip Addon Files (excluding .gitattributes)
-      run: zip -r barnysCCTracker_v${{ env.ADDON_VERSION_UNDERSCORES }}.zip ./barnysCCTracker/ --exclude *.gitattributes
+      run: 7z a barnysCCTracker_v${{ env.ADDON_VERSION_UNDERSCORES }}.zip -xr *.gitattributes
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
@@ -63,7 +65,7 @@ jobs:
       env:
         API_TOKEN: ${{ secrets.ESOUI_API_TOKEN }}
       run: |
-        curl -X POST "https://api.esoui.com/addons/update" \
+        curl -X POST "https://api.esoui.com/addons/updatetest" \
           -H "Authorization: Bearer $API_TOKEN" \
           -F "id=3971" \
           -F "version=${{ env.ADDON_VERSION }}" \
