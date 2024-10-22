@@ -37,7 +37,7 @@ function CCTracker:BuildUI()
 				self.UI.ApplySize(name)
 			end
 		end)
-		fragment = ZO_HUDFadeSceneFragment:New(tlw)
+		local fragment = ZO_HUDFadeSceneFragment:New(tlw)
 		
 		local icon = WM:CreateControl(self.name..name.."Icon", tlw, CT_TEXTURE)
 		icon:ClearAnchors()
