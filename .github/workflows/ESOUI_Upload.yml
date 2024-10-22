@@ -40,8 +40,10 @@ jobs:
       id: description
       run: |
         Description=$(cat barnysCCTracker/README.md)
+        # URL-encode the description to avoid issues with special characters
+        URLEncodedDescription=$(echo "$Description" | jq -sRr @uri)
         echo "DESCRIPTION<<EOF" >> $GITHUB_ENV
-        echo "$Description" >> $GITHUB_ENV
+        echo "$URLEncodedDescription" >> $GITHUB_ENV
         echo "EOF" >> $GITHUB_ENV
 
     - name: Zip Addon Files (excluding .gitattributes)
