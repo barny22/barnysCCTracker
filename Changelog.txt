@@ -1,3 +1,7 @@
+2024.10.22 v1.0.2
+! Minor fixes to code
+! Localized some variables
+
 2024.10.19 v1.0.1
 ! Fixed a bug with accountwide settings. They should now load properly
 + Added debugging system via LibChatMessage
