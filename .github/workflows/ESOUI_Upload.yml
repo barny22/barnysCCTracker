@@ -66,7 +66,7 @@ jobs:
         API_TOKEN: ${{ secrets.ESOUI_API_TOKEN }}
       run: |
         curl -X POST "https://api.esoui.com/addons/update" \
-          -H "Authorization: Bearer $API_TOKEN" \
+          -H "x-api-token: ${{ secrets.ESOUI_API_TOKEN }} \
           -F "id=3971" \
           -F "version=${{ env.ADDON_VERSION }}" \
           -F "updatefile=@./barnysCCTracker_v${{ env.ADDON_VERSION_UNDERSCORES }}.zip" \
