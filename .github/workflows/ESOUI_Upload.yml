@@ -45,8 +45,8 @@ jobs:
         echo "$Changelog" >> $GITHUB_ENV
         echo "EOF" >> $GITHUB_ENV
 
-    - name: Extract Addon Description
-      id: description
+    - name: Replace Semicolons in Addon Description
+      id: fix_description
       run: |
         Description=$(cat barnysCCTracker/README.md)
         # Ersetze Semikolons durch HTML-Entity
