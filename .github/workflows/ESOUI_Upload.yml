@@ -74,7 +74,7 @@ jobs:
           -F "id=3971" \
           -F "version=${{ env.ADDON_VERSION }}" \
           -F "updatefile=@./barnysCCTracker.zip" \
-          -F "changelog=@./Changelog.txt" \
+          -F "changelog=@barnysCCTracker/Changelog.txt" \
           -F "compatible=${{ env.PATCH_ID }}" \
-          -F "description=@./READEME.md" \
+          -F "description=@barnysCCTracker/READEME.md" \
           https://api.esoui.com/addons/updatetest
