@@ -37,35 +37,35 @@ jobs:
         PatchID=$(curl -s -H "x-api-token: ${{ secrets.ESOUI_API_TOKEN }}" "https://api.esoui.com/addons/compatible.json" | jq -r ".[] | select(.interface == \"$PatchVersion\") | .id")
         echo "PATCH_ID=$PatchID" >> $GITHUB_ENV
 
-    #- name: Extract Changelog
-    #  id: changelog
-    #  run: |
-    #    Changelog=$(cat barnysCCTracker/Changelog.txt)
-    #    echo "CHANGELOG<<EOF" >> $GITHUB_ENV
-    #    echo "$Changelog" >> $GITHUB_ENV
-    #    echo "EOF" >> $GITHUB_ENV
+    - name: Extract Changelog
+      id: changelog
+      run: |
+        Changelog=$(cat barnysCCTracker/Changelog.txt)
+        echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+        echo "$Changelog" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
 
-    #- name: Replace Semicolons in Addon Description
-    #  id: fix_description
-    #  run: |
-    #    Description=$(cat barnysCCTracker/README.md)
-    #    # Ersetze Semikolons durch HTML-Entity
-    #    DescriptionFixed=$(echo "$Description" | sed 's/;/&semi;/g')
-    #    echo "DESCRIPTION_FIXED=$DescriptionFixed" >> $GITHUB_ENV
+    - name: Extract Addon Description
+      id: description
+      run: |
+        Description=$(cat barnysCCTracker/README.md)
+        echo "DESCRIPTION<<EOF" >> $GITHUB_ENV
+        echo "$Description" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
 
     - name: Zip Addon Files (excluding .gitattributes)
       run: 7z a barnysCCTracker.zip barnysCCTracker/* -xr!*.git*
 
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v2
-      env:
-        GITHUB_TOKEN: ${{ secrets.CREATE_RELEASE_TOKEN }}
-      with:
-        tag_name: ${{ env.ADDON_VERSION }}
-        name: Release ${{ env.ADDON_VERSION }}
-        body: ${{ env.CHANGELOG }}
-        draft: false
-        prerelease: false
+    #- name: Create GitHub Release
+    #  uses: softprops/action-gh-release@v2
+    #  env:
+    #    GITHUB_TOKEN: ${{ secrets.CREATE_RELEASE_TOKEN }}
+    #  with:
+    #    tag_name: ${{ env.ADDON_VERSION }}
+    #    name: Release ${{ env.ADDON_VERSION }}
+    #    body: ${{ env.CHANGELOG }}
+    #    draft: false
+    #    prerelease: false
 
     - name: Upload Addon to ESOUI
       run: |
@@ -74,7 +74,7 @@ jobs:
           -F "id=3971" \
           -F "version=${{ env.ADDON_VERSION }}" \
           -F "updatefile=@./barnysCCTracker.zip" \
-          -F "changelog=@./barnysCCTracker/Changelog.txt" \
+          -F "changelog=\"${{ env.CHANGELOG }}\"" \
           -F "compatible=${{ env.PATCH_ID }}" \
-          -F "description=@./barnysCCTracker/README.md" \
-          https://api.esoui.com/addons/update
+          -F "description=\"${{ env.DESCRIPTION }}\"" \
+          https://api.esoui.com/addons/updatetest
