@@ -37,21 +37,21 @@ jobs:
         PatchID=$(curl -s -H "x-api-token: ${{ secrets.ESOUI_API_TOKEN }}" "https://api.esoui.com/addons/compatible.json" | jq -r ".[] | select(.interface == \"$PatchVersion\") | .id")
         echo "PATCH_ID=$PatchID" >> $GITHUB_ENV
 
-    - name: Extract Changelog
-      id: changelog
-      run: |
-        Changelog=$(cat barnysCCTracker/Changelog.txt)
-        echo "CHANGELOG<<EOF" >> $GITHUB_ENV
-        echo "$Changelog" >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
+    #- name: Extract Changelog
+    #  id: changelog
+    #  run: |
+    #    Changelog=$(cat barnysCCTracker/Changelog.txt)
+    #    echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+    #    echo "$Changelog" >> $GITHUB_ENV
+    #    echo "EOF" >> $GITHUB_ENV
 
-    - name: Replace Semicolons in Addon Description
-      id: fix_description
-      run: |
-        Description=$(cat barnysCCTracker/README.md)
-        # Ersetze Semikolons durch HTML-Entity
-        DescriptionFixed=$(echo "$Description" | sed 's/;/&semi;/g')
-        echo "DESCRIPTION_FIXED=$DescriptionFixed" >> $GITHUB_ENV
+    #- name: Replace Semicolons in Addon Description
+    #  id: fix_description
+    #  run: |
+    #    Description=$(cat barnysCCTracker/README.md)
+    #    # Ersetze Semikolons durch HTML-Entity
+    #    DescriptionFixed=$(echo "$Description" | sed 's/;/&semi;/g')
+    #    echo "DESCRIPTION_FIXED=$DescriptionFixed" >> $GITHUB_ENV
 
     - name: Zip Addon Files (excluding .gitattributes)
       run: 7z a barnysCCTracker.zip barnysCCTracker/* -xr!*.git*
@@ -74,7 +74,7 @@ jobs:
           -F "id=3971" \
           -F "version=${{ env.ADDON_VERSION }}" \
           -F "updatefile=@./barnysCCTracker.zip" \
-          -F "changelog=${{ env.CHANGELOG }}" \
+          -F "changelog=@./Changelog.txt" \
           -F "compatible=${{ env.PATCH_ID }}" \
-          -F "description=${{ env.DESCRIPTION_FIXED }}" \
+          -F "description=@./READEME.md" \
           https://api.esoui.com/addons/updatetest
