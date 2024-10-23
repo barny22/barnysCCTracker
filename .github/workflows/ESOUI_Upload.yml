@@ -77,4 +77,4 @@ jobs:
           -F "changelog=@./barnysCCTracker/Changelog.txt" \
           -F "compatible=${{ env.PATCH_ID }}" \
           -F "description=@./barnysCCTracker/README.md" \
-          https://api.esoui.com/addons/updatetest
+          https://api.esoui.com/addons/update
