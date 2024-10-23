@@ -56,16 +56,16 @@ jobs:
     - name: Zip Addon Files (excluding .gitattributes)
       run: 7z a barnysCCTracker.zip barnysCCTracker/* -xr!*.git*
 
-    #- name: Create GitHub Release
-    #  uses: softprops/action-gh-release@v2
-    #  env:
-    #    GITHUB_TOKEN: ${{ secrets.CREATE_RELEASE_TOKEN }}
-    #  with:
-    #    tag_name: ${{ env.ADDON_VERSION }}
-    #    name: Release ${{ env.ADDON_VERSION }}
-    #    body: ${{ env.CHANGELOG }}
-    #    draft: false
-    #    prerelease: false
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      env:
+       GITHUB_TOKEN: ${{ secrets.CREATE_RELEASE_TOKEN }}
+      with:
+        tag_name: ${{ env.ADDON_VERSION }}
+        name: Release ${{ env.ADDON_VERSION }}
+        body: ${{ env.CHANGELOG }}
+        draft: false
+        prerelease: false
 
     - name: Upload Addon to ESOUI
       run: |
@@ -77,4 +77,4 @@ jobs:
           -F "changelog=\"${{ env.CHANGELOG }}\"" \
           -F "compatible=${{ env.PATCH_ID }}" \
           -F "description=\"${{ env.DESCRIPTION }}\"" \
-          https://api.esoui.com/addons/updatetest
+          https://api.esoui.com/addons/update
