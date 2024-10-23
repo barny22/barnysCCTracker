@@ -75,6 +75,6 @@ jobs:
           -F "version=${{ env.ADDON_VERSION }}" \
           -F "updatefile=@./barnysCCTracker.zip" \
           -F "changelog=${{ env.CHANGELOG }}" \
-          -F "compatible="${{ env.PATCH_ID }}"" \
-          -F "description=${{ env.DESCRIPTION }}" \
+          -F "compatible=${{ env.PATCH_ID }}" \
+          -F "description="${{ env.DESCRIPTION }}"" \
           https://api.esoui.com/addons/updatetest
