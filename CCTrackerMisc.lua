@@ -79,7 +79,7 @@ function CCTracker:IsPossibleRoot(id)
 			return true
 		end
 	end
-	if self.SV.debug.roots then self.debug:Print("Checked for possible root, looked for "..tostring(GetFrameTimeMilliseconds()-time).."ms, didn't find anything interesting") end
+	if self.SV.debug.roots then self.debug:Print("Checked for possible root, looked for "..tostring(GetFrameTimeMilliseconds()-time).."ms, it seems you were simply hit by a snare.") end
 	return false
 end
 

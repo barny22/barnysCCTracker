@@ -119,20 +119,23 @@ function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotTyp
 			end
 			return
 		end
+		if res == ACTION_RESULT_SNARED then
+			if CCTracker:IsPossibleRoot(aId) then res = 2480 end
+		end
 		for ccType, check in pairs(self.variables) do
-			if check.tracked and check.res == res and not self:IsPossibleRoot(aId) then
+			if check.tracked and check.res == res then
 				if self.SV.debug.enabled then self.debug:Print("Caching cc result") end
 				self.ccCache = {}
 				local newAbility = {["type"] = ccType, ["recorded"] = GetFrameTimeMilliseconds(), ["id"] = aId,}
 				table.insert(self.ccCache, newAbility)
 				if self.SV.debug.ccCache then self.debug:Print("Caching ability "..aName) end
 				break
-			elseif check.tracked and check.name == "Root" and res == "ACTION_RESULT_SNARED" and self:IsPossibleRoot(aId) then
-				self.ccCache = {}
-				local newAbility = {["type"] = "root", ["recorded"] = GetFrameTimeMilliseconds(), ["id"] = aId,}
-				table.insert(self.ccCache, newAbility)
-				if self.SV.debug.ccCache then self.debug:Print("Caching ability "..aName) end
-				break
+			-- elseif check.tracked and check.name == "Root" and res == "ACTION_RESULT_SNARED" and self:IsPossibleRoot(aId) then
+				-- self.ccCache = {}
+				-- local newAbility = {["type"] = "root", ["recorded"] = GetFrameTimeMilliseconds(), ["id"] = aId,}
+				-- table.insert(self.ccCache, newAbility)
+				-- if self.SV.debug.ccCache then self.debug:Print("Caching ability "..aName) end
+				-- break
 			end
 		end
 	else return
@@ -155,7 +158,10 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 			self.UI.ApplyIcons()
 			return
 		elseif changeType == EFFECT_RESULT_UPDATED or changeType == EFFECT_RESULT_GAINED or changeType == EFFECT_RESULT_ITERATION_BEGIN or changeType == EFFECT_RESULT_FULL_REFRESH then
-			if self.variables[abilityType] and self.variables[abilityType].tracked and not self:IsPossibleRoot(aId) then
+			if abilityType == ABILITY_TYPE_SNARE then
+				if CCTracker:IsPossibleRoot(aId) then abilityType = "root" end
+			end
+			if self.variables[abilityType] and self.variables[abilityType].tracked then
 				local ending = ((endTime-beginTime~=0) and endTime) or 0
 				local newAbility = {["id"] = aId, ["type"] = abilityType, ["endTime"] = ending*1000}
 				if self.ccCache and self.ccCache[1].type == abilityType then
@@ -164,7 +170,6 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 					if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache") end
 				end
 				local inList, num = self:AIdInList(aId)
-				-- if not self:ResInList(abilityType) then
 				if not inList then
 					self.ccChanged = true
 					table.insert(self.ccActive, newAbility)
@@ -172,29 +177,27 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 					self.ccActive[num].endTime = endTime*1000
 				end
 				if self.SV.debug.ccCache then self.debug:Print("New cc "..eName) end
+			-- elseif self.variables.root.tracked and abilityType == ABILITY_TYPE_SNARE and self:IsPossibleRoot(aId) then
+				-- local ending = ((endTime-beginTime~=0) and endTime) or 0
+				-- local newAbility = {["id"] = aId, ["type"] = "root", ["endTime"] = ending*1000}
+				-- if self.ccCache and self.ccCache[1].type == "root" then
+					-- newAbility.cacheId = self.ccCache[1].id
+					-- self.ccCache = {}
+					-- if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache") end
 				-- end
-			elseif self.variables.root.tracked and abilityType == ABILITY_TYPE_SNARE and self:IsPossibleRoot(aId) then
-				local ending = ((endTime-beginTime~=0) and endTime) or 0
-				local newAbility = {["id"] = aId, ["type"] = "root", ["endTime"] = ending*1000}
-				if self.ccCache and self.ccCache[1].type == "root" then
-					newAbility.cacheId = self.ccCache[1].id
-					self.ccCache = {}
-					if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache") end
-				end
-				local inList, num = self:AIdInList(aId)
+				-- local inList, num = self:AIdInList(aId)
 				-- if not self:ResInList(abilityType) then
-				if not inList then
-					self.ccChanged = true
-					table.insert(self.ccActive, newAbility)
-				else
-					self.ccActive[num].endTime = endTime*1000
-				end
-				if self.SV.debug.ccCache then self.debug:Print("New cc "..eName) end
+				-- if not inList then
+					-- self.ccChanged = true
+					-- table.insert(self.ccActive, newAbility)
+				-- else
+					-- self.ccActive[num].endTime = endTime*1000
+				-- end
+				-- if self.SV.debug.ccCache then self.debug:Print("New cc "..eName) end
 			elseif self.ccCache and self.ccCache[1] and self.ccCache[1].recorded == time and not self.variables[abilityType] then
 				local ending = ((endTime-beginTime~=0) and endTime) or 0
 				local newAbility = {["id"] = aId, ["type"] = self.ccCache[1].type, ["endTime"] = ending*1000, ["cacheId"] = self.ccCache[1].id }
 				local inList, num = self:AIdInList(aId)
-				-- if not self:ResInList(self.ccCache[1][2]) then
 				if not inList then
 					self.ccChanged = true
 					table.insert(self.ccActive, newAbility)
@@ -204,7 +207,6 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				if self.SV.debug.ccCache then self.debug:Print("New cc from cache "..eName) end
 				self.ccCache = {}
 				if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache") end
-				-- end
 			end
 		elseif changeType == EFFECT_RESULT_FADED or changeType == EFFECT_RESULT_ITERATION_END or changeType == EFFECT_RESULT_TRANSFER then
 			for i, entry in ipairs(self.ccActive) do
@@ -222,16 +224,6 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 					self.ccChanged = true
 					if self.SV.debug.enabled then self.debug:Print("deleting entries in cc list") end
 				end
-			-- else
-				-- if not self.currentBuffs then
-					-- for i = 1, GetNumBuffs() do
-						-- local _, _, _, _, _, _, _, _, _, _, aId, _, _ = GetUnitBuffInfo("player", i)
-						-- self.currentBuffs[aId] = true
-					-- end
-				-- end
-				-- if not self.currentBuffs[self.ccActive[i].id] then
-					-- table.remove(self.ccActive, i)
-				-- end
 			end
 		end
 	end
