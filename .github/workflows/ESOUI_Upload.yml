@@ -78,7 +78,7 @@ jobs:
       run: |
         $baseDir = Get-Location
         $changelogPath = "$baseDir/barnysCCTracker/Changelog.txt"
-        $readmePath = "$baseDir/barnysCCTracker/ReadmeOriginal.md"
+        $readmePath = "$baseDir/barnysCCTracker/README.md"
         Write-Host "Changelog Path: $changelogPath" # Debugging-Ausgabe
         Write-Host "Readme Path: $readmePath" # Debugging-Ausgabe
         ./barnysCCTracker/.github/scripts/upload_to_esoui.ps1 `
