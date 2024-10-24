@@ -20,6 +20,11 @@ jobs:
       with:
         path: 'barnysCCTracker'
 
+    - name: Set Test only
+      id: test_only
+      run: |
+        echo "TEST_ONLY=true" >> $GITHUB_ENV
+
     - name: Extract API Version and Addon Version
       id: version_info
       run: |
@@ -45,18 +50,19 @@ jobs:
         echo "$Changelog" >> $GITHUB_ENV
         echo "EOF" >> $GITHUB_ENV
 
-    - name: Extract Addon Description
-      id: description
-      run: |
-        Description=$(cat barnysCCTracker/README.md)
-        echo "DESCRIPTION<<EOF" >> $GITHUB_ENV
-        echo "$Description" >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
+    #- name: Extract Addon Description
+    #  id: description
+    #  run: |
+    #    Description=$(cat barnysCCTracker/README.md)
+    #    echo "DESCRIPTION<<EOF" >> $GITHUB_ENV
+    #    echo "$Description" >> $GITHUB_ENV
+    #    echo "EOF" >> $GITHUB_ENV
 
     - name: Zip Addon Files (excluding .gitattributes)
-      run: 7z a barnysCCTracker.zip barnysCCTracker/* -xr!*.git*
+      run: 7z a ./barnysCCTracker/barnysCCTracker.zip ./barnysCCTracker/* -xr!*.git*
 
     - name: Create GitHub Release
+      if: env.TEST_ONLY == 'false'  # Nur wenn TEST_ONLY false ist
       uses: softprops/action-gh-release@v2
       env:
        GITHUB_TOKEN: ${{ secrets.CREATE_RELEASE_TOKEN }}
@@ -67,14 +73,20 @@ jobs:
         draft: false
         prerelease: false
 
-    - name: Upload Addon to ESOUI
+    - name: Upload Addon to ESOUI with PowerShell
+      shell: pwsh
       run: |
-        curl \
-          -H "x-api-token: ${{ secrets.ESOUI_API_TOKEN }}" \
-          -F "id=3971" \
-          -F "version=${{ env.ADDON_VERSION }}" \
-          -F "updatefile=@./barnysCCTracker.zip" \
-          -F "changelog=\"${{ env.CHANGELOG }}\"" \
-          -F "compatible=${{ env.PATCH_ID }}" \
-          -F "description=\"${{ env.DESCRIPTION }}\"" \
-          https://api.esoui.com/addons/update
+        $baseDir = Get-Location
+        $changelogPath = "$baseDir/barnysCCTracker/Changelog.txt"
+        $readmePath = "$baseDir/barnysCCTracker/ReadmeOriginal.md"
+        Write-Host "Changelog Path: $changelogPath" # Debugging-Ausgabe
+        Write-Host "Readme Path: $readmePath" # Debugging-Ausgabe
+        ./barnysCCTracker/.github/scripts/upload_to_esoui.ps1 `
+          -ApiToken "${{ secrets.ESOUI_API_TOKEN }}" `
+          -AddonId 3971 `
+          -Version "${{ env.ADDON_VERSION }}" `
+          -FilePath "./barnysCCTracker/barnysCCTracker.zip" `
+          -ChangelogFilePath "$changelogPath" `
+          -Compatible "${{ env.PATCH_ID }}" `
+          -ReadmeFilePath "$readmePath" `
+          -TestOnly "${{ env.TEST_ONLY }}"
