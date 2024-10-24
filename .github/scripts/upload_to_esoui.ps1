@@ -1,33 +1,75 @@
-param (
+param(
     [string]$ApiToken,
-    [string]$AddonId,
+    [int]$AddonId,
     [string]$Version,
     [string]$FilePath,
-    [string]$Changelog,
+    [string]$ChangelogFilePath,
     [string]$Compatible,
-    [string]$Description,
-    [bool]$TestOnly = $false # Default-Wert ist false
+    [string]$ReadmeFilePath,
+    [string]$TestOnly
 )
 
-# Wähle die richtige URL basierend auf dem Wert von TestOnly
-if ($TestOnly -eq $true) {
-    $url = "https://api.esoui.com/addons/updatetest"
-} else {
-    $url = "https://api.esoui.com/addons/update"
+    # Debugging-Ausgaben
+    Write-Host "API Token: $ApiToken"
+    Write-Host "AddOn Id: $AddonId"
+    Write-Host "Version: $Version"
+    Write-Host "ZIP File Path: $FilePath"
+    Write-Host "Changelog File Path: $ChangelogFilePath"
+    Write-Host "Compatible: $Compatible"
+    Write-Host "Readme File Path: $ReadmeFilePath"
+    Write-Host "Test: $TestOnly"
+
+function Upload-Addon {
+    param (
+        [string]$ApiToken,
+        [int]$AddonId,
+        [string]$Version,
+        [string]$FilePath,
+        [string]$ChangelogFilePath,
+        [string]$Compatible,
+        [string]$ReadmeFilePath,
+        [string]$TestOnly
+    )
+
+    $url = if ($TestOnly -eq "true") {
+        "https://api.esoui.com/addons/updatetest"
+    } else {
+        "https://api.esoui.com/addons/update"
+    }
+
+    $headers = @{
+        "x-api-token" = $ApiToken
+    }
+
+    Write-Host "ZIP File Path: $FilePath"
+    
+    # Prepare the multipart form data
+    $formData = @{
+        "archive" = "Yes"  # Set to "Yes" or "No" as required
+        "updatefile" = Get-Item $FilePath
+        "id" = $AddonId
+        "title" = ""  # Optional
+        "version" = $Version
+        "changelog" = $ChangelogFilePath
+        "compatible" = $Compatible
+        "description" = $description
+    }
+
+    # Debugging-Ausgaben
+    Write-Host "Request Data: $($formData | Out-String)"
+
+    try {
+        $response = Invoke-RestMethod -Uri $url -Method Post -Headers $headers -Form $formData
+        Write-Host "Response code: $($response.StatusCode)"
+        Write-Host "Response text: $($response.Content)"
+    } catch {
+        Write-Host "An error occurred: $_"
+    }
 }
 
-$headers = @{
-    "x-api-token" = $ApiToken
-}
+# Changelog und Beschreibung aus den Dateien einlesen
+$changelog = Get-Content $ChangelogFilePath
+$description = Get-Content $ReadmeFilePath
 
-$form = @{
-    "id"         = $AddonId
-    "version"    = $Version
-    "updatefile" = Get-Item $FilePath
-    "changelog"  = $Changelog
-    "compatible" = $Compatible
-    "description" = $Description
-}
-
-$response = Invoke-RestMethod -Uri $url -Method Post -Headers $headers -Form $form
-$response | ConvertTo-Json
+# Call the function with parameters
+Upload-Addon -ApiToken $ApiToken -AddonId $AddonId -Version $Version -FilePath $FilePath -changelog $changelog -Compatible $Compatible -description $description -TestOnly $TestOnly
