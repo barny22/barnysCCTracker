@@ -61,6 +61,16 @@ CCTracker.possibleRoots = {126700,1856,5655,5656,5657,8373,8668,10896,14138,1446
 	--------------------------
 	---- Helper functions ----
 	--------------------------
+function CCTracker:CropZOSString(zosString)
+    local _, zosStringDivider = string.find(zosString, "%^")
+    
+    if zosStringDivider then
+        return string.sub(zosString, 1, zosStringDivider - 1)
+    else
+        return zosString
+    end
+end
+
 
 function CCTracker:AIdInList(aId)
 	for i, entry in ipairs(self.ccActive) do

@@ -40,7 +40,7 @@ function CCTracker:Init()
 	
 	self.started = true
 	
-	self.currentCharacterName = GetUnitName("player")
+	self.currentCharacterName = self:CropZOSString(GetUnitName("player"))
 	self.variables = {
 		[32] = {["icon"] = "/esoui/art/icons/ability_debuff_disorient.dds", ["tracked"] = self.SV.settings.tracked.Disoriented, ["res"] = 2340, ["active"] = false, ["name"] = "Disoriented",}, --ABILITY_TYPE_DISORIENT
 		[27] = {["icon"] = "/esoui/art/icons/ability_debuff_fear.dds", ["tracked"] = self.SV.settings.tracked.Fear, ["res"] = 2320, ["active"] = false, ["name"] = "Fear",}, --ABILITY_TYPE_FEAR
@@ -108,12 +108,13 @@ end
 
 function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotType, sName, sType, tName, 
 										tType, hVal, pType, dType, _, 		sUId, 	 tUId,  aId,   _     )
-	if CCTracker:CheckForCCRegister() and tName == self.currentCharacterName then
+	if self:CropZOSString(tName) == self.currentCharacterName then
 		if res == ACTION_RESULT_EFFECT_FADED then
 			for i, check in pairs(self.ccActive) do
 				if check.cacheId and check.cacheId == aId then
 					table.remove(self.ccActive, i)
 					self.UI.ApplyIcons()
+					if self.SV.debug.ccCache then self.debug:Print("Removing ability "..aName) end
 					break
 				end
 			end
