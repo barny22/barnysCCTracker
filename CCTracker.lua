@@ -108,7 +108,7 @@ end
 
 function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotType, sName, sType, tName, 
 										tType, hVal, pType, dType, _, 		sUId, 	 tUId,  aId,   _     )
-	if CCTracker:CheckForCCRegister() and tName == self.currentCharacterName and not err then
+	if CCTracker:CheckForCCRegister() and tName == self.currentCharacterName then
 		if res == ACTION_RESULT_EFFECT_FADED then
 			for i, check in pairs(self.ccActive) do
 				if check.cacheId and check.cacheId == aId then
@@ -157,7 +157,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 			self.ccActive = {}
 			self.UI.ApplyIcons()
 			return
-		elseif changeType == EFFECT_RESULT_UPDATED or changeType == EFFECT_RESULT_GAINED or changeType == EFFECT_RESULT_ITERATION_BEGIN or changeType == EFFECT_RESULT_FULL_REFRESH then
+		elseif changeType == EFFECT_RESULT_GAINED or changeType == EFFECT_RESULT_FULL_REFRESH or changeType == EFFECT_RESULT_ITERATION_BEGIN --[[or changeType == EFFECT_RESULT_UPDATED]] then
 			if abilityType == ABILITY_TYPE_SNARE then
 				if CCTracker:IsPossibleRoot(aId) then abilityType = "root" end
 			end
@@ -208,7 +208,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				self.ccCache = {}
 				if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache") end
 			end
-		elseif changeType == EFFECT_RESULT_FADED or changeType == EFFECT_RESULT_ITERATION_END or changeType == EFFECT_RESULT_TRANSFER then
+		elseif changeType == EFFECT_RESULT_FADED or changeType == EFFECT_RESULT_ITERATION_END --[[or changeType == EFFECT_RESULT_TRANSFER]] then
 			for i, entry in ipairs(self.ccActive) do
 				if entry.id == aId then
 					table.remove(self.ccActive, i)
