@@ -112,7 +112,7 @@ end
 -- end
 
 function CCTracker:IsUnlocked()
-	for _, entry in pairs(self.variables) do
+	for _, entry in pairs(self.ccVariables) do
 		if self.UI.indicator[entry.name].controls.tlw.IsUnlocked() then
 			return true
 		end

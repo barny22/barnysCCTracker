@@ -41,7 +41,7 @@ function CCTracker:Init()
 	self.started = true
 	
 	self.currentCharacterName = self:CropZOSString(GetUnitName("player"))
-	self.variables = {
+	self.ccccVariables = {
 		[32] = {["icon"] = "/esoui/art/icons/ability_debuff_disorient.dds", ["tracked"] = self.SV.settings.tracked.Disoriented, ["res"] = 2340, ["active"] = false, ["name"] = "Disoriented",}, --ABILITY_TYPE_DISORIENT
 		[27] = {["icon"] = "/esoui/art/icons/ability_debuff_fear.dds", ["tracked"] = self.SV.settings.tracked.Fear, ["res"] = 2320, ["active"] = false, ["name"] = "Fear",}, --ABILITY_TYPE_FEAR
 		[17] = {["icon"] = "/esoui/art/icons/ability_debuff_knockback.dds", ["tracked"] = self.SV.settings.tracked.Knockback, ["res"] = 2475, ["active"] = false, ["name"] = "Knockback",}, --ABILITY_TYPE_KNOCKBACK
@@ -55,7 +55,7 @@ function CCTracker:Init()
 	}
 	
 	self.UI = self:BuildUI()
-	-- for _, entry in pairs(self.variables) do self.UI.ApplySize(entry.name) end
+	-- for _, entry in pairs(self.ccVariables) do self.UI.ApplySize(entry.name) end
 	-- self.UI.ApplySize(self.SV.UI.size)
 	self.UI.SetUnlocked(self.SV.settings.unlocked)
 	self.UI.FadeScenes("UI")
@@ -123,7 +123,7 @@ function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotTyp
 		if res == ACTION_RESULT_SNARED then
 			if CCTracker:IsPossibleRoot(aId) then res = 2480 end
 		end
-		for ccType, check in pairs(self.variables) do
+		for ccType, check in pairs(self.ccVariables) do
 			if check.tracked and check.res == res then
 				if self.SV.debug.enabled then self.debug:Print("Caching cc result") end
 				self.ccCache = {}
@@ -162,7 +162,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 			if abilityType == ABILITY_TYPE_SNARE then
 				if CCTracker:IsPossibleRoot(aId) then abilityType = "root" end
 			end
-			if self.variables[abilityType] and self.variables[abilityType].tracked then
+			if self.ccVariables[abilityType] and self.ccVariables[abilityType].tracked then
 				local ending = ((endTime-beginTime~=0) and endTime) or 0
 				local newAbility = {["id"] = aId, ["type"] = abilityType, ["endTime"] = ending*1000}
 				if self.ccCache and self.ccCache[1].type == abilityType then
@@ -178,7 +178,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 					self.ccActive[num].endTime = endTime*1000
 				end
 				if self.SV.debug.ccCache then self.debug:Print("New cc "..eName) end
-			-- elseif self.variables.root.tracked and abilityType == ABILITY_TYPE_SNARE and self:IsPossibleRoot(aId) then
+			-- elseif self.ccVariables.root.tracked and abilityType == ABILITY_TYPE_SNARE and self:IsPossibleRoot(aId) then
 				-- local ending = ((endTime-beginTime~=0) and endTime) or 0
 				-- local newAbility = {["id"] = aId, ["type"] = "root", ["endTime"] = ending*1000}
 				-- if self.ccCache and self.ccCache[1].type == "root" then
@@ -195,7 +195,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 					-- self.ccActive[num].endTime = endTime*1000
 				-- end
 				-- if self.SV.debug.ccCache then self.debug:Print("New cc "..eName) end
-			elseif self.ccCache and self.ccCache[1] and self.ccCache[1].recorded == time and not self.variables[abilityType] then
+			elseif self.ccCache and self.ccCache[1] and self.ccCache[1].recorded == time and not self.ccVariables[abilityType] then
 				local ending = ((endTime-beginTime~=0) and endTime) or 0
 				local newAbility = {["id"] = aId, ["type"] = self.ccCache[1].type, ["endTime"] = ending*1000, ["cacheId"] = self.ccCache[1].id }
 				local inList, num = self:AIdInList(aId)

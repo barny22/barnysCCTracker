@@ -1,7 +1,8 @@
 local LAM = LibAddonMenu2
 local WM = WINDOW_MANAGER
 CCTracker = CCTracker or {}
-CCTracker.menu = {}
+CCTracker.menu = CCTracker.menu or {}
+CCTracker.menu.icons = {}
 
 CCTracker.menu.constants = {
 	{
@@ -90,7 +91,7 @@ local function CreateCCCheckboxes()
 		control.getFunc = function() return CCTracker.SV.settings.tracked[CCTracker.menu.constants[i].Name] end
 		control.setFunc = function(value)
 			CCTracker.SV.settings.tracked[CCTracker.menu.constants[i].Name] = value
-			CCTracker.variables[CCTracker.menu.constants[i].Id].tracked = value
+			CCTracker.ccVariables[CCTracker.menu.constants[i].Id].tracked = value
 			if value and not CCTracker.registered then
 				CCTracker:Register()
 			elseif not value and CCTracker.registered and not CCTracker:CheckForCCRegister() then
@@ -102,7 +103,7 @@ local function CreateCCCheckboxes()
 	end
 end
 
-function CCTracker.CreateIcons(panel)					-- Thanks to DakJaniels who came up with this solution
+function CCTracker.menu.CreateIcons(panel)					-- Thanks to DakJaniels who came up with this solution
     if panel == barnysCCTrackerOptions then
         if CCTracker.SV.debug.enabled then
 			CCTracker.debug:Print("Panel was created.")
@@ -115,7 +116,7 @@ function CCTracker.CreateIcons(panel)					-- Thanks to DakJaniels who came up wi
             CCTracker.menu.icons[i]:SetTexture(CCTracker.menu.constants[i].Icon)
             CCTracker.menu.icons[i]:SetDimensions(CCTracker.menu.constants[i].Dimensions, CCTracker.menu.constants[i].Dimensions)
         end
-        CALLBACK_MANAGER:UnregisterCallback("LAM-PanelControlsCreated", CCTracker.CreateIcons)
+        CALLBACK_MANAGER:UnregisterCallback("LAM-PanelControlsCreated", CCTracker.menu.CreateIcons)
         if CCTracker.SV.debug.enabled then CCTracker.debug:Print("Deleting LAM Callback") end
     else
         return
@@ -123,10 +124,8 @@ function CCTracker.CreateIcons(panel)					-- Thanks to DakJaniels who came up wi
 end
 
 function CCTracker:BuildMenu()
-	self.menu = self.menu or {}
-	self.menu.icons = {}
 	
-	CALLBACK_MANAGER:RegisterCallback("LAM-PanelControlsCreated", self.CreateIcons)
+	CALLBACK_MANAGER:RegisterCallback("LAM-PanelControlsCreated", self.menu.CreateIcons)
 	
 	self.menu.metadata = {
 		type = "panel",
@@ -160,7 +159,7 @@ function CCTracker:BuildMenu()
                     self.SV = ZO_SavedVars:NewCharacterIdSettings(self.name.."SV", 1, nil, self.DEFAULT_SAVED_VARS, GetWorldName())
                     self.SV.global = false
                 end
-                for _, entry in pairs(self.variables) do self.UI.ApplySize(entry.name) end
+                for _, entry in pairs(self.ccVariables) do self.UI.ApplySize(entry.name) end
             end,
         },
 		{	
@@ -206,7 +205,7 @@ function CCTracker:BuildMenu()
 			getFunc = function() return self.SV.UI.size end,
 			setFunc = function(value)
 				self.SV.UI.size = value
-				for _, entry in pairs(self.variables) do
+				for _, entry in pairs(self.ccVariables) do
 					self.SV.UI.sizes[entry.name] = value
 					self.UI.ApplySize(entry.name)
 				end
