@@ -23,7 +23,7 @@ jobs:
     - name: Set Test only
       id: test_only
       run: |
-        echo "TEST_ONLY=false" >> $GITHUB_ENV
+        echo "TEST_ONLY=true" >> $GITHUB_ENV
 
     - name: Extract API Version and Addon Version
       id: version_info
@@ -84,6 +84,7 @@ jobs:
         ./barnysCCTracker/.github/scripts/upload_to_esoui.ps1 `
           -ApiToken "${{ secrets.ESOUI_API_TOKEN }}" `
           -AddonId 3971 `
+          -Title "barny's CC Tracker" `
           -Version "${{ env.ADDON_VERSION }}" `
           -FilePath "./barnysCCTracker/barnysCCTracker.zip" `
           -ChangelogFilePath "$changelogPath" `
