@@ -1,8 +1,8 @@
 ## Title: |c2a52beb|rarnys|c2a52beCC|rTracker
 ## Description: Tracker for CC with icons and stuff
 ## Author: |c2a52beb|rarny
-## Version: 1.0.2
-## AddOnVersion: 010002
+## Version: 1.0.3
+## AddOnVersion: 010003
 ## APIVersion: 101043
 ## SavedVariables: CCTrackerSV
 ## DependsOn: LibAddonMenu-2.0>=35 libAddonKeybinds>=5

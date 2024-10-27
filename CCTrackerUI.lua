@@ -79,23 +79,23 @@ function CCTracker:BuildUI()
 		}
 	end
 	
-	for _, entry in pairs(self.variables) do
+	for _, entry in pairs(self.ccVariables) do
 		indicator[entry.name] = GetIndicator(entry.name, entry.icon)
 		-- indicator[entry.name].tracker = ZO_HUDFadeSceneFragment:New(tlw)
 	end
 	 
 	local function FadeScenes(value)
 		if value == "UI" then
-			for _, entry in pairs(CCTracker.variables) do
+			for _, entry in pairs(CCTracker.ccVariables) do
 				SCENE_MANAGER:GetScene("hud"):AddFragment(CCTracker.UI.indicator[entry.name].controls.fragment)
 				SCENE_MANAGER:GetScene("hudui"):AddFragment(CCTracker.UI.indicator[entry.name].controls.fragment)
 			end
 		elseif value == "Unlocked" then
-			for _, entry in pairs(CCTracker.variables) do
+			for _, entry in pairs(CCTracker.ccVariables) do
 				SCENE_MANAGER:GetScene("gameMenuInGame"):AddFragment(CCTracker.UI.indicator[entry.name].controls.fragment)
 			end
 		elseif value == "Locked" then
-			for _, entry in pairs(CCTracker.variables) do
+			for _, entry in pairs(CCTracker.ccVariables) do
 				SCENE_MANAGER:GetScene("gameMenuInGame"):RemoveFragment(CCTracker.UI.indicator[entry.name].controls.fragment)
 			end
 		end
@@ -106,7 +106,7 @@ function CCTracker:BuildUI()
 	-- end
 	
 	local function SetUnlocked(value)
-		for _, entry in pairs(self.variables) do
+		for _, entry in pairs(self.ccVariables) do
 			if value and entry.tracked then
 				indicator[entry.name].controls.tlw:SetDrawTier(DT_HIGH)
 				indicator[entry.name].controls.tlw:SetMouseEnabled(true)
@@ -143,7 +143,7 @@ function CCTracker:BuildUI()
 
 	local function ApplyIcons()
 		local active = {}
-		for _, entry in pairs(self.variables) do
+		for _, entry in pairs(self.ccVariables) do
 			entry.active = false
 			self.UI.indicator[entry.name].controls.frame:SetHidden(true)
 			self.UI.indicator[entry.name].controls.icon:SetHidden(true)
@@ -151,9 +151,9 @@ function CCTracker:BuildUI()
 		if self.SV.debug.ccCache then self.debug:Print("Done with hiding CC icons") end
 		
 		for _, entry in ipairs(self.ccActive) do
-				self.variables[entry.type].active = true
-				self.UI.indicator[self.variables[entry.type].name].controls.frame:SetHidden(false)
-				self.UI.indicator[self.variables[entry.type].name].controls.icon:SetHidden(false)
+				self.ccVariables[entry.type].active = true
+				self.UI.indicator[self.ccVariables[entry.type].name].controls.frame:SetHidden(false)
+				self.UI.indicator[self.ccVariables[entry.type].name].controls.icon:SetHidden(false)
 			-- end
 		end
 		if self.SV.debug.ccCache then self.debug:Print("CC icons are shown") end
@@ -161,7 +161,7 @@ function CCTracker:BuildUI()
 	end
 	
 	local function ApplyAlpha()
-		for _, entry in pairs(self.variables) do
+		for _, entry in pairs(self.ccVariables) do
 			indicator[entry.name].controls.icon:SetAlpha(self.SV.UI.alpha/100)
 			indicator[entry.name].controls.frame:SetAlpha(self.SV.UI.alpha/100)
 		end
