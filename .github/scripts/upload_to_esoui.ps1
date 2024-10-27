@@ -1,7 +1,7 @@
 param(
     [string]$ApiToken,
     [int]$AddonId,
-    [string]$Title
+    [string]$Title,
     [string]$Version,
     [string]$FilePath,
     [string]$ChangelogFilePath,
