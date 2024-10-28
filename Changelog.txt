@@ -1,5 +1,6 @@
 2024.10.27 v1.0.3
 ! Major fix for the HandleCombatEvents function, since it didn't work correctly
++ API push
 
 2024.10.22 v1.0.2
 ! Minor fixes to code
