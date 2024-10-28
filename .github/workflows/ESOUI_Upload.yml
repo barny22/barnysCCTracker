@@ -59,7 +59,7 @@ jobs:
     #    echo "EOF" >> $GITHUB_ENV
 
     - name: Zip Addon Files (excluding .gitattributes)
-      run: 7z a ./barnysCCTracker/barnysCCTracker.zip ./* -xr!*.git*
+      run: 7z a ./barnysCCTracker/barnysCCTracker.zip * -xr!*.git*
 
     - name: Create GitHub Release
       if: env.TEST_ONLY == 'false'  # Nur wenn TEST_ONLY false ist
