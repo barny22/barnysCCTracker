@@ -6,73 +6,58 @@ CCTracker.menu.icons = {}
 
 CCTracker.menu.constants = {
 	{
+		["Name"] = "Charmed",
+		["Icon"] = "/esoui/art/icons/ability_debuff_disorient.dds",
+		["Id"] = "charm" --2340
+	},
+	{
 		["Name"] = "Disoriented",
 		["Icon"] = "/esoui/art/icons/ability_debuff_disorient.dds",
-		["Dimensions"] = 35,
-		["Offset"] = -25,
 		["Id"] = 32 --2340
 	},
 	{
 		["Name"] = "Fear",
 		["Icon"] = "/esoui/art/icons/ability_debuff_fear.dds",
-		["Dimensions"] = 35,
-		["Offset"] = -25,
 		["Id"] = 27 --2320
 	},
 	{
 		["Name"] = "Knockback",
 		["Icon"] = "/esoui/art/icons/ability_debuff_knockback.dds",
-		["Dimensions"] = 35,
-		["Offset"] = -25,
 		["Id"] =  17 --2475
 	}, 
 	{
 		["Name"] = "Levitating",
 		["Icon"] = "/esoui/art/icons/ability_debuff_levitate.dds",
-		["Dimensions"] = 35,
-		["Offset"] = -25,
 		["Id"] = 48 --2400
 	},
 	{
 		["Name"] = "Offbalance",
 		["Icon"] = "/esoui/art/icons/ability_debuff_offbalance.dds",
-		["Dimensions"] = 35,
-		["Offset"] = -25,
 		["Id"] =  53 --2440
 	},
 	{
 		["Name"] = "Root",
 		["Icon"] = "/esoui/art/icons/ability_debuff_root.dds",
-		["Dimensions"] = 35,
-		["Offset"] = -25,
 		["Id"] = "root" --2480
 	},
 	{
 		["Name"] = "Silence",
 		["Icon"] = "/esoui/art/icons/ability_debuff_silence.dds",
-		["Dimensions"] = 35,
-		["Offset"] = -25,
 		["Id"] = 11 --2010
 	},
 	{
 		["Name"] = "Snare",
 		["Icon"] = "/esoui/art/icons/ability_debuff_snare.dds",
-		["Dimensions"] = 35,
-		["Offset"] = -25,
 		["Id"] = 10 --2025
 	},
 	{
 		["Name"] = "Stagger",
 		["Icon"] = "/esoui/art/icons/ability_debuff_stagger.dds",
-		["Dimensions"] = 35,
-		["Offset"] = -25,
 		["Id"] = 33 --2470
 	},
 	{
 		["Name"] = "Stun",
 		["Icon"] = "/esoui/art/icons/ability_debuff_stun.dds",
-		["Dimensions"] = 35,
-		["Offset"] = -25,
 		["Id"] = 9 --2020
 	},
 }
@@ -112,9 +97,9 @@ function CCTracker.menu.CreateIcons(panel)					-- Thanks to DakJaniels who came 
         for i = 1, #CCTracker.menu.constants do
             local number = CCTracker:CreateMenuIconsPath(CCTracker.menu.constants[i].Name)
             CCTracker.menu.icons[i] = WM:CreateControl(CCTracker.name.."MenuIcon"..i, panel.controlsToRefresh[number].checkbox, CT_TEXTURE)
-            CCTracker.menu.icons[i]:SetAnchor(RIGHT, panel.controlsToRefresh[number].checkbox, LEFT, CCTracker.menu.constants[i].Offset, 0)
+            CCTracker.menu.icons[i]:SetAnchor(RIGHT, panel.controlsToRefresh[number].checkbox, LEFT, -25, 0)
             CCTracker.menu.icons[i]:SetTexture(CCTracker.menu.constants[i].Icon)
-            CCTracker.menu.icons[i]:SetDimensions(CCTracker.menu.constants[i].Dimensions, CCTracker.menu.constants[i].Dimensions)
+            CCTracker.menu.icons[i]:SetDimensions(35, 35)
         end
         CALLBACK_MANAGER:UnregisterCallback("LAM-PanelControlsCreated", CCTracker.menu.CreateIcons)
         if CCTracker.SV.debug.enabled then CCTracker.debug:Print("Deleting LAM Callback") end
