@@ -6,6 +6,7 @@ CCTracker.DEFAULT_SAVED_VARS = {
 	["global"] = true,
 	["UI"] = {
 		["xOffsets"] = {
+			["Charm"] = 500,
 			["Disoriented"] = 0,
 			["Fear"] = 50,
 			["Knockback"] = 100,
@@ -18,6 +19,7 @@ CCTracker.DEFAULT_SAVED_VARS = {
 			["Root"] = 450,
 		},
 		["yOffsets"] = {
+			["Charm"] = 0,
 			["Disoriented"] = 0,
 			["Fear"] = 0,
 			["Knockback"] = 0,
@@ -30,6 +32,7 @@ CCTracker.DEFAULT_SAVED_VARS = {
 			["Root"] = 0,
 		},
 		["sizes"] = {
+			["Charm"] = 50,
 			["Disoriented"] = 50,
 			["Fear"] = 50,
 			["Knockback"] = 50,

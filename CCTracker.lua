@@ -4,7 +4,7 @@ CCTracker = {
 	["version"] = {
 		["patch"] = 1,
 		["major"] = 0,
-		["minor"] = 3,
+		["minor"] = 4,
 	},
 	["menu"] = {},
 	["SV"] = {},
@@ -111,7 +111,13 @@ function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotTyp
 										tType, hVal, pType, dType, _, 		sUId, 	 tUId,  aId,   _     )
 	if self:CropZOSString(tName) == self.currentCharacterName then
 		if res == ACTION_RESULT_EFFECT_FADED then
-			for i, check in pairs(self.ccActive) do
+			if aId == 165424 then																							-- remove stun after using the arsenal to switch specs
+				self.ccActive = {}
+				self.UI.ApplyIcons()
+				if self.SV.debug.ccCache then self.debug:Print("Removing all cc after using arsenal") end
+				return
+			end
+			for i, check in ipairs(self.ccActive) do
 				if check.cacheId and check.cacheId == aId then
 					table.remove(self.ccActive, i)
 					self.UI.ApplyIcons()
@@ -130,7 +136,7 @@ function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotTyp
 				self.ccCache = {}
 				local newAbility = {["type"] = ccType, ["recorded"] = GetFrameTimeMilliseconds(), ["id"] = aId,}
 				table.insert(self.ccCache, newAbility)
-				if self.SV.debug.ccCache then self.debug:Print("Caching ability "..aName) end
+				if self.SV.debug.ccCache then self.debug:Print("Caching ability "..aName.." ID: "..aId) end
 				break
 			-- elseif check.tracked and check.name == "Root" and res == "ACTION_RESULT_SNARED" and self:IsPossibleRoot(aId) then
 				-- self.ccCache = {}
@@ -150,11 +156,9 @@ end
 
 function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,endTime,_,_,_,buffType,abilityType,_,unitName,_,aId,_)
 	--  if self.SV.debug.enabled then self.debug:Print(unitName.." - "..GetUnitName("player")) end
-	local time = GetFrameTimeMilliseconds()
-	if not (unitTag == "player" or unitName == self.currentCharacterName) then
-		return
+	if not (unitTag == "player" or unitName == self.currentCharacterName) then return
 	else
-		-- self.currentBuffs = {}
+		local time = GetFrameTimeMilliseconds()
 		if IsUnitDeadOrReincarnating("player") then
 			self.ccActive = {}
 			self.UI.ApplyIcons()
@@ -168,8 +172,12 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				local newAbility = {["id"] = aId, ["type"] = abilityType, ["endTime"] = ending*1000}
 				if self.ccCache and self.ccCache[1].type == abilityType then
 					newAbility.cacheId = self.ccCache[1].id
-					self.ccCache = {}
+					self.ccCache = nil
 					if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache") end
+				elseif self.ccCache and self.ccCache[1].type == "charm" and self.ccVariables.charm.tracked then
+					newAbility.type = "charm"
+					self.ccCache = nil
+					if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache. Charm was detected") end
 				end
 				local inList, num = self:AIdInList(aId)
 				if not inList then
@@ -207,7 +215,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 					self.ccActive[num].endTime = endTime*1000
 				end
 				if self.SV.debug.ccCache then self.debug:Print("New cc from cache "..eName) end
-				self.ccCache = {}
+				self.ccCache = nil
 				if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache") end
 			end
 		elseif changeType == EFFECT_RESULT_FADED or changeType == EFFECT_RESULT_ITERATION_END --[[or changeType == EFFECT_RESULT_TRANSFER]] then

@@ -6,7 +6,7 @@ CCTracker.menu.icons = {}
 
 CCTracker.menu.constants = {
 	{
-		["Name"] = "Charmed",
+		["Name"] = "Charm",
 		["Icon"] = "/esoui/art/icons/ability_debuff_disorient.dds",
 		["Id"] = "charm" --2340
 	},
