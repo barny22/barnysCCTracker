@@ -10,6 +10,10 @@ CCTracker = {
 	["SV"] = {},
 	["ccActive"] = {},
 	["UI"] = {},
+	["ignore"] = {
+		[202995] = "IA",
+		[203125] = "IA",
+	}
 }
 
 local function OnAddOnLoaded(eventCode, addOnName)
@@ -109,6 +113,10 @@ end
 
 function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotType, sName, sType, tName, 
 										tType, hVal, pType, dType, _, 		sUId, 	 tUId,  aId,   _     )
+	if CCTracker.ignore[aId] then 
+		if self.SV.denig.ccCache then self.debug:Print("Ignored CC in "..CCTracker.ignore[aId]..": "..CCTracker:CropZOSString(aName)) end
+		return
+	end
 	if self:CropZOSString(tName) == self.currentCharacterName then
 		if res == ACTION_RESULT_EFFECT_FADED then
 			if aId == 165424 then																							-- remove stun after using the arsenal to switch specs

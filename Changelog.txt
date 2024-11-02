@@ -1,5 +1,6 @@
 2024.10.29 v1.0.4
-! Ignoring the stun when using arsenal
+! Resetting stun when using arsenal
+! Ignoring stuns in IA when choosing visions/verses
 + Added charm to trackable abilities
 
 2024.10.27 v1.0.3
