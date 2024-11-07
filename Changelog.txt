@@ -2,6 +2,7 @@
 ! Resetting stun when using arsenal
 ! Ignoring stuns in IA when choosing visions/verses
 + Added charm to trackable abilities
++ Minor visual update to menu icons
 
 2024.10.27 v1.0.3
 ! Major fix for the HandleCombatEvents function, since it didn't work correctly

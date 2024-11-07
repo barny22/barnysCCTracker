@@ -7,7 +7,7 @@ CCTracker.menu.icons = {}
 CCTracker.menu.constants = {
 	{
 		["Name"] = "Charm",
-		["Icon"] = "/esoui/art/icons/ability_debuff_disorient.dds",
+		["Icon"] = "/barnysCCTracker/icons/charm.dds",
 		["Id"] = "charm" --2340
 	},
 	{
@@ -77,6 +77,11 @@ local function CreateCCCheckboxes()
 		control.setFunc = function(value)
 			CCTracker.SV.settings.tracked[CCTracker.menu.constants[i].Name] = value
 			CCTracker.ccVariables[CCTracker.menu.constants[i].Id].tracked = value
+			if value then
+				CCTracker.menu.icons[i]:SetDesaturation(0)
+			else
+				CCTracker.menu.icons[i]:SetDesaturation(1)
+			end
 			if value and not CCTracker.registered then
 				CCTracker:Register()
 			elseif not value and CCTracker.registered and not CCTracker:CheckForCCRegister() then
@@ -100,6 +105,11 @@ function CCTracker.menu.CreateIcons(panel)					-- Thanks to DakJaniels who came 
             CCTracker.menu.icons[i]:SetAnchor(RIGHT, panel.controlsToRefresh[number].checkbox, LEFT, -25, 0)
             CCTracker.menu.icons[i]:SetTexture(CCTracker.menu.constants[i].Icon)
             CCTracker.menu.icons[i]:SetDimensions(35, 35)
+			if CCTracker.ccVariables[CCTracker.menu.constants[i].Id].tracked then
+				CCTracker.menu.icons[i]:SetDesaturation(0)
+			else
+				CCTracker.menu.icons[i]:SetDesaturation(1)
+			end
         end
         CALLBACK_MANAGER:UnregisterCallback("LAM-PanelControlsCreated", CCTracker.menu.CreateIcons)
         if CCTracker.SV.debug.enabled then CCTracker.debug:Print("Deleting LAM Callback") end
