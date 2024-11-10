@@ -52,6 +52,7 @@ CCTracker.DEFAULT_SAVED_VARS = {
 		["unlocked"] = true,
 		["sample"] = false,
 	},
+	["ignored"] = {},
 	["debug"] = {
 		["enabled"] = false,
 		["ccCache"] = false,
@@ -113,6 +114,10 @@ end
     -- end
     -- return false -- 'aName' wurde nicht gefunden
 -- end
+	
+	------------
+	---- UI ----
+	------------
 
 function CCTracker:IsUnlocked()
 	for _, entry in pairs(self.ccVariables) do
@@ -122,7 +127,11 @@ function CCTracker:IsUnlocked()
 	end
 	return false
 end
-
+	
+	--------------
+	---- Menu ----
+	--------------
+	
 function CCTracker:CreateMenuIconsPath(ControlName)
 	local number
 	for i, entry in ipairs(barnysCCTrackerOptions.controlsToRefresh) do
@@ -131,6 +140,57 @@ function CCTracker:CreateMenuIconsPath(ControlName)
 		end
 	end
 	return number
+end
+
+function CCTracker:CreateListOfActiveCC()
+	for i in pairs(self.menu.ccList.active) do
+		self.menu.ccList.active.string[i] = nil
+		self.menu.ccList.active.id[i] = nil
+		self.menu.ccList.active.type[i] = nil
+	end
+	for i, entry in ipairs(self.ccActive) do
+		local abilityString = tostring("|t20:20:"..GetAbilityIcon(entry.id).."|t "..self:CropZOSString(GetAbilityName(entry.id))..", "..entry.type)
+		CCTracker.menu.ccList.active.string[i] = abilityString
+		CCTracker.menu.ccList.active.id[i] = entry.id
+		CCTracker.menu.ccList.active.type[i] = entry.type
+	end
+	
+	local panelControls = self.menu.panel.controlsToRefresh
+	for i, entry in ipairs(panelControls) do
+		local control = panelControls[i]
+		if (control.data and control.data.name == "List of current cc abilities") then
+			control:UpdateChoices()
+			control:UpdateValue()
+			break
+		end
+	end
+end
+
+function CCTracker:CreateIgnoredCCList()
+	for i in ipairs(self.menu.ccList.ignored.string) do
+		self.menu.ccList.ignored.string[i] = nil
+	end
+	for i in ipairs(self.menu.ccList.ignored.id) do
+		self.menu.ccList.ignored.id[i] = nil
+	end
+	
+	for id, type in pairs(self.SV.ignored) do
+		local num = #self.menu.ccList.ignored.string + 1
+		local ignoredAbilityString = tostring("|t20:20:"..GetAbilityIcon(id).."|t "..self:CropZOSString(GetAbilityName(id))..", "..type)
+		self.menu.ccList.ignored.string[num] = ignoredAbilityString
+		self.menu.ccList.ignored.id[num] = id
+	end
+	
+	
+	local panelControls = self.menu.panel.controlsToRefresh
+	for i, entry in ipairs(panelControls) do
+		local control = panelControls[i]
+		if (control.data and control.data.name == "List of ignored cc abilities") then
+			control:UpdateChoices()
+			control:UpdateValue()
+			break
+		end
+	end
 end
 
 	---------------

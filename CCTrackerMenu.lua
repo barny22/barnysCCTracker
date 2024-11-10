@@ -122,6 +122,17 @@ function CCTracker:BuildMenu()
 	
 	CALLBACK_MANAGER:RegisterCallback("LAM-PanelControlsCreated", self.menu.CreateIcons)
 	
+	self.menu.ccList = {}
+	self.menu.ccList.active = {
+		["string"] = {},
+		["id"] = {},
+		["type"] = {},
+	}
+	self.menu.ccList.ignored = {
+		["string"] = {},
+		["id"] = {},
+	}
+	
 	self.menu.metadata = {
 		type = "panel",
         name = "barnysCCTracker",
@@ -225,6 +236,132 @@ function CCTracker:BuildMenu()
 			name = "CCs to track",
 		},
 		{
+			type = "divider",
+		},
+		{
+			type = "submenu",
+			name = "CC Ignore List",
+			controls = {
+				{	
+					type = "dropdown",
+					name = "List of current cc abilities",
+					tooltip = "You can use this to look for unwanted abilities, for example if your stun icon doesn't disappear, you can look here which ability causes the stun to be recognized",
+					choices = self.menu.ccList.active.string,	
+					getFunc = function() 
+						for i, entry in ipairs(self.menu.ccList.active.id) do
+							if entry == self.menu.ccList.abilityId then return self.menu.ccList.active.string[i] end
+						end
+					end,
+					setFunc = function(value)
+						for i, entry in ipairs(self.menu.ccList.active.string) do
+							if entry == value then
+								self.menu.ccList.abilityId = self.menu.ccList.active.id[i]
+								self.menu.ccList.abilityType = self.menu.ccList.active.type[i]
+							end
+						end
+						self.menu.ccList.abilityAction = "ignore"
+					end,
+					width = "half",
+				},
+				{	
+					type = "button",
+					name = "Ignore ability",
+					tooltip = "This puts the currently selected ability on an ignore list",
+					disabled = function() return self.menu.ccList.abilityAction ~= "ignore" end,
+					func = function()
+						self.SV.ignored[self.menu.ccList.abilityId] = self.menu.ccList.abilityType
+						self.menu.ccList.abilityAction = nil
+						for i, entry in ipairs(self.ccActive) do
+							if entry.id == self.menu.ccList.abilityId then table.remove(self.ccActive, i) end
+						end
+						self.menu.ccList.abilityId = nil
+						self.menu.ccList.abilityType = nil
+						self:CreateListOfActiveCC()
+						self:CreateIgnoredCCList()
+					end,
+					width = "half",
+				},
+				{	
+					type = "dropdown",
+					name = "List of ignored cc abilities",
+					tooltip = "This is the list of your ignored abilities",
+					choices = self.menu.ccList.ignored.string,		
+					getFunc = function() 
+						for i, entry in ipairs(self.menu.ccList.ignored.id) do
+							if entry == self.menu.ccList.abilityId then return self.menu.ccList.ignored.string[i] end
+						end
+					end,
+					setFunc = function(value)
+						for i, entry in ipairs(self.menu.ccList.ignored.string) do
+							if entry == value then
+								self.menu.ccList.abilityId = self.menu.ccList.ignored.id[i]
+							end
+						end
+						self.menu.ccList.abilityAction = "unignore"
+					end,
+					width = "half",
+				},
+				{	
+					type = "button",
+					name = "Reenable ability",
+					tooltip = "This unignores the currently selected ability",
+					disabled = function() return self.menu.ccList.abilityAction ~= "unignore" end,
+					func = function()
+						self.SV.ignored[self.menu.ccList.abilityId] = nil
+						self.menu.ccList.abilityId = nil
+						self.menu.ccList.abilityType = nil
+						self.menu.ccList.abilityAction = nil
+						self:CreateIgnoredCCList()
+					end,
+					width = "half",
+				},
+				{
+					type = "editbox",
+					name = "Manually add ability id to ignore list",
+					warning = "If you enable debugging, you'll see any CC that is recognized, including its ID",
+					isMultiline = false,
+					getFunc = function() return self.menu.ccList.abilityId end,
+					setFunc = function(value)
+						self.menu.ccList.abilityId = value
+						self.menu.ccList.abilityAction = "manually"
+					end,
+					width = "half",
+				},
+				{
+					type = "editbox",
+					name = "Ability description",
+					tooltip = "If you want, you can add a description to the ability you'd like to ignore",
+					warning = "Only enabled, if you add manually!",
+					disabled = function() return self.menu.ccList.abilityAction ~= "manually" end,
+					isMultiline = false,
+					getFunc = function() return self.menu.ccList.abilityType end,
+					setFunc = function(value)
+						self.menu.ccList.abilityType = value
+					end,
+					width = "half",
+				},
+				{	
+					type = "button",
+					name = "Add ability to ignore list",
+					tooltip = "This adds the current manually selected ID to the ability ignore list",
+					disabled = function() return self.menu.ccList.abilityAction ~= "manually" end,
+					func = function()
+						self.SV.ignored[self.menu.ccList.abilityId] = self.menu.ccList.abilityType or "manually added"
+						if self:AIdInList(self.menu.ccList.abilityId) then
+							local _, i = self:AIdInList(self.menu.ccList.abilityId)
+							table.remove(self.ccActive, i)
+							self.UI.ApplyIcons()
+							if self.SV.debug.ignoreList then self.debug:Print("Manually removed currrently active CC ability ID: "..self.menu.ccList.abilityId) end
+						end
+						self:CreateIgnoredCCList()
+						self.menu.ccList.abilityId = nil
+						self.menu.ccList.abilityType = nil
+						self.menu.ccList.abilityAction = nil
+					end,
+				},
+			},
+		},
+		{
 			type = "header",
 			name = "Debug section",
 		},
@@ -264,9 +401,22 @@ function CCTracker:BuildMenu()
 			end,
 			width = "half",
 		},
+		{	
+			type = "checkbox",
+			name = "Debug ignore list detection",
+			disabled = function() return not self.SV.debug.enabled end,
+			getFunc = function() return self.SV.debug.ignoreList end,
+			setFunc = function(value)
+				self.SV.debug.ignoreList = value
+				-- self.log = value
+			end,
+			width = "half",
+		},
 	}
 	
 	CreateCCCheckboxes()
 	self.menu.panel = LAM:RegisterAddonPanel(self.name.."Options", self.menu.metadata)
     LAM:RegisterOptionControls(self.name.."Options", self.menu.options)
+	
+	self:CreateIgnoredCCList()
 end

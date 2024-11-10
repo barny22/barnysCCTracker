@@ -114,8 +114,11 @@ end
 function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotType, sName, sType, tName, 
 										tType, hVal, pType, dType, _, 		sUId, 	 tUId,  aId,   _     )
 	if CCTracker.ignore[aId] then 
-		if self.SV.denig.ccCache then self.debug:Print("Ignored CC in "..CCTracker.ignore[aId]..": "..CCTracker:CropZOSString(aName)) end
+		if self.SV.debug.ccCache then self.debug:Print("Ignored CC in "..CCTracker.ignore[aId]..": "..CCTracker:CropZOSString(aName)) end
 		return
+	elseif CCTracker.SV.ignored[aId] then
+		if self.SV.debug.ignoreList then self.debug:Print("Ignored CC from ignore-list "..aId..": "..CCTracker:CropZOSString(aName)) end
+		return		
 	end
 	if self:CropZOSString(tName) == self.currentCharacterName then
 		if res == ACTION_RESULT_EFFECT_FADED then
@@ -140,7 +143,7 @@ function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotTyp
 		end
 		for ccType, check in pairs(self.ccVariables) do
 			if check.tracked and check.res == res then
-				if self.SV.debug.enabled then self.debug:Print("Caching cc result") end
+				if self.SV.debug.ccCache then self.debug:Print("Caching cc result") end
 				self.ccCache = {}
 				local newAbility = {["type"] = ccType, ["recorded"] = GetFrameTimeMilliseconds(), ["id"] = aId,}
 				table.insert(self.ccCache, newAbility)
@@ -164,7 +167,11 @@ end
 
 function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,endTime,_,_,_,buffType,abilityType,_,unitName,_,aId,_)
 	--  if self.SV.debug.enabled then self.debug:Print(unitName.." - "..GetUnitName("player")) end
-	if not (unitTag == "player" or unitName == self.currentCharacterName) then return
+	if not (unitTag == "player" or unitName == self.currentCharacterName) then
+		return
+	elseif CCTracker.SV.ignored[aId] then
+		if self.SV.debug.ignoreList then self.debug:Print("Ignored CC from ignore-list "..aId..": "..CCTracker:CropZOSString(aName)) end
+		return	
 	else
 		local time = GetFrameTimeMilliseconds()
 		if IsUnitDeadOrReincarnating("player") then
@@ -194,7 +201,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				else
 					self.ccActive[num].endTime = endTime*1000
 				end
-				if self.SV.debug.ccCache then self.debug:Print("New cc "..eName) end
+				if self.SV.debug.enabled then self.debug:Print("New cc "..eName.." - ID: "..newAbility.id) end
 			-- elseif self.ccVariables.root.tracked and abilityType == ABILITY_TYPE_SNARE and self:IsPossibleRoot(aId) then
 				-- local ending = ((endTime-beginTime~=0) and endTime) or 0
 				-- local newAbility = {["id"] = aId, ["type"] = "root", ["endTime"] = ending*1000}
@@ -222,7 +229,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				else
 					self.ccActive[num].endTime = endTime*1000
 				end
-				if self.SV.debug.ccCache then self.debug:Print("New cc from cache "..eName) end
+				if self.SV.debug.enabled then self.debug:Print("New cc from cache "..eName.." - ID: "..newAbility.cacheId) end
 				self.ccCache = nil
 				if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache") end
 			end
@@ -240,10 +247,13 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				if self.ccActive[i].endTime < time then
 					table.remove(self.ccActive, i)
 					self.ccChanged = true
-					if self.SV.debug.enabled then self.debug:Print("deleting entries in cc list") end
+					-- if self.SV.debug.enabled then self.debug:Print("deleting entries in cc list") end
 				end
 			end
 		end
 	end
-	if self.ccChanged then self.UI.ApplyIcons() end
+	if self.ccChanged then 
+		self.UI.ApplyIcons()
+		self:CreateListOfActiveCC()
+	end
 end
