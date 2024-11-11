@@ -51,12 +51,14 @@ CCTracker.DEFAULT_SAVED_VARS = {
 		["tracked"] = {},
 		["unlocked"] = true,
 		["sample"] = false,
+		["ccIgnoreLinks"] = false,
 	},
 	["ignored"] = {},
 	["debug"] = {
 		["enabled"] = false,
 		["ccCache"] = false,
 		["roots"] = false,
+		["ignoreList"] = false,
 	},
 }
 
@@ -132,7 +134,7 @@ end
 	---- Menu ----
 	--------------
 	
-function CCTracker:CreateMenuIconsPath(ControlName)
+function CCTracker.menu.CreateMenuIconsPath(ControlName)
 	local number
 	for i, entry in ipairs(barnysCCTrackerOptions.controlsToRefresh) do
 		if ControlName == entry.data.name then
@@ -142,20 +144,44 @@ function CCTracker:CreateMenuIconsPath(ControlName)
 	return number
 end
 
-function CCTracker:CreateListOfActiveCC()
-	for i in pairs(self.menu.ccList.active) do
-		self.menu.ccList.active.string[i] = nil
-		self.menu.ccList.active.id[i] = nil
-		self.menu.ccList.active.type[i] = nil
+function CCTracker.menu.UpdateLists()
+	CCTracker.menu.CreateListOfActiveCC()
+	CCTracker.menu.CreateIgnoredCCList()
+end
+
+local function CountTableLength(table)
+	local count = 0
+	for _ in pairs(table) do
+		count = count + 1
 	end
-	for i, entry in ipairs(self.ccActive) do
-		local abilityString = tostring("|t20:20:"..GetAbilityIcon(entry.id).."|t "..self:CropZOSString(GetAbilityName(entry.id))..", "..entry.type)
-		CCTracker.menu.ccList.active.string[i] = abilityString
-		CCTracker.menu.ccList.active.id[i] = entry.id
-		CCTracker.menu.ccList.active.type[i] = entry.type
+	return count
+end
+
+function CCTracker.menu.CreateListOfActiveCC()
+	for i in pairs(CCTracker.menu.ccList.active) do
+		CCTracker.menu.ccList.active.string[i] = nil
+		CCTracker.menu.ccList.active.id[i] = nil
+		CCTracker.menu.ccList.active.type[i] = nil
 	end
 	
-	local panelControls = self.menu.panel.controlsToRefresh
+	if CountTableLength(CCTracker.ccActive) ~= 0 then
+		for i, entry in ipairs(CCTracker.ccActive) do
+			local abilityString = tostring("|t20:20:"..GetAbilityIcon(entry.id).."|t "..CCTracker:CropZOSString(GetAbilityName(entry.id))..", "..self.ccVariables[entry.type].name)
+			CCTracker.menu.ccList.active.string[i] = abilityString
+			if entry.cacheId then
+				CCTracker.menu.ccList.active.id[i] = entry.cacheId
+			else
+				CCTracker.menu.ccList.active.id[i] = entry.id
+			end
+			CCTracker.menu.ccList.active.type[i] = self.ccVariables[entry.type].name
+		end
+	else
+		CCTracker.menu.ccList.active.string[1] = "No cc active"
+		CCTracker.menu.ccList.active.id[1] = 0
+		CCTracker.menu.ccList.active.type[1] = "-"
+	end
+	
+	local panelControls = CCTracker.menu.panel.controlsToRefresh
 	for i, entry in ipairs(panelControls) do
 		local control = panelControls[i]
 		if (control.data and control.data.name == "List of current cc abilities") then
@@ -166,23 +192,29 @@ function CCTracker:CreateListOfActiveCC()
 	end
 end
 
-function CCTracker:CreateIgnoredCCList()
-	for i in ipairs(self.menu.ccList.ignored.string) do
-		self.menu.ccList.ignored.string[i] = nil
+function CCTracker.menu.CreateIgnoredCCList()
+	for i in ipairs(CCTracker.menu.ccList.ignored.string) do
+		CCTracker.menu.ccList.ignored.string[i] = nil
 	end
-	for i in ipairs(self.menu.ccList.ignored.id) do
-		self.menu.ccList.ignored.id[i] = nil
-	end
-	
-	for id, type in pairs(self.SV.ignored) do
-		local num = #self.menu.ccList.ignored.string + 1
-		local ignoredAbilityString = tostring("|t20:20:"..GetAbilityIcon(id).."|t "..self:CropZOSString(GetAbilityName(id))..", "..type)
-		self.menu.ccList.ignored.string[num] = ignoredAbilityString
-		self.menu.ccList.ignored.id[num] = id
+	for i in ipairs(CCTracker.menu.ccList.ignored.id) do
+		CCTracker.menu.ccList.ignored.id[i] = nil
 	end
 	
+	if CountTableLength(CCTracker.SV.ignored) ~= 0 then
+		for id, type in pairs(CCTracker.SV.ignored) do
+			local num = #CCTracker.menu.ccList.ignored.string + 1
+			local ignoredAbilityString = tostring("|t20:20:"..GetAbilityIcon(id).."|t "..CCTracker:CropZOSString(GetAbilityName(id))..", "..type)
+			CCTracker.menu.ccList.ignored.string[num] = ignoredAbilityString
+			CCTracker.menu.ccList.ignored.id[num] = id
+		end
+	else
+		-- CCTracker.debug:Print("No ignored abilities")
+		CCTracker.menu.ccList.ignored.string[1] = "No ignored abilities"
+		CCTracker.menu.ccList.ignored.id[1] = 0
+	end
 	
-	local panelControls = self.menu.panel.controlsToRefresh
+	
+	local panelControls = CCTracker.menu.panel.controlsToRefresh
 	for i, entry in ipairs(panelControls) do
 		local control = panelControls[i]
 		if (control.data and control.data.name == "List of ignored cc abilities") then
@@ -191,6 +223,39 @@ function CCTracker:CreateIgnoredCCList()
 			break
 		end
 	end
+end
+
+	----------------------
+	---- Ignore Links ----
+	----------------------
+
+function CCTracker:HandleIgnoreLinks(link, button, text, color, linkType, name, id, zone)
+    if linkType ~= "CC_ABILITY_IGNORE_LINK" then
+		-- CCTracker.debug:Print("Not my kind of link")
+        return
+    end
+	local aId = tonumber(id)
+    if button then
+		if CCTracker.SV.ignored[aId] then 
+			CCTracker.debug:Print("Ability is already ignored")
+			return true -- link has been handled
+		end
+		CCTracker.SV.ignored[aId] = tostring(zone.." - added manually")
+		CCTracker.debug:Print("CC ability "..name.." will be ignored in the future.")
+		for i, entry in ipairs(CCTracker.ccActive) do
+			if entry.id == aId or (entry.cacheId and entry.cacheId == aId) then
+				table.remove(CCTracker.ccActive, i)
+			end
+		end
+		CCTracker.UI.ApplyIcons()
+		CCTracker.menu.UpdateLists()
+    end
+    return true -- link has been handled
+end
+
+function CCTracker:InitLinkHandler()
+    LINK_HANDLER:RegisterCallback(LINK_HANDLER.LINK_CLICKED_EVENT, CCTracker.HandleIgnoreLinks, self)
+    LINK_HANDLER:RegisterCallback(LINK_HANDLER.LINK_MOUSE_UP_EVENT, CCTracker.HandleIgnoreLinks, self)
 end
 
 	---------------

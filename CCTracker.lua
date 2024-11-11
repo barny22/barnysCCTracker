@@ -40,13 +40,21 @@ ZO_CreateStringId("SI_BINDING_NAME_CCTRACKER_RESET", "Reset CCTracker")
 
 function CCTracker:Init()
 	if self.started then return end
-	if LibChatMessage then CCTracker.debug = LibChatMessage("barnysCCTracker", "BCC") else self:SetAllDebugFalse() end
+	if LibChatMessage then
+		CCTracker.debug = LibChatMessage("|c2a52beb|rarnys|c2a52beCC|rTracker", "|c2a52beBCC|r")
+		LibChatMessage:RegisterCustomChatLink("CC_ABILITY_IGNORE_LINK", function(linkStyle, linkType, name, id, zone, displayText)
+			return ZO_LinkHandler_CreateLinkWithBrackets(displayText, nil, "CC_ABILITY_IGNORE_LINK", name, id, zone)
+		end)
+		CCTracker:InitLinkHandler()
+	else 
+		self:SetAllDebugFalse()
+	end
 	
 	self.started = true
 	
 	self.currentCharacterName = self:CropZOSString(GetUnitName("player"))
 	self.ccVariables = {
-		["charm"] = {["icon"] = "/barnysCCTracker/icons/charm.dds", ["tracked"] = self.SV.settings.tracked.Charm, ["res"] = 3510, ["active"] = false, ["name"] = "Charm",}, --ACTION_RESULT_CHARMED
+		["charm"] = {["icon"] = "/esoui/art/icons/ability_u34_sea_witch_mindcontrol.dds", ["tracked"] = self.SV.settings.tracked.Charm, ["res"] = 3510, ["active"] = false, ["name"] = "Charm",}, --ACTION_RESULT_CHARMED
 		[32] = {["icon"] = "/esoui/art/icons/ability_debuff_disorient.dds", ["tracked"] = self.SV.settings.tracked.Disoriented, ["res"] = 2340, ["active"] = false, ["name"] = "Disoriented",}, --ABILITY_TYPE_DISORIENT
 		[27] = {["icon"] = "/esoui/art/icons/ability_debuff_fear.dds", ["tracked"] = self.SV.settings.tracked.Fear, ["res"] = 2320, ["active"] = false, ["name"] = "Fear",}, --ABILITY_TYPE_FEAR
 		[17] = {["icon"] = "/esoui/art/icons/ability_debuff_knockback.dds", ["tracked"] = self.SV.settings.tracked.Knockback, ["res"] = 2475, ["active"] = false, ["name"] = "Knockback",}, --ABILITY_TYPE_KNOCKBACK
@@ -202,6 +210,14 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 					self.ccActive[num].endTime = endTime*1000
 				end
 				if self.SV.debug.enabled then self.debug:Print("New cc "..eName.." - ID: "..newAbility.id) end
+				--------------------------
+				-- IGNORE CC CHAT LINKS --
+				--------------------------
+				if self.SV.settings.ccIgnoreLinks then
+					self.debug:Print("New cc ability detected "..self:CropZOSString(eName))
+					self.debug:Print("Click |c2a52be|H1:CC_ABILITY_IGNORE_LINK:"..self:CropZOSString(eName)..":"..newAbility.id..":"..self:CropZOSString(GetUnitZone('player')).."|h[here]|h|r to ignore it in the future,")
+					self.debug:Print("or ignore the ID: "..newAbility.id.." manually in the |c2a52be/bcc|r menu")
+				end
 			-- elseif self.ccVariables.root.tracked and abilityType == ABILITY_TYPE_SNARE and self:IsPossibleRoot(aId) then
 				-- local ending = ((endTime-beginTime~=0) and endTime) or 0
 				-- local newAbility = {["id"] = aId, ["type"] = "root", ["endTime"] = ending*1000}
@@ -230,6 +246,14 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 					self.ccActive[num].endTime = endTime*1000
 				end
 				if self.SV.debug.enabled then self.debug:Print("New cc from cache "..eName.." - ID: "..newAbility.cacheId) end
+				--------------------------
+				-- IGNORE CC CHAT LINKS --
+				--------------------------
+				if self.SV.settings.ccIgnoreLinks then
+					self.debug:Print("New cc ability detected "..self:CropZOSString(eName))
+					self.debug:Print("Click |c2a52be|H1:CC_ABILITY_IGNORE_LINK:"..self:CropZOSString(eName)..":"..newAbility.cacheId..":"..self:CropZOSString(GetUnitZone('player')).."|h[here]|h|r to ignore it in the future,")
+					self.debug:Print("or ignore the ID: "..newAbility.cacheId.." manually in the |c2a52be/bcc|r menu")
+				end
 				self.ccCache = nil
 				if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache") end
 			end
@@ -254,6 +278,5 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 	end
 	if self.ccChanged then 
 		self.UI.ApplyIcons()
-		self:CreateListOfActiveCC()
 	end
 end

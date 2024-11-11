@@ -7,7 +7,7 @@ CCTracker.menu.icons = {}
 CCTracker.menu.constants = {
 	{
 		["Name"] = "Charm",
-		["Icon"] = "/barnysCCTracker/icons/charm.dds",
+		["Icon"] = "/esoui/art/icons/ability_u34_sea_witch_mindcontrol.dds",
 		["Id"] = "charm" --2340
 	},
 	{
@@ -94,33 +94,35 @@ local function CreateCCCheckboxes()
 end
 
 function CCTracker.menu.CreateIcons(panel)					-- Thanks to DakJaniels who came up with this solution
-    if panel == barnysCCTrackerOptions then
-        if CCTracker.SV.debug.enabled then
-			CCTracker.debug:Print("Panel was created.")
-			if CCTracker.menu.icons[1] then CCTracker.debug:Print("Menu Icons seem to have been initialized before") else CCTracker.debug:Print("Menu Icons have not been initialized yet") end
+	if CCTracker.SV.debug.enabled then
+		CCTracker.debug:Print("Panel was created.")
+		if CCTracker.menu.icons[1] then CCTracker.debug:Print("Menu Icons seem to have been initialized before") else CCTracker.debug:Print("Menu Icons have not been initialized yet") end
+	end
+	for i = 1, #CCTracker.menu.constants do
+		local number = CCTracker.menu.CreateMenuIconsPath(CCTracker.menu.constants[i].Name)
+		CCTracker.menu.icons[i] = WM:CreateControl(CCTracker.name.."MenuIcon"..i, panel.controlsToRefresh[number].checkbox, CT_TEXTURE)
+		CCTracker.menu.icons[i]:SetAnchor(RIGHT, panel.controlsToRefresh[number].checkbox, LEFT, -25, 0)
+		CCTracker.menu.icons[i]:SetTexture(CCTracker.menu.constants[i].Icon)
+		CCTracker.menu.icons[i]:SetDimensions(35, 35)
+		if CCTracker.ccVariables[CCTracker.menu.constants[i].Id].tracked then
+			CCTracker.menu.icons[i]:SetDesaturation(0)
+		else
+			CCTracker.menu.icons[i]:SetDesaturation(1)
 		end
-        for i = 1, #CCTracker.menu.constants do
-            local number = CCTracker:CreateMenuIconsPath(CCTracker.menu.constants[i].Name)
-            CCTracker.menu.icons[i] = WM:CreateControl(CCTracker.name.."MenuIcon"..i, panel.controlsToRefresh[number].checkbox, CT_TEXTURE)
-            CCTracker.menu.icons[i]:SetAnchor(RIGHT, panel.controlsToRefresh[number].checkbox, LEFT, -25, 0)
-            CCTracker.menu.icons[i]:SetTexture(CCTracker.menu.constants[i].Icon)
-            CCTracker.menu.icons[i]:SetDimensions(35, 35)
-			if CCTracker.ccVariables[CCTracker.menu.constants[i].Id].tracked then
-				CCTracker.menu.icons[i]:SetDesaturation(0)
-			else
-				CCTracker.menu.icons[i]:SetDesaturation(1)
-			end
-        end
-        CALLBACK_MANAGER:UnregisterCallback("LAM-PanelControlsCreated", CCTracker.menu.CreateIcons)
-        if CCTracker.SV.debug.enabled then CCTracker.debug:Print("Deleting LAM Callback") end
-    else
-        return
-    end
+	end
+	CALLBACK_MANAGER:UnregisterCallback("LAM-PanelControlsCreated", CCTracker.menu.CreateIcons)
+	if CCTracker.SV.debug.enabled then CCTracker.debug:Print("Deleting LAM Callback") end
 end
 
 function CCTracker:BuildMenu()
 	
-	CALLBACK_MANAGER:RegisterCallback("LAM-PanelControlsCreated", self.menu.CreateIcons)
+	CALLBACK_MANAGER:RegisterCallback("LAM-PanelControlsCreated", function(panel)
+		if panel == barnysCCTrackerOptions then self.menu.CreateIcons(panel) end
+	end)
+	CALLBACK_MANAGER:RegisterCallback("LAM-PanelOpened", function(panel)
+		if panel ~= barnysCCTrackerOptions then return end
+		self.menu.UpdateLists()
+	end)
 	
 	self.menu.ccList = {}
 	self.menu.ccList.active = {
@@ -247,19 +249,25 @@ function CCTracker:BuildMenu()
 					name = "List of current cc abilities",
 					tooltip = "You can use this to look for unwanted abilities, for example if your stun icon doesn't disappear, you can look here which ability causes the stun to be recognized",
 					choices = self.menu.ccList.active.string,	
-					getFunc = function() 
-						for i, entry in ipairs(self.menu.ccList.active.id) do
-							if entry == self.menu.ccList.abilityId then return self.menu.ccList.active.string[i] end
+					getFunc = function()
+						if self.menu.ccList.active.string[1] == "No cc active" then
+							return self.menu.ccList.active.string[1]
+						else
+							for i, entry in ipairs(self.menu.ccList.active.id) do
+								if entry == self.menu.ccList.abilityId then return self.menu.ccList.active.string[i] end
+							end
 						end
 					end,
 					setFunc = function(value)
-						for i, entry in ipairs(self.menu.ccList.active.string) do
-							if entry == value then
-								self.menu.ccList.abilityId = self.menu.ccList.active.id[i]
-								self.menu.ccList.abilityType = self.menu.ccList.active.type[i]
+						if value ~= "No cc active" then
+							for i, entry in ipairs(self.menu.ccList.active.string) do
+								if entry == value then
+									self.menu.ccList.abilityId = self.menu.ccList.active.id[i]
+									self.menu.ccList.abilityType = self.menu.ccList.active.type[i]
+								end
 							end
+							self.menu.ccList.abilityAction = "ignore"
 						end
-						self.menu.ccList.abilityAction = "ignore"
 					end,
 					width = "half",
 				},
@@ -276,8 +284,8 @@ function CCTracker:BuildMenu()
 						end
 						self.menu.ccList.abilityId = nil
 						self.menu.ccList.abilityType = nil
-						self:CreateListOfActiveCC()
-						self:CreateIgnoredCCList()
+						self.menu.UpdateLists()
+						self.UI.ApplyIcons()
 					end,
 					width = "half",
 				},
@@ -286,18 +294,24 @@ function CCTracker:BuildMenu()
 					name = "List of ignored cc abilities",
 					tooltip = "This is the list of your ignored abilities",
 					choices = self.menu.ccList.ignored.string,		
-					getFunc = function() 
-						for i, entry in ipairs(self.menu.ccList.ignored.id) do
-							if entry == self.menu.ccList.abilityId then return self.menu.ccList.ignored.string[i] end
+					getFunc = function()
+						if self.menu.ccList.ignored.string[1] == "No ignored abilities" then
+							return self.menu.ccList.ignored.string[1]
+						else
+							for i, entry in ipairs(self.menu.ccList.ignored.id) do
+								if entry == self.menu.ccList.abilityId then return self.menu.ccList.ignored.string[i] end
+							end
 						end
 					end,
 					setFunc = function(value)
-						for i, entry in ipairs(self.menu.ccList.ignored.string) do
-							if entry == value then
-								self.menu.ccList.abilityId = self.menu.ccList.ignored.id[i]
+						if value ~= "No ignored abilities" then
+							for i, entry in ipairs(self.menu.ccList.ignored.string) do
+								if entry == value then
+									self.menu.ccList.abilityId = self.menu.ccList.ignored.id[i]
+								end
 							end
+							self.menu.ccList.abilityAction = "unignore"
 						end
-						self.menu.ccList.abilityAction = "unignore"
 					end,
 					width = "half",
 				},
@@ -311,7 +325,7 @@ function CCTracker:BuildMenu()
 						self.menu.ccList.abilityId = nil
 						self.menu.ccList.abilityType = nil
 						self.menu.ccList.abilityAction = nil
-						self:CreateIgnoredCCList()
+						self.menu.UpdateLists()
 					end,
 					width = "half",
 				},
@@ -353,10 +367,22 @@ function CCTracker:BuildMenu()
 							self.UI.ApplyIcons()
 							if self.SV.debug.ignoreList then self.debug:Print("Manually removed currrently active CC ability ID: "..self.menu.ccList.abilityId) end
 						end
-						self:CreateIgnoredCCList()
 						self.menu.ccList.abilityId = nil
 						self.menu.ccList.abilityType = nil
 						self.menu.ccList.abilityAction = nil
+						self.menu.UpdateLists()
+						self.UI.ApplyIcons()
+					end,
+				},
+				{	
+					type = "checkbox",
+					name = "Enable chat links",
+					tooltip = "This enables clickable links in chat, that let you ignore the linked CC ability",
+					warning = "To use this you need to have LibChatMessage installed!",
+					disabled = function() return not self.debug end,
+					getFunc = function() return self.SV.settings.ccIgnoreLinks end,
+					setFunc = function(value)
+						self.SV.settings.ccIgnoreLinks = value
 					end,
 				},
 			},
@@ -379,6 +405,9 @@ function CCTracker:BuildMenu()
                 -- self.log = value
             end
         },
+		{ 
+			type = "divider"
+		},
 		{	
 			type = "checkbox",
 			name = "Debug ccCache",
@@ -417,6 +446,4 @@ function CCTracker:BuildMenu()
 	CreateCCCheckboxes()
 	self.menu.panel = LAM:RegisterAddonPanel(self.name.."Options", self.menu.metadata)
     LAM:RegisterOptionControls(self.name.."Options", self.menu.options)
-	
-	self:CreateIgnoredCCList()
 end
