@@ -89,7 +89,7 @@ local function CreateCCCheckboxes()
 			end
 			if CCTracker.SV.settings.unlocked then CCTracker.UI.SetUnlocked(true) end
 		end
-		table.insert(CCTracker.menu.options, position+i, control)
+		table.insert(CCTracker.menu.options[position].controls, control)
 	end
 end
 
@@ -170,80 +170,98 @@ function CCTracker:BuildMenu()
                 for _, entry in pairs(self.ccVariables) do self.UI.ApplySize(entry.name) end
             end,
         },
-		{	
-			type = "checkbox",
-			name = "Unlock CCTracker",
-			tooltip = "Reposition and resize icons by dragging the edges or the center.",
-			disabled = function() return self.SV.settings.sample end,
-			-- width = "half",
-			getFunc = function() return self.SV.settings.unlocked end,
-			setFunc = function(value) self.UI.SetUnlocked(value) end,
-		},
-		{	
-			type = "checkbox",
-			name = "Show sample",
-			tooltip = "Gives you a sample icon so you can see the changes you're making, when adjusting size or alpha.",
-			warning = "Only enabled in locked mode. This also disables unlocked mode.",
-			disabled = function() return self.SV.settings.unlocked end,
-			-- width = "half",
-			getFunc = function() return self.SV.settings.sample end,
-			setFunc = function(value)
-				self.SV.settings.sample = value
-				self.UI.indicator.Stun.controls.tlw:ClearAnchors()
-				self.UI.indicator.Stun.controls.tlw:SetHidden(not value)
-				self.UI.indicator.Stun.controls.icon:SetHidden(not value)
-				self.UI.indicator.Stun.controls.frame:SetHidden(not value)
-				if value then
-					self.UI.indicator.Stun.controls.tlw:SetAnchor(RIGHT, GuiRoot, RIGHT, -GuiRoot:GetWidth()/8, 0)
-					self.UI.FadeScenes("Unlocked")
-				else
-					self.UI.indicator.Stun.controls.tlw:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, self.SV.UI.xOffsets.Stun, self.SV.UI.yOffsets.Stun)
-					self.UI.FadeScenes("Locked")
-				end
-			end,
+		{
+			type = "submenu",
+			name = "UI",
+			controls = {
+				{	
+					type = "checkbox",
+					name = "Unlock CCTracker",
+					tooltip = "Reposition and resize icons by dragging the edges or the center.",
+					disabled = function() return self.SV.settings.sample end,
+					-- width = "half",
+					getFunc = function() return self.SV.settings.unlocked end,
+					setFunc = function(value) self.UI.SetUnlocked(value) end,
+				},
+				{	
+					type = "checkbox",
+					name = "Show sample",
+					tooltip = "Gives you a sample icon so you can see the changes you're making, when adjusting size or alpha.",
+					warning = "Only enabled in locked mode. This also disables unlocked mode.",
+					disabled = function() return self.SV.settings.unlocked end,
+					-- width = "half",
+					getFunc = function() return self.SV.settings.sample end,
+					setFunc = function(value)
+						self.SV.settings.sample = value
+						self.UI.indicator.Stun.controls.tlw:ClearAnchors()
+						self.UI.indicator.Stun.controls.tlw:SetHidden(not value)
+						self.UI.indicator.Stun.controls.icon:SetHidden(not value)
+						self.UI.indicator.Stun.controls.frame:SetHidden(not value)
+						if value then
+							self.UI.indicator.Stun.controls.tlw:SetAnchor(RIGHT, GuiRoot, RIGHT, -GuiRoot:GetWidth()/8, 0)
+							self.UI.FadeScenes("Unlocked")
+						else
+							self.UI.indicator.Stun.controls.tlw:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, self.SV.UI.xOffsets.Stun, self.SV.UI.yOffsets.Stun)
+							self.UI.FadeScenes("Locked")
+						end
+					end,
+				},
+				{
+					type = "slider",
+					name = "Icon size",
+					warning = "If you change this ALL icons are being resized to the given size! ALL individual sizes will be overwritten!",
+					default = 50,
+					min = 20,
+					max = 200,
+					step = 1,
+					getFunc = function() return self.SV.UI.size end,
+					setFunc = function(value)
+						self.SV.UI.size = value
+						for _, entry in pairs(self.ccVariables) do
+							self.SV.UI.sizes[entry.name] = value
+							self.UI.ApplySize(entry.name)
+						end
+					end,
+				},
+				{
+					type = "slider",
+					name = "Icon alpha",
+					tooltip = "The CC icons are too prominent for you? Simply adjust alpha with this slider to make them disappear.",
+					default = 100,
+					min = 0,
+					max = 100,
+					step = 1,
+					getFunc = function() return self.SV.UI.alpha end,
+					setFunc = function(value)
+						self.SV.UI.alpha = value
+						self.UI.ApplyAlpha()
+					end,
+				},
+			},
 		},
 		{
-			type = "slider",
-			name = "Icon size",
-			warning = "If you change this ALL icons are being resized to the given size! ALL individual sizes will be overwritten!",
-			default = 50,
-			min = 20,
-			max = 200,
-			step = 1,
-			getFunc = function() return self.SV.UI.size end,
-			setFunc = function(value)
-				self.SV.UI.size = value
-				for _, entry in pairs(self.ccVariables) do
-					self.SV.UI.sizes[entry.name] = value
-					self.UI.ApplySize(entry.name)
-				end
-			end,
-		},
-		{
-			type = "slider",
-			name = "Icon alpha",
-			tooltip = "The CC icons are too prominent for you? Simply adjust alpha with this slider to make them disappear.",
-			default = 100,
-			min = 0,
-			max = 100,
-			step = 1,
-			getFunc = function() return self.SV.UI.alpha end,
-			setFunc = function(value)
-				self.SV.UI.alpha = value
-				self.UI.ApplyAlpha()
-			end,
-		},
-		{
-			type = "header",
+			type = "submenu",
 			name = "CCs to track",
+			controls = {},
 		},
-		{
-			type = "divider",
-		},
+		-- {
+			-- type = "divider",
+		-- },
 		{
 			type = "submenu",
 			name = "CC Ignore List",
 			controls = {
+				{	
+					type = "checkbox",
+					name = "Enable chat links",
+					tooltip = "This enables clickable links in chat, that let you ignore the linked CC ability",
+					warning = "To use this you need to have LibChatMessage installed!",
+					disabled = function() return not self.debug end,
+					getFunc = function() return self.SV.settings.ccIgnoreLinks end,
+					setFunc = function(value)
+						self.SV.settings.ccIgnoreLinks = value
+					end,
+				},
 				{	
 					type = "dropdown",
 					name = "List of current cc abilities",
@@ -332,7 +350,7 @@ function CCTracker:BuildMenu()
 				{
 					type = "editbox",
 					name = "Manually add ability id to ignore list",
-					warning = "If you enable debugging, you'll see any CC that is recognized, including its ID",
+					warning = "If you enable chat links, you'll see any CC that is recognized, including its ID",
 					isMultiline = false,
 					getFunc = function() return self.menu.ccList.abilityId end,
 					setFunc = function(value)
@@ -374,17 +392,6 @@ function CCTracker:BuildMenu()
 						self.UI.ApplyIcons()
 					end,
 				},
-				{	
-					type = "checkbox",
-					name = "Enable chat links",
-					tooltip = "This enables clickable links in chat, that let you ignore the linked CC ability",
-					warning = "To use this you need to have LibChatMessage installed!",
-					disabled = function() return not self.debug end,
-					getFunc = function() return self.SV.settings.ccIgnoreLinks end,
-					setFunc = function(value)
-						self.SV.settings.ccIgnoreLinks = value
-					end,
-				},
 			},
 		},
 		{
@@ -406,40 +413,43 @@ function CCTracker:BuildMenu()
             end
         },
 		{ 
-			type = "divider"
-		},
-		{	
-			type = "checkbox",
-			name = "Debug ccCache",
-			disabled = function() return not self.SV.debug.enabled end,
-			getFunc = function() return self.SV.debug.ccCache end,
-			setFunc = function(value)
-				self.SV.debug.ccCache = value
-				-- self.log = value
-			end,
-			width = "half",
-		},
-		{	
-			type = "checkbox",
-			name = "Debug root detection",
-			disabled = function() return not self.SV.debug.enabled end,
-			getFunc = function() return self.SV.debug.roots end,
-			setFunc = function(value)
-				self.SV.debug.roots = value
-				-- self.log = value
-			end,
-			width = "half",
-		},
-		{	
-			type = "checkbox",
-			name = "Debug ignore list detection",
-			disabled = function() return not self.SV.debug.enabled end,
-			getFunc = function() return self.SV.debug.ignoreList end,
-			setFunc = function(value)
-				self.SV.debug.ignoreList = value
-				-- self.log = value
-			end,
-			width = "half",
+			type = "submenu",
+			name = "Debug options",
+			controls = {
+				{	
+					type = "checkbox",
+					name = "Debug ccCache",
+					disabled = function() return not self.SV.debug.enabled end,
+					getFunc = function() return self.SV.debug.ccCache end,
+					setFunc = function(value)
+						self.SV.debug.ccCache = value
+						-- self.log = value
+					end,
+					width = "half",
+				},
+				{	
+					type = "checkbox",
+					name = "Debug root detection",
+					disabled = function() return not self.SV.debug.enabled end,
+					getFunc = function() return self.SV.debug.roots end,
+					setFunc = function(value)
+						self.SV.debug.roots = value
+						-- self.log = value
+					end,
+					width = "half",
+				},
+				{	
+					type = "checkbox",
+					name = "Debug ignore list detection",
+					disabled = function() return not self.SV.debug.enabled end,
+					getFunc = function() return self.SV.debug.ignoreList end,
+					setFunc = function(value)
+						self.SV.debug.ignoreList = value
+						-- self.log = value
+					end,
+					width = "half",
+				},
+			},
 		},
 	}
 	
