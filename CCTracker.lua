@@ -4,12 +4,16 @@ CCTracker = {
 	["version"] = {
 		["patch"] = 1,
 		["major"] = 0,
-		["minor"] = 3,
+		["minor"] = 4,
 	},
 	["menu"] = {},
 	["SV"] = {},
 	["ccActive"] = {},
 	["UI"] = {},
+	["ignore"] = {
+		[202995] = "IA",
+		[203125] = "IA",
+	}
 }
 
 local function OnAddOnLoaded(eventCode, addOnName)
@@ -36,12 +40,21 @@ ZO_CreateStringId("SI_BINDING_NAME_CCTRACKER_RESET", "Reset CCTracker")
 
 function CCTracker:Init()
 	if self.started then return end
-	if LibChatMessage then CCTracker.debug = LibChatMessage("barnysCCTracker", "BCC") else self:SetAllDebugFalse() end
+	if LibChatMessage then
+		CCTracker.debug = LibChatMessage("|c2a52beb|rarnys|c2a52beCC|rTracker", "|c2a52beBCC|r")
+		LibChatMessage:RegisterCustomChatLink("CC_ABILITY_IGNORE_LINK", function(linkStyle, linkType, name, id, zone, displayText)
+			return ZO_LinkHandler_CreateLinkWithBrackets(displayText, nil, "CC_ABILITY_IGNORE_LINK", name, id, zone)
+		end)
+		CCTracker:InitLinkHandler()
+	else 
+		self:SetAllDebugFalse()
+	end
 	
 	self.started = true
 	
 	self.currentCharacterName = self:CropZOSString(GetUnitName("player"))
 	self.ccVariables = {
+		["charm"] = {["icon"] = "/esoui/art/icons/ability_u34_sea_witch_mindcontrol.dds", ["tracked"] = self.SV.settings.tracked.Charm, ["res"] = 3510, ["active"] = false, ["name"] = "Charm",}, --ACTION_RESULT_CHARMED
 		[32] = {["icon"] = "/esoui/art/icons/ability_debuff_disorient.dds", ["tracked"] = self.SV.settings.tracked.Disoriented, ["res"] = 2340, ["active"] = false, ["name"] = "Disoriented",}, --ABILITY_TYPE_DISORIENT
 		[27] = {["icon"] = "/esoui/art/icons/ability_debuff_fear.dds", ["tracked"] = self.SV.settings.tracked.Fear, ["res"] = 2320, ["active"] = false, ["name"] = "Fear",}, --ABILITY_TYPE_FEAR
 		[17] = {["icon"] = "/esoui/art/icons/ability_debuff_knockback.dds", ["tracked"] = self.SV.settings.tracked.Knockback, ["res"] = 2475, ["active"] = false, ["name"] = "Knockback",}, --ABILITY_TYPE_KNOCKBACK
@@ -108,9 +121,22 @@ end
 
 function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotType, sName, sType, tName, 
 										tType, hVal, pType, dType, _, 		sUId, 	 tUId,  aId,   _     )
+	if CCTracker.ignore[aId] then 
+		if self.SV.debug.ccCache then self.debug:Print("Ignored CC in "..CCTracker.ignore[aId]..": "..CCTracker:CropZOSString(aName)) end
+		return
+	elseif CCTracker.SV.ignored[aId] then
+		if self.SV.debug.ignoreList then self.debug:Print("Ignored CC from ignore-list "..aId..": "..CCTracker:CropZOSString(aName)) end
+		return		
+	end
 	if self:CropZOSString(tName) == self.currentCharacterName then
 		if res == ACTION_RESULT_EFFECT_FADED then
-			for i, check in pairs(self.ccActive) do
+			if aId == 165424 then																							-- remove stun after using the arsenal to switch specs
+				self.ccActive = {}
+				self.UI.ApplyIcons()
+				if self.SV.debug.ccCache then self.debug:Print("Removing all cc after using arsenal") end
+				return
+			end
+			for i, check in ipairs(self.ccActive) do
 				if check.cacheId and check.cacheId == aId then
 					table.remove(self.ccActive, i)
 					self.UI.ApplyIcons()
@@ -125,11 +151,11 @@ function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotTyp
 		end
 		for ccType, check in pairs(self.ccVariables) do
 			if check.tracked and check.res == res then
-				if self.SV.debug.enabled then self.debug:Print("Caching cc result") end
+				if self.SV.debug.ccCache then self.debug:Print("Caching cc result") end
 				self.ccCache = {}
 				local newAbility = {["type"] = ccType, ["recorded"] = GetFrameTimeMilliseconds(), ["id"] = aId,}
 				table.insert(self.ccCache, newAbility)
-				if self.SV.debug.ccCache then self.debug:Print("Caching ability "..aName) end
+				if self.SV.debug.ccCache then self.debug:Print("Caching ability "..aName.." ID: "..aId) end
 				break
 			-- elseif check.tracked and check.name == "Root" and res == "ACTION_RESULT_SNARED" and self:IsPossibleRoot(aId) then
 				-- self.ccCache = {}
@@ -149,11 +175,13 @@ end
 
 function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,endTime,_,_,_,buffType,abilityType,_,unitName,_,aId,_)
 	--  if self.SV.debug.enabled then self.debug:Print(unitName.." - "..GetUnitName("player")) end
-	local time = GetFrameTimeMilliseconds()
 	if not (unitTag == "player" or unitName == self.currentCharacterName) then
 		return
+	elseif CCTracker.SV.ignored[aId] then
+		if self.SV.debug.ignoreList then self.debug:Print("Ignored CC from ignore-list "..aId..": "..CCTracker:CropZOSString(aName)) end
+		return	
 	else
-		-- self.currentBuffs = {}
+		local time = GetFrameTimeMilliseconds()
 		if IsUnitDeadOrReincarnating("player") then
 			self.ccActive = {}
 			self.UI.ApplyIcons()
@@ -167,8 +195,12 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				local newAbility = {["id"] = aId, ["type"] = abilityType, ["endTime"] = ending*1000}
 				if self.ccCache and self.ccCache[1].type == abilityType then
 					newAbility.cacheId = self.ccCache[1].id
-					self.ccCache = {}
+					self.ccCache = nil
 					if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache") end
+				elseif self.ccCache and self.ccCache[1].type == "charm" and self.ccVariables.charm.tracked then
+					newAbility.type = "charm"
+					self.ccCache = nil
+					if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache. Charm was detected") end
 				end
 				local inList, num = self:AIdInList(aId)
 				if not inList then
@@ -177,7 +209,15 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				else
 					self.ccActive[num].endTime = endTime*1000
 				end
-				if self.SV.debug.ccCache then self.debug:Print("New cc "..eName) end
+				if self.SV.debug.enabled then self.debug:Print("New cc "..eName.." - ID: "..newAbility.id) end
+				--------------------------
+				-- IGNORE CC CHAT LINKS --
+				--------------------------
+				if self.SV.settings.ccIgnoreLinks then
+					self.debug:Print("New cc ability detected "..self:CropZOSString(eName))
+					self.debug:Print("Click |c2a52be|H1:CC_ABILITY_IGNORE_LINK:"..self:CropZOSString(eName)..":"..newAbility.id..":"..self:CropZOSString(GetUnitZone('player')).."|h[here]|h|r to ignore it in the future,")
+					self.debug:Print("or ignore the ID: "..newAbility.id.." manually in the |c2a52be/bcc|r menu")
+				end
 			-- elseif self.ccVariables.root.tracked and abilityType == ABILITY_TYPE_SNARE and self:IsPossibleRoot(aId) then
 				-- local ending = ((endTime-beginTime~=0) and endTime) or 0
 				-- local newAbility = {["id"] = aId, ["type"] = "root", ["endTime"] = ending*1000}
@@ -205,8 +245,16 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				else
 					self.ccActive[num].endTime = endTime*1000
 				end
-				if self.SV.debug.ccCache then self.debug:Print("New cc from cache "..eName) end
-				self.ccCache = {}
+				if self.SV.debug.enabled then self.debug:Print("New cc from cache "..eName.." - ID: "..newAbility.cacheId) end
+				--------------------------
+				-- IGNORE CC CHAT LINKS --
+				--------------------------
+				if self.SV.settings.ccIgnoreLinks then
+					self.debug:Print("New cc ability detected "..self:CropZOSString(eName))
+					self.debug:Print("Click |c2a52be|H1:CC_ABILITY_IGNORE_LINK:"..self:CropZOSString(eName)..":"..newAbility.cacheId..":"..self:CropZOSString(GetUnitZone('player')).."|h[here]|h|r to ignore it in the future,")
+					self.debug:Print("or ignore the ID: "..newAbility.cacheId.." manually in the |c2a52be/bcc|r menu")
+				end
+				self.ccCache = nil
 				if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache") end
 			end
 		elseif changeType == EFFECT_RESULT_FADED or changeType == EFFECT_RESULT_ITERATION_END --[[or changeType == EFFECT_RESULT_TRANSFER]] then
@@ -223,10 +271,12 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				if self.ccActive[i].endTime < time then
 					table.remove(self.ccActive, i)
 					self.ccChanged = true
-					if self.SV.debug.enabled then self.debug:Print("deleting entries in cc list") end
+					-- if self.SV.debug.enabled then self.debug:Print("deleting entries in cc list") end
 				end
 			end
 		end
 	end
-	if self.ccChanged then self.UI.ApplyIcons() end
+	if self.ccChanged then 
+		self.UI.ApplyIcons()
+	end
 end

@@ -1,7 +1,7 @@
 [b]Addon Name:[/b] barny's CC Tracker
 
 [b]Description:[/b]
-barny's CC Tracker is the perfect addon for [b]you[/b] to help you keep track of crowd control (CC) effects during combat. CC effects include abilities like stuns, snares, and roots that temporarily limit your character’s movement or actions. This addon displays icons in real-time whenever your character is affected by a CC ability, showing you exactly which effect is active. It also automatically updates when the CC ends, helping you respond more quickly and efficiently in combat.
+barny's CC Tracker is the perfect addon for [b]you[/b] to help you keep track of crowd control (CC) effects during combat. CC effects include abilities like stuns, snares, and roots that temporarily limit your character's movement or actions. This addon displays icons in real-time whenever your character is affected by a CC ability, showing you exactly which effect is active. It also automatically updates when the CC ends, helping you respond more quickly and efficiently in combat.
 
 Additionally, barny's CC Tracker allows you to set a keybind to manually reset the UI if any CC entries behave incorrectly or fail to deactivate. This ensures a smoother experience during prolonged fights.
 
