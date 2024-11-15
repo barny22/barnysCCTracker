@@ -1,0 +1,68 @@
+name: ESO Addon Release
+
+# Auslöser: Nur manueller dispatch
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    if: (github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        path: 'barnysCCTracker'
+
+    - name: Set Test only
+      id: test_only
+      run: |
+        echo "TEST_ONLY=true" >> $GITHUB_ENV
+
+    - name: Extract API Version and Addon Version
+      id: version_info
+      run: |
+        APIVersion=$(grep -Po '(?<=## APIVersion: )\d+' barnysCCTracker/barnysCCTracker.txt)
+        AddonVersion=$(grep -Po '(?<=## Version: )[\d.]+' barnysCCTracker/barnysCCTracker.txt)
+        echo "API_VERSION=$APIVersion" >> $GITHUB_ENV
+        echo "ADDON_VERSION=$AddonVersion" >> $GITHUB_ENV
+
+    - name: Get Compatible Patch ID
+      id: get_patch_id
+      run: |
+        # Hole die aktuelle Patchnummer
+        PatchVersion=$(grep -Po '(?<=## APIVersion: )\d+' barnysCCTracker/barnysCCTracker.txt)
+        # Anfrage an die ESOUI API, um die ID für die Patch-Version zu erhalten
+        PatchID=$(curl -s -H "x-api-token: ${{ secrets.ESOUI_API_TOKEN }}" "https://api.esoui.com/addons/compatible.json" | jq -r ".[] | select(.interface == \"$PatchVersion\") | .id")
+        echo "PATCH_ID=$PatchID" >> $GITHUB_ENV
+
+    - name: Extract Changelog
+      id: changelog
+      run: |
+        Changelog=$(cat barnysCCTracker/Changelog.txt)
+        echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+        echo "$Changelog" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+
+    - name: Zip Addon Files (excluding .gitattributes)
+      run: 7z a ./barnysCCTracker/barnysCCTracker_${{ env.ADDON_VERSION }}_beta.zip * -xr!*.git* -xr!*README.md
+
+    - name: Upload Addon to ESOUI with PowerShell
+      shell: pwsh
+      run: |
+        $baseDir = Get-Location
+        $changelogPath = "$baseDir/barnysCCTracker/Changelog.txt"
+        $readmePath = "$baseDir/barnysCCTracker/README_BETA.md"
+        Write-Host "Changelog Path: $changelogPath" # Debugging-Ausgabe
+        Write-Host "Readme Path: $readmePath" # Debugging-Ausgabe
+        ./barnysCCTracker/.github/scripts/upload_to_esoui.ps1 `
+          -ApiToken "${{ secrets.ESOUI_API_TOKEN }}" `
+          -AddonId 3988 `
+          -Title "barny's CC Tracker - beta" `
+          -Version "${{ env.ADDON_VERSION }} - beta" `
+          -FilePath "./barnysCCTracker/barnysCCTracker_${{ env.ADDON_VERSION }}_beta.zip" `
+          -ChangelogFilePath "$changelogPath" `
+          -Compatible "${{ env.PATCH_ID }}" `
+          -ReadmeFilePath "$readmePath" `
+          -TestOnly "${{ env.TEST_ONLY }}"
