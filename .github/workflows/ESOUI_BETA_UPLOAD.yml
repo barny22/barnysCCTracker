@@ -1,4 +1,4 @@
-name: ESO Addon Release
+name: ESO BETA Release
 
 # Auslöser: Nur manueller dispatch
 on:
