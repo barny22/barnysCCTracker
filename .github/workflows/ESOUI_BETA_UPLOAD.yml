@@ -1,12 +1,16 @@
 name: ESO BETA Release
 
-# Auslöser: Nur manueller dispatch
+# Auslöser: Nur manueller dispatch und auf "development" branch beschränkt
 on:
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run the workflow on'
+        default: 'development'
 
 jobs:
   build:
-    if: (github.event_name == 'workflow_dispatch')
+    if: (github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/development')
     runs-on: ubuntu-latest
 
     steps:
