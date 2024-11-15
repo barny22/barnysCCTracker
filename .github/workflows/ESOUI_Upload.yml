@@ -59,7 +59,7 @@ jobs:
     #    echo "EOF" >> $GITHUB_ENV
 
     - name: Zip Addon Files (excluding .gitattributes)
-      run: 7z a ./barnysCCTracker/barnysCCTracker.zip_${{ env.ADDON_VERSION }} * -xr!*.git* -xr!*README_BETA.md
+      run: 7z a ./barnysCCTracker/barnysCCTracker_${{ env.ADDON_VERSION }}.zip * -xr!*.git* -xr!*README_BETA.md
 
     - name: Create GitHub Release
       if: env.TEST_ONLY == 'false'  # Nur wenn TEST_ONLY false ist
@@ -86,7 +86,7 @@ jobs:
           -AddonId 3971 `
           -Title "barny's CC Tracker" `
           -Version "${{ env.ADDON_VERSION }}" `
-          -FilePath "./barnysCCTracker/barnysCCTracker.zip_${{ env.ADDON_VERSION }}" `
+          -FilePath "./barnysCCTracker/barnysCCTracker_${{ env.ADDON_VERSION }}.zip" `
           -ChangelogFilePath "$changelogPath" `
           -Compatible "${{ env.PATCH_ID }}" `
           -ReadmeFilePath "$readmePath" `
