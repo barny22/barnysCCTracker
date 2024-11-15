@@ -1,4 +1,4 @@
-name: ESO BETA Release
+name: CCTracker BETA Release
 
 # Auslöser: Nur manueller dispatch und auf "development" branch beschränkt
 on:
