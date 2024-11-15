@@ -3,10 +3,8 @@ name: ESO BETA Release
 # Auslöser: Nur manueller dispatch und auf "development" branch beschränkt
 on:
   workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to run the workflow on'
-        default: 'development'
+    branches:
+      - development
 
 jobs:
   build:
