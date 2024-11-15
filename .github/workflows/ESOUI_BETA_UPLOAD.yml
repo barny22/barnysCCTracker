@@ -4,20 +4,20 @@ name: ESO BETA Release
 on:
   workflow_dispatch:
     inputs:
-      branch:
-        description: 'Branch to run the workflow on'
-        default: 'development'
+      target_branch:
+        description: "The branch to run this workflow on"
+        default: "development"
+        required: true
 
 jobs:
   build:
-    if: (github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/development')
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        path: 'barnysCCTracker'
+        ref: ${{ github.event.inputs.target_branch }}
 
     - name: Set Test only
       id: test_only
