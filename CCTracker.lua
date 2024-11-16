@@ -4,7 +4,7 @@ CCTracker = {
 	["version"] = {
 		["patch"] = 1,
 		["major"] = 0,
-		["minor"] = 4,
+		["minor"] = 5,
 	},
 	["menu"] = {},
 	["SV"] = {},
