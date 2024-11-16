@@ -1,4 +1,7 @@
-2024.11.13 v1.0.4
+2024.11.16 v1.0.5
+! Fix for bug when using CCTracker-reset keybind
+
+2024.11.15 v1.0.4
 ! Resetting stun when using arsenal
 ! Ignoring stuns in IA when choosing visions/verses
 + Added charm to trackable abilities
