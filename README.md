@@ -17,5 +17,5 @@ You can easily access the options menu using the [b]/bcc[/b] slash command. If y
 [*] Includes a keybind option to reset the UI if necessary.
 [*] Access options with [b]/bcc[/b].
 [*] [url=https://www.esoui.com/portal.php?id=386&a=listbugs]Report bugs[/url] and [url=https://www.esoui.com/portal.php?id=386&a=listfeatures]request features[/url] via the ESOUI portal.
-[*] [url=https://github.com/barny22/barnysCCTracker/tree/development]Beta versions[/url] and the [url=https://github.com/barny22/barnysCCTracker/archive/refs/heads/development.zip]latest Beta[/url] available on GitHub.
+[*] Beta versions on [url=https://github.com/barny22/barnysCCTracker/tree/development]GitHub[/url] or [url=https://www.esoui.com/downloads/info3988-barnysCCTracker-beta.html]ESOUI[/url].
 [/list]
