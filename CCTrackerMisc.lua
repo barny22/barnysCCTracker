@@ -166,14 +166,16 @@ function CCTracker.menu.CreateListOfActiveCC()
 	
 	if CountTableLength(CCTracker.ccActive) ~= 0 then
 		for i, entry in ipairs(CCTracker.ccActive) do
-			local abilityString = tostring("|t20:20:"..GetAbilityIcon(entry.id).."|t "..CCTracker:CropZOSString(GetAbilityName(entry.id))..", "..self.ccVariables[entry.type].name)
-			CCTracker.menu.ccList.active.string[i] = abilityString
-			if entry.cacheId then
-				CCTracker.menu.ccList.active.id[i] = entry.cacheId
-			else
-				CCTracker.menu.ccList.active.id[i] = entry.id
+			if entry then
+				local abilityString = tostring("|t20:20:"..GetAbilityIcon(entry.id).."|t "..CCTracker:CropZOSString(GetAbilityName(entry.id))..", "..self.ccVariables[entry.type].name)
+				CCTracker.menu.ccList.active.string[i] = abilityString
+				if entry.cacheId then
+					CCTracker.menu.ccList.active.id[i] = entry.cacheId
+				else
+					CCTracker.menu.ccList.active.id[i] = entry.id
+				end
+				CCTracker.menu.ccList.active.type[i] = self.ccVariables[entry.type].name
 			end
-			CCTracker.menu.ccList.active.type[i] = self.ccVariables[entry.type].name
 		end
 	else
 		CCTracker.menu.ccList.active.string[1] = "No cc active"
