@@ -141,7 +141,7 @@ function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotTyp
 				if check.cacheId and check.cacheId == aId then
 					table.remove(self.ccActive, i)
 					self.UI.ApplyIcons()
-					if self.SV.debug.ccCache then self.debug:Print("Removing ability "..aName) end
+					if self.SV.debug.ccCache then self.debug:Print("Removing ability "..self:CropZOSString(aName)) end
 					break
 				end
 			end
@@ -156,7 +156,7 @@ function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotTyp
 				if not self.ccCache then self.ccCache = {} end
 				for i = #self.ccCache, 1, -1 do
 					if self.ccCache[i].recorded ~= time then
-						if self.SV.debug.ccCache then self.debug:Print("Clearing outdated CC from cache: "..self.ccCache[i].name) end
+						if self.SV.debug.ccCache then self.debug:Print("Combat event clearing outdated CC from cache: "..self.ccCache[i].name) end
 						table.remove(self.ccCache, i)
 					end
 				end
@@ -193,7 +193,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 		if self.ccCache then
 			for i = #self.ccCache, 1, -1 do
 				if self.ccCache[i].recorded ~= time then
-					if self.SV.debug.ccCache then self.debug:Print("Clearing outdated CC from cache: "..self.ccCache[i].name) end
+					if self.SV.debug.ccCache then self.debug:Print("Effect changed clearing outdated CC from cache: "..self.ccCache[i].name) end
 					table.remove(self.ccCache, i)
 				end
 			end
