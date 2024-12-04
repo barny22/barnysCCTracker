@@ -245,8 +245,8 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 					self.debug:Print("or ignore the ID: "..newAbility.id.." manually in the |c2a52be/bcc|r menu")
 				end
 			elseif self.ccCache then
-				for i = #self.ccCache, 1, -1 do
-					if self.ccCache[i].recorded == time and not self.ccVariables[abilityType] then
+				if not self.ccVariables[abilityType] then
+					for i = #self.ccCache, 1, -1 do
 						local ending = ((endTime-beginTime~=0) and endTime) or 0
 						local newAbility = {["id"] = aId, ["type"] = self.ccCache[i].type, ["endTime"] = ending*1000, ["cacheId"] = self.ccCache[i].id }
 						local inList, num = self:AIdInList(aId)
