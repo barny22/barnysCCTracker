@@ -5,60 +5,86 @@ CCTracker.menu = CCTracker.menu or {}
 CCTracker.menu.icons = {}
 
 CCTracker.menu.constants = {
-	{
-		["Name"] = "Charm",
-		["Icon"] = "/esoui/art/icons/ability_u34_sea_witch_mindcontrol.dds",
-		["Id"] = "charm" --2340
+	["CC"] = {
+		{
+			["Name"] = "Charm",
+			["Icon"] = "/esoui/art/icons/ability_u34_sea_witch_mindcontrol.dds",
+			["Id"] = "charm" --2340
+		},
+		{
+			["Name"] = "Disoriented",
+			["Icon"] = "/esoui/art/icons/ability_debuff_disorient.dds",
+			["Id"] = 32 --2340
+		},
+		{
+			["Name"] = "Fear",
+			["Icon"] = "/esoui/art/icons/ability_debuff_fear.dds",
+			["Id"] = 27 --2320
+		},
+		{
+			["Name"] = "Knockback",
+			["Icon"] = "/esoui/art/icons/ability_debuff_knockback.dds",
+			["Id"] =  17 --2475
+		}, 
+		{
+			["Name"] = "Levitating",
+			["Icon"] = "/esoui/art/icons/ability_debuff_levitate.dds",
+			["Id"] = 48 --2400
+		},
+		{
+			["Name"] = "Offbalance",
+			["Icon"] = "/esoui/art/icons/ability_debuff_offbalance.dds",
+			["Id"] =  53 --2440
+		},
+		{
+			["Name"] = "Root",
+			["Icon"] = "/esoui/art/icons/ability_debuff_root.dds",
+			["Id"] = "root" --2480
+		},
+		{
+			["Name"] = "Silence",
+			["Icon"] = "/esoui/art/icons/ability_debuff_silence.dds",
+			["Id"] = 11 --2010
+		},
+		{
+			["Name"] = "Snare",
+			["Icon"] = "/esoui/art/icons/ability_debuff_snare.dds",
+			["Id"] = 10 --2025
+		},
+		{
+			["Name"] = "Stagger",
+			["Icon"] = "/esoui/art/icons/ability_debuff_stagger.dds",
+			["Id"] = 33 --2470
+		},
+		{
+			["Name"] = "Stun",
+			["Icon"] = "/esoui/art/icons/ability_debuff_stun.dds",
+			["Id"] = 9 --2020
+		},
 	},
-	{
-		["Name"] = "Disoriented",
-		["Icon"] = "/esoui/art/icons/ability_debuff_disorient.dds",
-		["Id"] = 32 --2340
-	},
-	{
-		["Name"] = "Fear",
-		["Icon"] = "/esoui/art/icons/ability_debuff_fear.dds",
-		["Id"] = 27 --2320
-	},
-	{
-		["Name"] = "Knockback",
-		["Icon"] = "/esoui/art/icons/ability_debuff_knockback.dds",
-		["Id"] =  17 --2475
-	}, 
-	{
-		["Name"] = "Levitating",
-		["Icon"] = "/esoui/art/icons/ability_debuff_levitate.dds",
-		["Id"] = 48 --2400
-	},
-	{
-		["Name"] = "Offbalance",
-		["Icon"] = "/esoui/art/icons/ability_debuff_offbalance.dds",
-		["Id"] =  53 --2440
-	},
-	{
-		["Name"] = "Root",
-		["Icon"] = "/esoui/art/icons/ability_debuff_root.dds",
-		["Id"] = "root" --2480
-	},
-	{
-		["Name"] = "Silence",
-		["Icon"] = "/esoui/art/icons/ability_debuff_silence.dds",
-		["Id"] = 11 --2010
-	},
-	{
-		["Name"] = "Snare",
-		["Icon"] = "/esoui/art/icons/ability_debuff_snare.dds",
-		["Id"] = 10 --2025
-	},
-	{
-		["Name"] = "Stagger",
-		["Icon"] = "/esoui/art/icons/ability_debuff_stagger.dds",
-		["Id"] = 33 --2470
-	},
-	{
-		["Name"] = "Stun",
-		["Icon"] = "/esoui/art/icons/ability_debuff_stun.dds",
-		["Id"] = 9 --2020
+	["SoundList"] = {
+		"General_Alert_Error",
+		"Achievement_Awarded",
+		"Quest_Abandon",
+		"Quest_StepFailed",
+		"Telvar_Gained",
+		"Telvar_Lost",
+		"GroupElection_Requested",
+		"BG_Countdown_Finish",
+		"EnlightenedState_Gained",
+		"Ability_Companion_Ultimate_Ready_Sound",
+		"CraftedAbilityScript_Unlocked",
+		"CraftedAbility_Unlocked",
+		"Champion_PointsCommitted",
+		"Duel_Accepted",
+		"DailyLoginRewards_ClaimFanfare",
+		"CodeRedemption_Success",
+		"Antiquities_Digging_Antiquity_Completed",
+		"Endeavor_Complete",
+		"Tribute_AgentDamaged",
+		"UI_U40_EA_AvatarVision_Acquired",
+		"PromotionalEvent_ClaimReward",
+		"PromotionalEvent_ClaimCapstoneReward",
 	},
 }
 
@@ -67,20 +93,20 @@ local function CreateCCCheckboxes()
 	for i, entry in ipairs(CCTracker.menu.options) do
 		if entry.name == "CCs to track" then position = i break end
 	end
-	for i = 1, #CCTracker.menu.constants do
+	for i = 1, #CCTracker.menu.constants.CC do
 		local control = {}
 		control.type = "checkbox"
-		control.name = CCTracker.menu.constants[i].Name
+		control.name = CCTracker.menu.constants.CC[i].Name
 		control.width = "half"
 		control.default = false
-		control.getFunc = function() return CCTracker.SV.settings.tracked[CCTracker.menu.constants[i].Name] end
+		control.getFunc = function() return CCTracker.SV.settings.tracked[CCTracker.menu.constants.CC[i].Name] end
 		control.setFunc = function(value)
-			CCTracker.SV.settings.tracked[CCTracker.menu.constants[i].Name] = value
-			CCTracker.ccVariables[CCTracker.menu.constants[i].Id].tracked = value
+			CCTracker.SV.settings.tracked[CCTracker.menu.constants.CC[i].Name] = value
+			CCTracker.ccVariables[CCTracker.menu.constants.CC[i].Id].tracked = value
 			if value then
-				CCTracker.menu.icons[i]:SetDesaturation(0)
+				CCTracker.menu.icons.CC[i]:SetDesaturation(0)
 			else
-				CCTracker.menu.icons[i]:SetDesaturation(1)
+				CCTracker.menu.icons.CC[i]:SetDesaturation(1)
 			end
 			if value and not CCTracker.registered then
 				CCTracker:Register()
@@ -93,23 +119,79 @@ local function CreateCCCheckboxes()
 	end
 end
 
+local function CreateSoundControls()
+	CCTracker.menu.constants.sound = CCTracker.menu.constants.CC 							-- Copy constants.CC table
+	local position
+	for i, entry in ipairs(CCTracker.menu.options) do
+		if entry.name == "Sound" then position = i break end
+	end
+	for i = 1, #CCTracker.menu.constants.sound do
+		-- Enabled checkbox
+		local control1 = {}
+		control1.type = "checkbox"
+		control1.name = "Play "..CCTracker.menu.constants.sound[i].Name.." sound"
+		control1.width = "half"
+		control1.disabled = function() return not CCTracker.ccVariables[CCTracker.menu.constants.sound[i].Id].tracked end
+		control1.default = false
+		control1.getFunc = function() return CCTracker.SV.sound[CCTracker.menu.constants.sound[i].Name].enabled end
+		control1.setFunc = function(value)
+			CCTracker.SV.sound[CCTracker.menu.constants.sound[i].Name].enabled = value
+			if value then
+				CCTracker.menu.icons.sound[i]:SetDesaturation(0)
+			else
+				CCTracker.menu.icons.sound[i]:SetDesaturation(1)
+			end
+		end
+		CCTracker.menu.constants.sound[i].CheckboxName = control1.name
+		table.insert(CCTracker.menu.options[position].controls, control1)
+		
+		-- Select sound dropdown
+		local control2 = {}
+		control2.type = "dropdown"
+		control2.name = CCTracker.menu.constants.sound[i].Name.." sound"
+		control2.width = "half"
+		control2.disabled = function() return not CCTracker.SV.sound[CCTracker.menu.constants.sound[i].Name].enabled end
+		control2.choices = CCTracker.menu.constants.SoundList
+		control2.getFunc = function() return CCTracker.SV.sound[CCTracker.menu.constants.sound[i].Name].sound end
+		control2.setFunc = function(value)
+			CCTracker.SV.sound[CCTracker.menu.constants.sound[i].Name].sound = value
+			PlaySound(value)
+		end
+		table.insert(CCTracker.menu.options[position].controls, control2)
+	end
+end
+
 function CCTracker.menu.CreateIcons(panel)					-- Thanks to DakJaniels who came up with this solution
+	CCTracker.menu.icons = {["CC"] = {},["sound"] = {}}
 	if CCTracker.SV.debug.enabled then
 		CCTracker.debug:Print("Panel was created.")
 		if CCTracker.menu.icons[1] then CCTracker.debug:Print("Menu Icons seem to have been initialized before") else CCTracker.debug:Print("Menu Icons have not been initialized yet") end
 	end
-	for i = 1, #CCTracker.menu.constants do
-		local number = CCTracker.menu.CreateMenuIconsPath(CCTracker.menu.constants[i].Name)
-		CCTracker.menu.icons[i] = WM:CreateControl(CCTracker.name.."MenuIcon"..i, panel.controlsToRefresh[number].checkbox, CT_TEXTURE)
-		CCTracker.menu.icons[i]:SetAnchor(RIGHT, panel.controlsToRefresh[number].checkbox, LEFT, -25, 0)
-		CCTracker.menu.icons[i]:SetTexture(CCTracker.menu.constants[i].Icon)
-		CCTracker.menu.icons[i]:SetDimensions(35, 35)
-		if CCTracker.ccVariables[CCTracker.menu.constants[i].Id].tracked then
-			CCTracker.menu.icons[i]:SetDesaturation(0)
+	for i = 1, #CCTracker.menu.constants.CC do
+		local number = CCTracker.menu.CreateMenuIconsPath(CCTracker.menu.constants.CC[i].Name)
+		CCTracker.menu.icons.CC[i] = WM:CreateControl(CCTracker.name.."MenuCCIcon"..i, panel.controlsToRefresh[number].checkbox, CT_TEXTURE)
+		CCTracker.menu.icons.CC[i]:SetAnchor(RIGHT, panel.controlsToRefresh[number].checkbox, LEFT, -25, 0)
+		CCTracker.menu.icons.CC[i]:SetTexture(CCTracker.menu.constants.CC[i].Icon)
+		CCTracker.menu.icons.CC[i]:SetDimensions(35, 35)
+		if CCTracker.ccVariables[CCTracker.menu.constants.CC[i].Id].tracked then
+			CCTracker.menu.icons.CC[i]:SetDesaturation(0)
 		else
-			CCTracker.menu.icons[i]:SetDesaturation(1)
+			CCTracker.menu.icons.CC[i]:SetDesaturation(1)
 		end
 	end
+	for i = 1, #CCTracker.menu.constants.sound do
+		local number = CCTracker.menu.CreateMenuIconsPath(CCTracker.menu.constants.sound[i].CheckboxName)
+		CCTracker.menu.icons.sound[i] = WM:CreateControl(CCTracker.name.."MenuSoundIcon"..i, panel.controlsToRefresh[number].checkbox, CT_TEXTURE)
+		CCTracker.menu.icons.sound[i]:SetAnchor(RIGHT, panel.controlsToRefresh[number].checkbox, LEFT, -25, 0)
+		CCTracker.menu.icons.sound[i]:SetTexture(CCTracker.menu.constants.sound[i].Icon)
+		CCTracker.menu.icons.sound[i]:SetDimensions(35, 35)
+		if CCTracker.SV.sound[CCTracker.menu.constants.sound[i].Name].enabled then
+			CCTracker.menu.icons.sound[i]:SetDesaturation(0)
+		else
+			CCTracker.menu.icons.sound[i]:SetDesaturation(1)
+		end
+	end
+	
 	CALLBACK_MANAGER:UnregisterCallback("LAM-PanelControlsCreated", CCTracker.menu.CreateIcons)
 	if CCTracker.SV.debug.enabled then CCTracker.debug:Print("Deleting LAM Callback") end
 end
@@ -244,9 +326,12 @@ function CCTracker:BuildMenu()
 			name = "CCs to track",
 			controls = {},
 		},
-		-- {
-			-- type = "divider",
-		-- },
+		{
+			type = "submenu",
+			name = "Sound",
+			tooltip = "You can enable sounds for different CC to also get an audio cue when hit by CC",
+			controls = {},
+		},
 		{
 			type = "submenu",
 			name = "CC Ignore List",
@@ -454,6 +539,7 @@ function CCTracker:BuildMenu()
 	}
 	
 	CreateCCCheckboxes()
+	CreateSoundControls()
 	self.menu.panel = LAM:RegisterAddonPanel(self.name.."Options", self.menu.metadata)
     LAM:RegisterOptionControls(self.name.."Options", self.menu.options)
 end

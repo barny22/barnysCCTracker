@@ -181,6 +181,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 		if self.SV.debug.ignoreList then self.debug:Print("Ignored CC from ignore-list "..aId..": "..CCTracker:CropZOSString(aName)) end
 		return	
 	else
+		local playCCSound = false
 		local time = GetFrameTimeMilliseconds()
 		if IsUnitDeadOrReincarnating("player") then
 			self.ccActive = {}
@@ -206,6 +207,10 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				if not inList then
 					self.ccChanged = true
 					table.insert(self.ccActive, newAbility)
+					if self.SV.sound[self.ccVariables[abilityType].name].enabled then
+						self.ccVariables[abilityType].playSound = true
+						playCCSound = true
+					end
 				else
 					self.ccActive[num].endTime = endTime*1000
 				end
@@ -242,6 +247,10 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				if not inList then
 					self.ccChanged = true
 					table.insert(self.ccActive, newAbility)
+					if self.SV.sound[self.ccVariables[abilityType].name].enabled then
+						self.ccVariables[abilityType].playSound = true
+						playCCSound = true
+					end
 				else
 					self.ccActive[num].endTime = endTime*1000
 				end
@@ -261,6 +270,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 			for i, entry in ipairs(self.ccActive) do
 				if entry.id == aId then
 					table.remove(self.ccActive, i)
+					self.ccVariables[entry.type].playSound = false
 					self.ccChanged = true
 					break
 				end
@@ -275,8 +285,11 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				end
 			end
 		end
-	end
-	if self.ccChanged then 
-		self.UI.ApplyIcons()
+		if self.ccChanged then
+			if playCCSound then
+				self:PlayCCSound()
+			end
+			self.UI.ApplyIcons()
+		end
 	end
 end

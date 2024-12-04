@@ -53,6 +53,52 @@ CCTracker.DEFAULT_SAVED_VARS = {
 		["sample"] = false,
 		["ccIgnoreLinks"] = false,
 	},
+	["sound"] = {
+		["Charm"] = {
+			["enabled"] = false,
+			["sound"] = "General_Alert_Error",
+		},
+		["Disoriented"] = {
+			["enabled"] = false,
+			["sound"] = "General_Alert_Error",
+		},
+		["Fear"] = {
+			["enabled"] = false,
+			["sound"] = "General_Alert_Error",
+		},
+		["Knockback"] = {
+			["enabled"] = false,
+			["sound"] = "General_Alert_Error",
+		},
+		["Levitating"] = {
+			["enabled"] = false,
+			["sound"] = "General_Alert_Error",
+		},
+		["Offbalance"] = {
+			["enabled"] = false,
+			["sound"] = "General_Alert_Error",
+		},
+		["Silence"] = {
+			["enabled"] = false,
+			["sound"] = "General_Alert_Error",
+		},
+		["Snare"] = {
+			["enabled"] = false,
+			["sound"] = "General_Alert_Error",
+		},
+		["Stagger"] = {
+			["enabled"] = false,
+			["sound"] = "General_Alert_Error",
+		},
+		["Stun"] = {
+			["enabled"] = false,
+			["sound"] = "General_Alert_Error",
+		},
+		["Root"] = {
+			["enabled"] = false,
+			["sound"] = "General_Alert_Error",
+		},
+	},
 	["ignored"] = {},
 	["debug"] = {
 		["enabled"] = false,
@@ -139,9 +185,9 @@ function CCTracker.menu.CreateMenuIconsPath(ControlName)
 	for i, entry in ipairs(barnysCCTrackerOptions.controlsToRefresh) do
 		if ControlName == entry.data.name then
 			number = i
+			return number
 		end
 	end
-	return number
 end
 
 function CCTracker.menu.UpdateLists()
@@ -227,6 +273,24 @@ function CCTracker.menu.CreateIgnoredCCList()
 	end
 end
 
+	----------------
+	---- Sounds ----
+	----------------
+
+function CCTracker:PlayCCSound()
+	-- self.debug:Print("Sound requested")
+	if #self.ccActive > 0 then
+		-- self.debug:Print("Checking which sound needs to be played")
+		for i, entry in pairs(self.ccVariables) do
+			if entry.playSound then
+				PlaySound(self.SV.sound[entry.name].sound)
+				-- self.debug:Print("Playing sound for "..entry.name)
+				entry.playSound = false
+			end
+		end
+	end
+end	
+	
 	----------------------
 	---- Ignore Links ----
 	----------------------
