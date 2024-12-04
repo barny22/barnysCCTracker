@@ -129,6 +129,7 @@ function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotTyp
 		return		
 	end
 	if self:CropZOSString(tName) == self.currentCharacterName then
+		local time = GetFrameTimeMilliseconds()
 		if res == ACTION_RESULT_EFFECT_FADED then
 			if aId == 165424 then																							-- remove stun after using the arsenal to switch specs
 				self.ccActive = {}
@@ -151,18 +152,22 @@ function CCTracker:HandleCombatEvents	(_,   res,  err, aName, aGraphic, aSlotTyp
 		end
 		for ccType, check in pairs(self.ccVariables) do
 			if check.tracked and check.res == res then
-				if self.SV.debug.ccCache then self.debug:Print("Caching cc result") end
-				self.ccCache = {}
-				local newAbility = {["type"] = ccType, ["recorded"] = GetFrameTimeMilliseconds(), ["id"] = aId,}
+				-- if self.SV.debug.ccCache then self.debug:Print("Caching cc result") end
+				if not self.ccCache then self.ccCache = {} end
+				for i = #self.ccCache, 1, -1 do
+					if self.ccCache[i].recorded ~= time then
+						if self.SV.debug.ccCache then self.debug:Print("Clearing outdated CC from cache: "..self.ccCache[i].name) end
+						table.remove(self.ccCache, i)
+					end
+				end
+				-- self.ccCache.type = ccType
+				-- self.ccCache.recorded = GetFrameTimeMilliseconds()
+				-- self.ccCache.id = aId
+				local newAbility = {["type"] = ccType, ["recorded"] = time, ["id"] = aId,}
+				newAbility.name = self:CropZOSString(aName)
 				table.insert(self.ccCache, newAbility)
-				if self.SV.debug.ccCache then self.debug:Print("Caching ability "..aName.." ID: "..aId) end
+				if self.SV.debug.ccCache then self.debug:Print("Caching ability "..newAbility.name.." ID: "..aId) end
 				break
-			-- elseif check.tracked and check.name == "Root" and res == "ACTION_RESULT_SNARED" and self:IsPossibleRoot(aId) then
-				-- self.ccCache = {}
-				-- local newAbility = {["type"] = "root", ["recorded"] = GetFrameTimeMilliseconds(), ["id"] = aId,}
-				-- table.insert(self.ccCache, newAbility)
-				-- if self.SV.debug.ccCache then self.debug:Print("Caching ability "..aName) end
-				-- break
 			end
 		end
 	else return
@@ -183,6 +188,16 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 	else
 		local playCCSound = false
 		local time = GetFrameTimeMilliseconds()
+		
+		-- deleting outdated cache entries
+		if self.ccCache then
+			for i = #self.ccCache, 1, -1 do
+				if self.ccCache[i].recorded ~= time then
+					if self.SV.debug.ccCache then self.debug:Print("Clearing outdated CC from cache: "..self.ccCache[i].name) end
+					table.remove(self.ccCache, i)
+				end
+			end
+		end
 		if IsUnitDeadOrReincarnating("player") then
 			self.ccActive = {}
 			self.UI.ApplyIcons()
@@ -194,14 +209,20 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 			if self.ccVariables[abilityType] and self.ccVariables[abilityType].tracked then
 				local ending = ((endTime-beginTime~=0) and endTime) or 0
 				local newAbility = {["id"] = aId, ["type"] = abilityType, ["endTime"] = ending*1000}
-				if self.ccCache and self.ccCache[1].type == abilityType then
-					newAbility.cacheId = self.ccCache[1].id
-					self.ccCache = nil
-					if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache") end
-				elseif self.ccCache and self.ccCache[1].type == "charm" and self.ccVariables.charm.tracked then
-					newAbility.type = "charm"
-					self.ccCache = nil
-					if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache. Charm was detected") end
+				if self.ccCache then
+					for i = #self.ccCache, 1, -1 do
+						if self.ccCache[i].type == abilityType then
+							newAbility.cacheId = self.ccCache[i].id
+							table.remove(self.ccCache, i)
+							if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache position "..i) end
+							break
+						elseif self.ccCache and self.ccCache[i].type == "charm" and self.ccVariables.charm.tracked then
+							newAbility.type = "charm"
+							table.remove(self.ccCache, i)
+							if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache position "..i..". Charm was detected") end
+							break
+						end
+					end
 				end
 				local inList, num = self:AIdInList(aId)
 				if not inList then
@@ -214,7 +235,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				else
 					self.ccActive[num].endTime = endTime*1000
 				end
-				if self.SV.debug.enabled then self.debug:Print("New cc "..eName.." - ID: "..newAbility.id) end
+				if self.SV.debug.enabled then self.debug:Print("New cc "..self:CropZOSString(eName).." - ID: "..newAbility.id) end
 				--------------------------
 				-- IGNORE CC CHAT LINKS --
 				--------------------------
@@ -223,48 +244,36 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 					self.debug:Print("Click |c2a52be|H1:CC_ABILITY_IGNORE_LINK:"..self:CropZOSString(eName)..":"..newAbility.id..":"..self:CropZOSString(GetUnitZone('player')).."|h[here]|h|r to ignore it in the future,")
 					self.debug:Print("or ignore the ID: "..newAbility.id.." manually in the |c2a52be/bcc|r menu")
 				end
-			-- elseif self.ccVariables.root.tracked and abilityType == ABILITY_TYPE_SNARE and self:IsPossibleRoot(aId) then
-				-- local ending = ((endTime-beginTime~=0) and endTime) or 0
-				-- local newAbility = {["id"] = aId, ["type"] = "root", ["endTime"] = ending*1000}
-				-- if self.ccCache and self.ccCache[1].type == "root" then
-					-- newAbility.cacheId = self.ccCache[1].id
-					-- self.ccCache = {}
-					-- if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache") end
-				-- end
-				-- local inList, num = self:AIdInList(aId)
-				-- if not self:ResInList(abilityType) then
-				-- if not inList then
-					-- self.ccChanged = true
-					-- table.insert(self.ccActive, newAbility)
-				-- else
-					-- self.ccActive[num].endTime = endTime*1000
-				-- end
-				-- if self.SV.debug.ccCache then self.debug:Print("New cc "..eName) end
-			elseif self.ccCache and self.ccCache[1] and self.ccCache[1].recorded == time and not self.ccVariables[abilityType] then
-				local ending = ((endTime-beginTime~=0) and endTime) or 0
-				local newAbility = {["id"] = aId, ["type"] = self.ccCache[1].type, ["endTime"] = ending*1000, ["cacheId"] = self.ccCache[1].id }
-				local inList, num = self:AIdInList(aId)
-				if not inList then
-					self.ccChanged = true
-					table.insert(self.ccActive, newAbility)
-					if self.SV.sound[self.ccVariables[abilityType].name].enabled then
-						self.ccVariables[abilityType].playSound = true
-						playCCSound = true
+			elseif self.ccCache then
+				for i = #self.ccCache, 1, -1 do
+					if self.ccCache[i].recorded == time and not self.ccVariables[abilityType] then
+						local ending = ((endTime-beginTime~=0) and endTime) or 0
+						local newAbility = {["id"] = aId, ["type"] = self.ccCache[i].type, ["endTime"] = ending*1000, ["cacheId"] = self.ccCache[i].id }
+						local inList, num = self:AIdInList(aId)
+						if not inList then
+							self.ccChanged = true
+							table.insert(self.ccActive, newAbility)
+							if self.SV.sound[self.ccVariables[type].name].enabled then
+								self.ccVariables[type].playSound = true
+								playCCSound = true
+							end
+						else
+							self.ccActive[num].endTime = endTime*1000
+						end
+						if self.SV.debug.enabled then self.debug:Print("New cc from cache "..self:CropZOSString(eName).." - ID: "..newAbility.cacheId) end
+						--------------------------
+						-- IGNORE CC CHAT LINKS --
+						--------------------------
+						if self.SV.settings.ccIgnoreLinks then
+							self.debug:Print("New cc ability detected "..self:CropZOSString(eName))
+							self.debug:Print("Click |c2a52be|H1:CC_ABILITY_IGNORE_LINK:"..self:CropZOSString(eName)..":"..newAbility.cacheId..":"..self:CropZOSString(GetUnitZone('player')).."|h[here]|h|r to ignore it in the future,")
+							self.debug:Print("or ignore the ID: "..newAbility.cacheId.." manually in the |c2a52be/bcc|r menu")
+						end
+						table.remove(self.ccCache, i)
+						if self.SV.debug.ccCache then self.debug:Print("CC ability detected from combat event. Clearing CC cache position "..i) end
+						break
 					end
-				else
-					self.ccActive[num].endTime = endTime*1000
 				end
-				if self.SV.debug.enabled then self.debug:Print("New cc from cache "..eName.." - ID: "..newAbility.cacheId) end
-				--------------------------
-				-- IGNORE CC CHAT LINKS --
-				--------------------------
-				if self.SV.settings.ccIgnoreLinks then
-					self.debug:Print("New cc ability detected "..self:CropZOSString(eName))
-					self.debug:Print("Click |c2a52be|H1:CC_ABILITY_IGNORE_LINK:"..self:CropZOSString(eName)..":"..newAbility.cacheId..":"..self:CropZOSString(GetUnitZone('player')).."|h[here]|h|r to ignore it in the future,")
-					self.debug:Print("or ignore the ID: "..newAbility.cacheId.." manually in the |c2a52be/bcc|r menu")
-				end
-				self.ccCache = nil
-				if self.SV.debug.ccCache then self.debug:Print("Clearing CC cache") end
 			end
 		elseif changeType == EFFECT_RESULT_FADED or changeType == EFFECT_RESULT_ITERATION_END --[[or changeType == EFFECT_RESULT_TRANSFER]] then
 			for i, entry in ipairs(self.ccActive) do
