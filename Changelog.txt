@@ -1,3 +1,7 @@
+2024.12.04 v1.0.6
+! ccCache will now be properly accessed and cleared
++ Added sound cues for CC abilities
+
 2024.11.16 v1.0.5
 ! Fix for bug when using CCTracker-reset keybind
 
