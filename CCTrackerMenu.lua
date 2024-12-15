@@ -163,10 +163,10 @@ end
 
 function CCTracker.menu.CreateIcons(panel)					-- Thanks to DakJaniels who came up with this solution
 	CCTracker.menu.icons = {["CC"] = {},["sound"] = {}}
-	if CCTracker.SV.debug.enabled then
-		CCTracker.debug:Print("Panel was created.")
-		if CCTracker.menu.icons[1] then CCTracker.debug:Print("Menu Icons seem to have been initialized before") else CCTracker.debug:Print("Menu Icons have not been initialized yet") end
-	end
+	-- self:PrintDebug("enabled", "Panel was created.")
+	
+	-- if CCTracker.menu.icons[1] then CCTracker.debug:Print("Menu Icons seem to have been initialized before") else CCTracker.debug:Print("Menu Icons have not been initialized yet") end
+		
 	for i = 1, #CCTracker.menu.constants.CC do
 		local number = CCTracker.menu.CreateMenuIconsPath(CCTracker.menu.constants.CC[i].Name)
 		CCTracker.menu.icons.CC[i] = WM:CreateControl(CCTracker.name.."MenuCCIcon"..i, panel.controlsToRefresh[number].checkbox, CT_TEXTURE)
@@ -193,7 +193,7 @@ function CCTracker.menu.CreateIcons(panel)					-- Thanks to DakJaniels who came 
 	end
 	
 	CALLBACK_MANAGER:UnregisterCallback("LAM-PanelControlsCreated", CCTracker.menu.CreateIcons)
-	if CCTracker.SV.debug.enabled then CCTracker.debug:Print("Deleting LAM Callback") end
+	-- self:PrintDebug("enabled", "Deleting LAM Callback")
 end
 
 function CCTracker:BuildMenu()
@@ -252,6 +252,14 @@ function CCTracker:BuildMenu()
                 for _, entry in pairs(self.ccVariables) do self.UI.ApplySize(entry.name) end
             end,
         },
+		-- {
+			-- type = "checkbox",
+			-- name = "Use advanced tracking",
+			-- tooltip = "Use additional resources to track CC",
+			-- warning = "This is an advanced option! It might cause CC to be shown, even though you don't recognize your character being impacted. This is due to how ZOS handles combat events. When using this I strongly advice to use the 'Enable chat links' option under 'CC ignore list' to adjust CC detection individually",
+			-- getFunc = function() return self.SV.settings.advancedTracking end,
+			-- setFunc = function(value) self.SV.settings.advancedTracking = value end,
+		-- },
 		{
 			type = "submenu",
 			name = "UI",
@@ -468,7 +476,7 @@ function CCTracker:BuildMenu()
 							local _, i = self:AIdInList(self.menu.ccList.abilityId)
 							table.remove(self.ccActive, i)
 							self.UI.ApplyIcons()
-							if self.SV.debug.ignoreList then self.debug:Print("Manually removed currrently active CC ability ID: "..self.menu.ccList.abilityId) end
+							self:PrintDebug("ignoreList", "Manually removed currrently active CC ability ID: "..self.menu.ccList.abilityId)
 						end
 						self.menu.ccList.abilityId = nil
 						self.menu.ccList.abilityType = nil
@@ -503,6 +511,28 @@ function CCTracker:BuildMenu()
 			controls = {
 				{	
 					type = "checkbox",
+					name = "Debug ccActive",
+					disabled = function() return not self.SV.debug.enabled end,
+					getFunc = function() return self.SV.debug.ccActive end,
+					setFunc = function(value)
+						self.SV.debug.ccActive = value
+						-- self.log = value
+					end,
+					width = "half",
+				},
+				{	
+					type = "checkbox",
+					name = "Debug ccAdded",
+					disabled = function() return not self.SV.debug.enabled end,
+					getFunc = function() return self.SV.debug.ccAdded end,
+					setFunc = function(value)
+						self.SV.debug.ccAdded = value
+						-- self.log = value
+					end,
+					width = "half",
+				},
+				{	
+					type = "checkbox",
 					name = "Debug ccCache",
 					disabled = function() return not self.SV.debug.enabled end,
 					getFunc = function() return self.SV.debug.ccCache end,
@@ -530,6 +560,17 @@ function CCTracker:BuildMenu()
 					getFunc = function() return self.SV.debug.ignoreList end,
 					setFunc = function(value)
 						self.SV.debug.ignoreList = value
+						-- self.log = value
+					end,
+					width = "half",
+				},
+				{	
+					type = "checkbox",
+					name = "Debug additional root list detection",
+					disabled = function() return not self.SV.debug.enabled end,
+					getFunc = function() return self.SV.debug.additionalRootList end,
+					setFunc = function(value)
+						self.SV.debug.additionalRootList = value
 						-- self.log = value
 					end,
 					width = "half",
