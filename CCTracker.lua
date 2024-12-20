@@ -38,6 +38,7 @@ function CCTracker:Init()
 	if self.started then return end
 	if LibChatMessage then
 		CCTracker.debug = LibChatMessage("|c2a52beb|rarnys|c2a52beCC|rTracker", "|c2a52beBCC|r")
+		CCTracker:HandleLibChatMessage()
 		LibChatMessage:RegisterCustomChatLink("CC_ABILITY_IGNORE_LINK", function(linkStyle, linkType, name, id, zone, displayText)
 			return ZO_LinkHandler_CreateLinkWithBrackets(displayText, nil, "CC_ABILITY_IGNORE_LINK", name, id, zone)
 		end)
@@ -46,7 +47,7 @@ function CCTracker:Init()
 		self:SetAllDebugFalse()
 	end
 	
-	if self.SV.additionalRoots and next(self.SV.additionalRoots) then
+	if NonContiguousCount(self.SV.additionalRoots) > 0 then
 		self:PrintDebug("additionalRoots", "Importing additional root abilities to constants")
 		for _, entry in ipairs(self.SV.additionalRoots) do
 			table.insert(self.constants.possibleRoots, entry)
@@ -73,8 +74,7 @@ function CCTracker:Init()
 	}
 	
 	self.UI = self:BuildUI()
-	-- for _, entry in pairs(self.ccVariables) do self.UI.ApplySize(entry.name) end
-	-- self.UI.ApplySize(self.SV.UI.size)
+	
 	self.UI.SetUnlocked(self.SV.settings.unlocked)
 	self.UI.FadeScenes("UI")
 	self:BuildMenu()
@@ -111,6 +111,28 @@ function CCTracker:Register()
 			CCTracker:HandleEffectsChanged(...)
 		end
 	)
+	EM:RegisterForEvent(
+		self.name.."PlayerDeactivated",
+		EVENT_PLAYER_DEACTIVATED,
+		function()
+			-- Clear all CC when player is deactivated
+			if NonContiguousCount(CCTracker.ccActive) > 0 then
+				CCTracker.ccActive = {}
+				CCTracker:CCChanged()
+			end
+		end
+	)
+	EM:RegisterForEvent(
+		self.name.."PlayerDead",
+		EVENT_PLAYER_DEAD,
+		function()
+			-- Clear all CC when player dies
+			if NonContiguousCount(CCTracker.ccActive) > 0 then
+				CCTracker.ccActive = {}
+				CCTracker:CCChanged()
+			end
+		end
+	)
 	self.registered = true
 end
 
@@ -120,6 +142,12 @@ function CCTracker:Unregister()
 		
 	EM:UnregisterForEvent(
 		self.name.."EffectsChanged")
+	
+	EM:UnregisterForEvent(
+		self.name.."PlayerDeactivated")
+	
+	EM:UnregisterForEvent(
+		self.name.."PlayerDead")
 	
 	self.registered = false
 end
@@ -147,18 +175,27 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 		self:ClearOutdatedLists(time, "Combat events")
 		
 		if res == ACTION_RESULT_EFFECT_FADED then
-			for i, check in ipairs(self.ccActive) do
-				if check.cacheId == aId or check.id == aId then
-								-- "snare"
-					if check.type == 10 and self.couldBeRoot and next(self.couldBeRoot) then
-						self:CheckForActualRoot(aId)
-					end
-					table.remove(self.ccActive, i)
-					self.UI.ApplyIcons()
-					self:PrintDebug("ccActive", "Removing ability "..name.." from ccActive list")
-					-- break
+			local inList, num = self:AbilityInList(aId)
+			if inList then
+				if self.ccActive[num].type == 10 and self.couldBeRoot and next(self.couldBeRoot) then
+					self:CheckForActualRoot(aId)
 				end
+				table.remove(self.ccActive, num)
+				self:CCChanged()
+				self:PrintDebug("ccActive", "Removing ability "..name.." from ccActive list")
 			end
+			-- for i, check in ipairs(self.ccActive) do
+				-- if check.cacheId == aId or check.id == aId then
+								-- "snare"
+					-- if check.type == 10 and self.couldBeRoot and next(self.couldBeRoot) then
+						-- self:CheckForActualRoot(aId)
+					-- end
+					-- table.remove(self.ccActive, i)
+					-- self.UI.ApplyIcons()
+					-- self:PrintDebug("ccActive", "Removing ability "..name.." from ccActive list")
+					-- break
+				-- end
+			-- end
 			return
 		end
 		if res == ACTION_RESULT_SNARED then
@@ -233,27 +270,38 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 		-- return
 	else
 		local playCCSound = false
+		local ccChanged = false
 		local time = GetFrameTimeMilliseconds()
 		
 		self:ClearOutdatedLists(time, "Effect changed")
 		
 		if IsUnitDeadOrReincarnating("player") then
-			self.ccActive = {}
-			self.UI.ApplyIcons()
+			if self.ccActive and next(self.ccActive) then
+				self.ccActive = {}
+				self:CCChanged()
+			end
 			return
 		elseif changeType == EFFECT_RESULT_FADED or changeType == EFFECT_RESULT_ITERATION_END --[[or changeType == EFFECT_RESULT_TRANSFER]] then
-			for i, entry in ipairs(self.ccActive) do
-				if entry.id == aId or entry.cacheId == aId then
-								--	"snare"
-					if entry.type == 10 and self.couldBeRoot and next(self.couldBeRoot) then
-						self:CheckForActualRoot(entry.id)
-					end
-					table.remove(self.ccActive, i)
-					-- self.ccVariables[entry.type].playSound = false
-					-- break
-					self:CCChanged()
+			local inList, num = self:AbilityInList(aId)
+			if inList then
+											--"snare"
+				if self.ccActive[num].type == 10 and self.couldBeRoot and next(self.couldBeRoot) then
+					self:CheckForActualRoot(aId)
 				end
+				table.remove(self.ccActive, num)
+				ccChanged = true
 			end
+			-- for i, entry in ipairs(self.ccActive) do
+				-- if entry.id == aId or entry.cacheId == aId then
+									-- "snare"
+					-- if entry.type == 10 and self.couldBeRoot and next(self.couldBeRoot) then
+						-- self:CheckForActualRoot(entry.id)
+					-- end
+					-- table.remove(self.ccActive, i)
+					-- ccChanged = true
+					-- break
+				-- end
+			-- end
 		elseif changeType == EFFECT_RESULT_GAINED or changeType == EFFECT_RESULT_FULL_REFRESH or changeType == EFFECT_RESULT_ITERATION_BEGIN --[[or changeType == EFFECT_RESULT_UPDATED]] then
 			local inList, num = self:AbilityInList(aId)
 			local name = self:CropZOSString(eName)
@@ -292,7 +340,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 							self.ccVariables[abilityType].playSound = true
 							playCCSound = true
 						end
-						self:CCChanged(playCCSound)
+						ccChanged = true
 					end
 					table.insert(self.ccActive, newAbility)
 					self:PrintDebug("ccActive", "New cc "..name.." - ID: "..newAbility.id.." - "..self.ccVariables[newAbility.type].name)
@@ -323,7 +371,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 									self.ccVariables[newAbility.type].playSound = true
 									playCCSound = true
 								end
-								self:CCChanged(playCCSound)
+								ccChanged = true
 							end
 							table.insert(self.ccActive, newAbility)
 							self:PrintDebug("ccActive", "ccCache", "New cc from cache "..self.ccCache[i].name.." - ID: "..self.ccCache[i].id.." - "..self.ccVariables[self.ccCache[i].type].name)
@@ -347,6 +395,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				end
 				self.ccCache = {}
 			end
+			if ccChanged then self:CCChanged(playCCSound) end
 		end
 	end
 end

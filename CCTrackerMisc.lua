@@ -131,6 +131,8 @@ CCTracker.constants.ignore = {
 	[36434] = "Mount",
 	[36419] = "Dismount",
 	[165424] = "Arsenal (Stun)",
+	[72712] = "Hideyhole",
+	[75747] = "Hideyhole",
 }
 	--------------------------
 	---- Helper functions ----
@@ -192,6 +194,7 @@ function CCTracker:CCChanged(playSound)
 		self:PlayCCSound()
 	end
 	self.UI.ApplyIcons()
+	self.menu.CreateListOfActiveCC()
 end
 
 -- function CCTracker:NameInList(aName)
@@ -348,6 +351,11 @@ end
 	---- Menu ----
 	--------------
 	
+function CCTracker:HandleLibChatMessage()
+	local value = (self.SV.debug.enabled or self.SV.settings.ccIgnoreLinks)
+	if self.debug then self.debug:SetEnabled(value) end
+end
+	
 function CCTracker.menu.CreateMenuIconsPath(ControlName)
 	local number
 	for i, entry in ipairs(barnysCCTrackerOptions.controlsToRefresh) do
@@ -363,13 +371,13 @@ function CCTracker.menu.UpdateLists()
 	CCTracker.menu.CreateIgnoredCCList()
 end
 
-local function CountTableLength(table)
-	local count = 0
-	for _ in pairs(table) do
-		count = count + 1
-	end
-	return count
-end
+-- local function CountTableLength(table)
+	-- local count = 0
+	-- for _ in pairs(table) do
+		-- count = count + 1
+	-- end
+	-- return count
+-- end
 
 function CCTracker.menu.CreateListOfActiveCC()
 	for i in pairs(CCTracker.menu.ccList.active) do
@@ -378,7 +386,7 @@ function CCTracker.menu.CreateListOfActiveCC()
 		CCTracker.menu.ccList.active.type[i] = nil
 	end
 	
-	if CountTableLength(CCTracker.ccActive) ~= 0 then
+	if NonContiguousCount(CCTracker.ccActive) ~= 0 then
 		for i, entry in ipairs(CCTracker.ccActive) do
 			if entry then
 				local abilityString = tostring("|t20:20:"..GetAbilityIcon(entry.id).."|t "..CCTracker:CropZOSString(GetAbilityName(entry.id))..", "..CCTracker.ccVariables[entry.type].name)
@@ -416,7 +424,7 @@ function CCTracker.menu.CreateIgnoredCCList()
 		CCTracker.menu.ccList.ignored.id[i] = nil
 	end
 	
-	if CountTableLength(CCTracker.SV.ignored) ~= 0 then
+	if NonContiguousCount(CCTracker.SV.ignored) ~= 0 then
 		for id, ccType in pairs(CCTracker.SV.ignored) do
 			local num = #CCTracker.menu.ccList.ignored.string + 1
 			local ignoredAbilityString = tostring("|t20:20:"..GetAbilityIcon(id).."|t "..ccType)

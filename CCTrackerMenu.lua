@@ -353,6 +353,7 @@ function CCTracker:BuildMenu()
 					getFunc = function() return self.SV.settings.ccIgnoreLinks end,
 					setFunc = function(value)
 						self.SV.settings.ccIgnoreLinks = value
+						self:HandleLibChatMessage()
 					end,
 				},
 				{	
@@ -498,7 +499,7 @@ function CCTracker:BuildMenu()
             getFunc = function() return self.SV.debug.enabled end,
             setFunc = function(value)
                 self.SV.debug.enabled = value
-				self.debug:SetEnabled(value)
+				self:HandleLibChatMessage()
 				if not value then
 					self:SetAllDebugFalse()
 				end

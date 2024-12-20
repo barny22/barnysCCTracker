@@ -4,8 +4,7 @@
       <Action name="CCTRACKER_RESET">
         <Down>
 			CCTracker.ccActive = {}
-			CCTracker.UI.ApplyIcons()
-			CCTracker.menu.CreateListOfActiveCC()
+			CCTracker:CCChanged()
 		</Down>
         <Up></Up>
       </Action>
