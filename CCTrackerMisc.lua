@@ -127,6 +127,7 @@ CCTracker.constants.ignore = {
 	[36432] = "Dismount",
 	[36417] = "Dismount",
 	[166794] = "DSR - Raging Current",
+	[167949] = "DSR - Raging Current",
 	[37139] = "Mount",
 	[36434] = "Mount",
 	[36419] = "Dismount",
