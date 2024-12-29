@@ -179,6 +179,8 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 			if inList then
 				if self.ccActive[num].type == 10 and self.couldBeRoot and next(self.couldBeRoot) then
 					self:CheckForActualRoot(aId)
+				elseif self.ccActive[num].type == "root" and self.couldJustBeSnare and next(self.couldJustBeSnare) then
+					self:CheckForActualSnare(aId)
 				end
 				table.remove(self.ccActive, num)
 				self:CCChanged()
@@ -258,6 +260,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 	--  self:PrintDebug("enabled", unitName.." - "..GetUnitName("player"))
 	
 	if not self.couldBeRoot then self.couldBeRoot = {} end	-- initialize "couldBeRoot" table
+	if not self.couldJustBeSnare then self.couldJustBeSnare = {} end -- initialize "couldJustBeSnare" table
 	
 	if not (unitTag == "player" or unitName == self.currentCharacterName) then
 		return
@@ -287,6 +290,8 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 											--"snare"
 				if self.ccActive[num].type == 10 and self.couldBeRoot and next(self.couldBeRoot) then
 					self:CheckForActualRoot(aId)
+				elseif self.ccActive[num].type == "root" and self.couldJustBeSnare and next(self.couldJustBeSnare) then
+					self:CheckForActualSnare(aId)
 				end
 				table.remove(self.ccActive, num)
 				ccChanged = true

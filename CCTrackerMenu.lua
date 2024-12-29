@@ -217,6 +217,9 @@ function CCTracker:BuildMenu()
 		["id"] = {},
 	}
 	
+	self.menu.additionalRootList = self.menu.additionalRootList or {}
+	self.menu.actualSnaresList = self.menu.actualSnaresList or {}
+	
 	self.menu.metadata = {
 		type = "panel",
         name = "barnysCCTracker",
@@ -567,6 +570,17 @@ function CCTracker:BuildMenu()
 				},
 				{	
 					type = "checkbox",
+					name = "Debug actual snare list",
+					disabled = function() return not self.SV.debug.enabled end,
+					getFunc = function() return self.SV.debug.actualSnares end,
+					setFunc = function(value)
+						self.SV.debug.actualSnares = value
+						-- self.log = value
+					end,
+					width = "half",
+				},
+				{	
+					type = "checkbox",
 					name = "Debug additional root list detection",
 					disabled = function() return not self.SV.debug.enabled end,
 					getFunc = function() return self.SV.debug.additionalRootList end,
@@ -575,6 +589,30 @@ function CCTracker:BuildMenu()
 						-- self.log = value
 					end,
 					width = "half",
+				},
+				{
+					type = "submenu",
+					name = "Additional CC Lists",
+					controls = {
+						{
+							type = "dropdown",
+							name = "Current additional roots",
+							disabled = function() return #self.SV.additionalRoots == 0 end,
+							choices = CCTracker.menu.additionalRootList,
+							getFunc = function() if next(self.SV.additionalRoots) then return self.SV.additionalRoots[1] end end,
+							setFunc = function() return end,
+							width = "half",
+						},
+						{
+							type = "dropdown",
+							name = "Current actual snares",
+							disabled = function() return #self.SV.actualSnares == 0 end,
+							choices = CCTracker.menu.actualSnaresList,
+							getFunc = function() if next(self.SV.actualSnares) then return self.SV.actualSnares[1] end end,
+							setFunc = function() return end,
+							width = "half",
+						},
+					},
 				},
 			},
 		},
