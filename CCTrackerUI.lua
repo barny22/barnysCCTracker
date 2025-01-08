@@ -142,7 +142,6 @@ function CCTracker:BuildUI()
 	-- indicator.ApplySize = ApplySize
 
 	local function ApplyIcons()
-		local active = {}
 		for _, entry in pairs(self.ccVariables) do
 			entry.active = false
 			self.UI.indicator[entry.name].controls.frame:SetHidden(true)

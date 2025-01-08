@@ -48,11 +48,14 @@ CCTracker.DEFAULT_SAVED_VARS = {
 		["alpha"] = 100,
 	},
 	["settings"] = {
-		["tracked"] = {},
+		["tracked"] = {
+			["exceptions"] = {
+				["death"] = true,
+			},
+		},
 		["unlocked"] = true,
 		["sample"] = false,
 		["ccIgnoreLinks"] = false,
-		["advancedTracking"] = true,
 	},
 	["sound"] = {
 		["Charm"] = {
@@ -108,6 +111,10 @@ CCTracker.DEFAULT_SAVED_VARS = {
 		["ccCache"] = false,
 		["roots"] = false,
 		["ignoreList"] = false,
+		["ccActive"] = false,
+		["ccAdded"] = false,
+		["actualSnares"] = false,
+		["additionalRootList"] = false,
 	},
 }
 
@@ -120,7 +127,7 @@ CCTracker.constants = CCTracker.constants or {
 	["rollDodge"] = 28549,	--ability id
 	["breakFree"] = 16565,
 	["exceptions"] = {
-		[41952] = "Cower",
+		-- [41952] = "Cower",
 		},
 	["ignore"] = {
 		[202995] = "IA - choosing vision/verse",
@@ -135,6 +142,8 @@ CCTracker.constants = CCTracker.constants or {
 		[165424] = "Arsenal (Stun)",
 		[72712] = "Hideyhole",
 		[75747] = "Hideyhole",
+		[28549] = "RollDodge",
+		[39518] = "Vampire Initiation",
 	},
 }
 	--------------------------
@@ -151,24 +160,35 @@ function CCTracker:CropZOSString(zosString)
     end
 end
 
+function CCTracker:IgnoreSwitch(specifier)
+	if specifier == "start" or specifier == "death" then
+		if self.SV.settings.tracked.exceptions.death then
+			self.constants.ignore[14644] = "Revive (Stun)"
+			self.constants.ignore[14646] = "Revive (Snare)"
+		else
+			self.constants.ignore[14644] = nil
+			self.constants.ignore[14646] = nil
+		end
+	end
+end
 
-function CCTracker:AbilityInList(aId)--, cacheId)
-	-- if aId and cacheId then
-		-- for i, entry in ipairs(self.ccActive) do
-			-- if entry.id == aId and entry.cacheId == cacheId then
-				-- return true, i		-- 'aId' found, cacheId is identical
-			-- end
-		-- end
-		-- return false -- 'aId' not found or 'cacheId isn't identical
-	-- elseif not cacheId then
 
-		for i, entry in ipairs(self.ccActive) do
+function CCTracker:AbilityInList(aId, list)--, cacheId)
+	if type(list[1]) == "table" then
+		for i, entry in ipairs(list) do
 			if entry.id == aId or entry.cacheId == aId then
 				return true, i		-- 'aId' found
 			end
 		end
 		return false -- 'aId' not found
-	-- end
+	elseif type(list[1]) == "number" then
+		for i, entry in ipairs(list) do
+			if entry == aId then
+				return true, i
+			end
+		end
+		return false
+	end
 end
 
 function CCTracker:TypeInList(cachedType)
@@ -186,11 +206,12 @@ function CCTracker:IsPossibleRoot(id)
 		return
 	end
 	local time = GetFrameTimeMilliseconds()
-	for _, check in ipairs(self.constants.possibleRoots) do
-		if check == id then
+	if CCTracker:AbilityInList(id, self.constants.possibleRoots) then
+	-- for _, check in ipairs(self.constants.possibleRoots) do
+		-- if check == id then
 			self:PrintDebug("roots", "Found possible root. It took "..tostring(GetFrameTimeMilliseconds()-time).."ms")
 			return true
-		end
+		-- end
 	end
 	self:PrintDebug("roots", "Checked for possible root, looked for "..tostring(GetFrameTimeMilliseconds()-time).."ms, it seems you were simply hit by a snare.")
 	return false
@@ -229,6 +250,10 @@ function CCTracker:ClearOutdatedLists(time, client)
 	
 	if self.couldJustBeSnare and next(self.couldJustBeSnare) then
 		self:ClearOutdatedSnareCache(time)
+	end
+	
+	for i, entry in pairs(self.activeEffects) do
+		if entry.time ~= time and not entry.subeffects then self.activeEffects[i] = nil end
 	end
 end
 
@@ -276,7 +301,7 @@ end
 function CCTracker:BreakFreeDetected()
 	local newActive = {}
 	for _, entry in ipairs(self.ccActive) do
-		if entry.type ~= "charm" and entry.type ~= 9 and entry.type ~= 27 then
+		if not (entry.type == "charm" or entry.type == 9 or entry.type == 27) then
 			table.insert(newActive, entry)
 		end
 	end
@@ -291,14 +316,21 @@ function CCTracker:RolldodgeDetected()
 		if entry.type ~= "root" then
 			table.insert(newActive, entry)
 		else
-			local couldJustBeSnare = {}
-			couldJustBeSnare.time = time
-			if entry.cacheId == 0 then
-				couldJustBeSnare.id = entry.id
-			else
-				couldJustBeSnare.id = entry.cacheId
+			-- local doCheck = false
+			-- for _, id in ipairs(self.SV.additionalRoots) do
+				-- if id == entry.id then doCheck = true end
+			-- end
+			if not CCTracker:AbilityInList(entry.id, self.SV.additionalRoots) then
+				local couldJustBeSnare = {}
+				couldJustBeSnare.time = time
+				if entry.cacheId == 0 then
+					couldJustBeSnare.id = entry.id
+				else
+					couldJustBeSnare.id = entry.cacheId
+				end
+				self:PrintDebug("actualSnares", "Saving ability "..couldJustBeSnare.id..": "..self:CropZOSString(GetAbilityName(couldJustBeSnare.id))..", for possible snare list")
+				table.insert(self.couldJustBeSnare, couldJustBeSnare)
 			end
-			table.insert(self.couldJustBeSnare, couldJustBeSnare)
 		end
 					-- "snare"
 		if entry.type == 10 then
@@ -314,26 +346,30 @@ function CCTracker:RolldodgeDetected()
 	end
 	self.ccActive = newActive
 	self.UI.ApplyIcons()
+	-- self:PrintDebug("enabled", "Found a dodgeRoll, you lucky guy")
 end
 
 function CCTracker:CheckForActualRoot(id)
-	for _, check in ipairs(self.couldBeRoot) do
-		if check.id == id then
+	if CCTracker:AbilityInList(id, self.couldBeRoot) then
+	-- for _, check in ipairs(self.couldBeRoot) do
+		-- if check.id == id then
 			table.insert(self.SV.additionalRoots, check.id)				-- add ability id to saved variables
 			table.insert(self.constants.possibleRoots, check.id)		-- add ability it to possibleRoots list to be sorted correctly in the future without reloading ui
 			self:PrintDebug("additionalRootList", "Added "..self:CropZOSString(GetAbilityName(check.id)).." - "..check.id.." - to additional roots")
-			break
-		end
+			-- break
+		-- end
 	end
 end
 
 function CCTracker:CheckForActualSnare(id)
-	for _, check in ipairs(self.couldJustBeSnare) do
-		if check.id == id then
+	-- for _, check in ipairs(self.couldJustBeSnare) do
+		self:PrintDebug("actualSnares", "Checking ability "..check.id..": "..self:CropZOSString(GetAbilityName(check.id)))
+		if CCTracker:AbilityInList(id, self.couldJustBeSnare) then
+		-- if check.id == id then
 			table.insert(self.SV.actualSnares, id)
 			self:PrintDebug("actualSnares", "Added"..self:CropZOSString(GetAbilityName(check.id)).." - "..check.id.." - to actualSnares")
-			break
-		end
+			-- break
+		-- end
 	end
 end
 	
@@ -443,7 +479,7 @@ function CCTracker.menu.CreateActualSnaresList()
 end
 
 function CCTracker.menu.CreateListOfActiveCC()
-	for i in pairs(CCTracker.menu.ccList.active) do
+	for i in ipairs(CCTracker.menu.ccList.active.string) do
 		CCTracker.menu.ccList.active.string[i] = nil
 		CCTracker.menu.ccList.active.id[i] = nil
 		CCTracker.menu.ccList.active.type[i] = nil

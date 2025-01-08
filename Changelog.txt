@@ -2,7 +2,7 @@
 ! ccActive will now be cleared on player deactivation or death
 ! ccCache will now be properly accessed and cleared
 ! Abilities wrongly declared as roots will now be filtered and ignored in the future when looking for roots
-+ Added advanced tracking method to be activated individually
+! Changed the way tracking works for more accurate results
 + Roots that are incorrectly detected as snares will now be added to a personal list in SV so they will be correctly detected as roots in the future (feel free to post your list of additional roots in the [url=https://www.esoui.com/downloads/info3988-barnysCCTracker-beta.html#comments]comment section[/url])
 + Stuns, fears and charms will now be removed automaticly if break free was detected
 + Roots will now be removed automaticly if dodgeroll was detected

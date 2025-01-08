@@ -91,7 +91,7 @@ CCTracker.menu.constants = {
 local function CreateCCCheckboxes()
 	local position
 	for i, entry in ipairs(CCTracker.menu.options) do
-		if entry.name == "CCs to track" then position = i break end
+		if entry.name == "CC to track" then position = i break end
 	end
 	for i = 1, #CCTracker.menu.constants.CC do
 		local control = {}
@@ -334,8 +334,26 @@ function CCTracker:BuildMenu()
 		},
 		{
 			type = "submenu",
-			name = "CCs to track",
+			name = "CC to track",
 			controls = {},
+		},
+		{
+			type = "submenu",
+			name = "Exceptions",
+			controls = {
+				{	
+					type = "checkbox",
+					name = "Ignore CC when reviving",
+					default = true,
+					tooltip = "This ignores the stun an slow during revive",
+					disabled = function() return not (self.SV.settings.tracked.Snare or self.SV.settings.tracked.Stun) end,
+					getFunc = function() return self.SV.settings.tracked.exceptions.death end,
+					setFunc = function(value)
+						self.SV.settings.tracked.exceptions.death = value
+						self:IgnoreSwitch("death")
+					end,
+				},				
+			},
 		},
 		{
 			type = "submenu",

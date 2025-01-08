@@ -8,8 +8,11 @@ CCTracker = {
 	},
 	["menu"] = {},
 	["SV"] = {},
+	["activeEffects"] = {},
 	["ccActive"] = {},
 	["UI"] = {},
+	["couldBeRoot"] = {},
+	["couldJustBeSnare"] = {},
 }
 
 local function OnAddOnLoaded(eventCode, addOnName)
@@ -21,9 +24,10 @@ local function OnAddOnLoaded(eventCode, addOnName)
  
     --create the default table
     --create the saved variable access object here and assign it to savedVars
-	CCTracker.SV = ZO_SavedVars:NewCharacterIdSettings("CCTrackerSV", 1, nil, CCTracker.DEFAULT_SAVED_VARS, GetWorldName())
+	local worldName = GetWorldName()
+	CCTracker.SV = ZO_SavedVars:NewCharacterIdSettings("CCTrackerSV", 1, nil, CCTracker.DEFAULT_SAVED_VARS, worldName)
 	if CCTracker.SV.global then
-		CCTracker.SV = ZO_SavedVars:NewAccountWide("CCTrackerSV", 1, nil, CCTracker.DEFAULT_SAVED_VARS, GetWorldName())
+		CCTracker.SV = ZO_SavedVars:NewAccountWide("CCTrackerSV", 1, nil, CCTracker.DEFAULT_SAVED_VARS, worldName)
 		CCTracker.SV.global = true
 	end
 	CCTracker:Init()
@@ -35,7 +39,9 @@ EM:RegisterForEvent(CCTracker.name, EVENT_ADD_ON_LOADED, OnAddOnLoaded)
 ZO_CreateStringId("SI_BINDING_NAME_CCTRACKER_RESET", "Reset CCTracker")
 
 function CCTracker:Init()
+
 	if self.started then return end
+	
 	if LibChatMessage then
 		CCTracker.debug = LibChatMessage("|c2a52beb|rarnys|c2a52beCC|rTracker", "|c2a52beBCC|r")
 		CCTracker:HandleLibChatMessage()
@@ -48,9 +54,13 @@ function CCTracker:Init()
 	end
 	
 	if NonContiguousCount(self.SV.additionalRoots) > 0 then
-		self:PrintDebug("additionalRoots", "Importing additional root abilities to constants")
+		self:PrintDebug("additionalRootList", "Importing additional root abilities to constants")
 		for _, entry in ipairs(self.SV.additionalRoots) do
-			table.insert(self.constants.possibleRoots, entry)
+			if not self:IsPossibleRoot(entry) then
+				table.insert(self.constants.possibleRoots, entry)
+			else
+				self:PrintDebug("additionalRootList", "Skipping skill "..entry..": "..self:CropZOSString(GetAbilityName(entry))..". Already in list")
+			end
 		end
 	end
 	
@@ -78,9 +88,8 @@ function CCTracker:Init()
 	self.UI.SetUnlocked(self.SV.settings.unlocked)
 	self.UI.FadeScenes("UI")
 	self:BuildMenu()
-	if self:CheckForCCRegister() then
-		self:Register()
-	end
+	
+	self:CheckForCCRegister()
 end
 
 	-----------------------------
@@ -90,10 +99,10 @@ end
 function CCTracker:CheckForCCRegister()
 	for _, check in pairs(self.SV.settings.tracked) do
 		if check == true then
-			return true
+			self:Register()
+			break
 		end
 	end
-	return false
 end
 
 function CCTracker:Register()
@@ -133,6 +142,24 @@ function CCTracker:Register()
 			end
 		end
 	)
+	EM:RegisterForEvent(
+		self.name.."WeaponPairLockChanged",
+		EVENT_WEAPON_PAIR_LOCK_CHANGED,
+		function(e, isLocked)
+			local cache = {}
+			--clear knockbacks if not isLocked
+			if CCTracker.ccVariables[17].active and not isLocked then
+				for _, entry in ipairs(CCTracker.ccActive) do
+					if entry.type ~= 17 then table.insert(cache, entry) end
+				end
+				CCTracker.ccActive = cache
+				CCTracker:CCChanged()
+				-- self:PrintDebug("enabled", "Eliminated knockbacks")
+			end
+		end
+	)
+	
+	self:IgnoreSwitch("start")
 	self.registered = true
 end
 
@@ -149,55 +176,69 @@ function CCTracker:Unregister()
 	EM:UnregisterForEvent(
 		self.name.."PlayerDead")
 	
+	EM:UnregisterForEvent(
+		self.name.."WeaponPairLockChanged")
+	
 	self.registered = false
 end
 
 function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tName, 
 										 _,	hVal, 	_,		_, _, _, 	_, aId,   _)
-	local name = self:CropZOSString(aName)
+	local aName = self:CropZOSString(aName)
+	
+	----------------------------------------
+	-- useful debug section do not delete!--
+	----------------------------------------
+	
+	local checkInList = self:AbilityInList(aId, self.couldJustBeSnare)
+	if checkInList then
+		self:PrintDebug("actualSnares", "Snare in list "..aId..": "..aName.." - "..res)
+	end
+	
 	if self:CropZOSString(tName) == self.currentCharacterName then
-		if self.constants.ignore[aId] then
-			-- self:PrintDebug("ccCache", "ccActive", "Ignored CC "..aId..": "..self.constants.ignore[aId])
-			return
-		elseif self.SV.ignored[aId] then
-			self:PrintDebug("ignoreList", "Ignored CC from ignore-list "..aId..": "..name)
-			return		
-		end
 		if aId == self.constants.breakFree and self.currentCharacterName == self:CropZOSString(sName) and self:DoesBreakFreeWork() then			-- remove stuns, fear and charm if player breaks free
 			self:BreakFreeDetected()
 			return
 		elseif aId == self.constants.rollDodge and self.currentCharacterName == self:CropZOSString(sName) and res == ACTION_RESULT_EFFECT_GAINED then	-- remove roots when player uses dodgeroll
 			self:RolldodgeDetected()
 			return
-		end		
+		elseif self.constants.ignore[aId] or self.SV.ignored[aId] then
+			self:PrintDebug("ignoreList", "ccActive", "Ignored CC from ignore-list "..aId..": "..aName)
+			return
+		end	
 		local time = GetFrameTimeMilliseconds()
 		
 		self:ClearOutdatedLists(time, "Combat events")
 		
 		if res == ACTION_RESULT_EFFECT_FADED then
-			local inList, num = self:AbilityInList(aId)
+			if self.activeEffects[aId] and self.activeEffects[aId].subeffects then
+				for _, j in ipairs(self.activeEffects[aId].subeffects) do
+					local inList, num = self:AbilityInList(j, self.ccActive)
+					if inList then
+						table.remove(self.ccActive, num)
+						self:CCChanged()
+						self:PrintDebug("ccActive", "Removing ability "..self:CropZOSString(GetAbilityName(j)).." from ccActive list")
+					end
+				end
+				return
+			end
+			local inList, num = self:AbilityInList(aId, self.ccActive)
 			if inList then
+				self:PrintDebug("actualSnares", "additionalRootList", "Effect "..aId..": "..aName.." faded, checking for actual root/snare")
 				if self.ccActive[num].type == 10 and self.couldBeRoot and next(self.couldBeRoot) then
 					self:CheckForActualRoot(aId)
 				elseif self.ccActive[num].type == "root" and self.couldJustBeSnare and next(self.couldJustBeSnare) then
 					self:CheckForActualSnare(aId)
+					self:PrintDebug("actualSnares", "Root faded, checking if "..aId..": "..aName.." was actually a snare")
 				end
 				table.remove(self.ccActive, num)
 				self:CCChanged()
-				self:PrintDebug("ccActive", "Removing ability "..name.." from ccActive list")
+				self:PrintDebug("ccActive", "Removing ability "..aName.." from ccActive list")
 			end
-			-- for i, check in ipairs(self.ccActive) do
-				-- if check.cacheId == aId or check.id == aId then
-								-- "snare"
-					-- if check.type == 10 and self.couldBeRoot and next(self.couldBeRoot) then
-						-- self:CheckForActualRoot(aId)
-					-- end
-					-- table.remove(self.ccActive, i)
-					-- self.UI.ApplyIcons()
-					-- self:PrintDebug("ccActive", "Removing ability "..name.." from ccActive list")
-					-- break
-				-- end
-			-- end
+			return
+		elseif res == ACTION_RESULT_EFFECT_GAINED then
+			local newEffect = {["name"] = aName, ["time"] = time}
+			self.activeEffects[aId] = newEffect
 			return
 		end
 		if res == ACTION_RESULT_SNARED then
@@ -207,21 +248,29 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 			if check.res == res and check.tracked and not self.constants.exceptions[aId] then
 				-- self:PrintDebug("ccCache", "Caching cc result")
 				
+				for _, entry in pairs(self.activeEffects) do
+					if entry.time == time then
+						if not entry.subeffects then entry.subeffects = {} end
+						table.insert(entry.subeffects, aId)
+						break
+					end
+				end
+				
 				-- trying direct import of abilities from combat events
 				local newAbility = {}
 				newAbility.id = aId
-				if --[[self.SV.settings.advancedTracking and ]]self:CropZOSString(sName) ~= self.currentCharacterName and not err then
+				if --[[self.SV.settings.advancedTracking and self:CropZOSString(sName) ~= self.currentCharacterName and]] not err then
 					newAbility.type = ccType
 					newAbility.endTime = 0
 					newAbility.cacheId = 0
 					local ccChanged = false
-					local inList, num = self:AbilityInList(aId, newAbility.cacheId)
+					local inList, num = self:AbilityInList(aId, self.ccActive)
 					if not inList then
 						if not self:TypeInList(newAbility.type) then
 							ccChanged = true
 						end
 						table.insert(self.ccActive, newAbility)
-						self:PrintDebug("ccActive", "New cc from combat events "..name.." - ID: "..aId.." - "..check.name)
+						self:PrintDebug("ccActive", "New cc from combat events "..aName.." - ID: "..aId.." - "..check.name)
 						self.ccAdded.combatEvents = self.ccAdded.combatEvents + 1
 						self:PrintDebug("ccAdded", "So far I've added "..self.ccAdded.combatEvents.." cc abilities from combatEvents and "..self.ccAdded.effectsChanged.." from effectsChanged")
 					end
@@ -236,14 +285,14 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 					-- IGNORE CC CHAT LINKS --
 					--------------------------
 					if self.SV.settings.ccIgnoreLinks then
-						self:PrintIgnoreLink(name, aId)
+						self:PrintIgnoreLink(aName, aId)
 					end
 					break
 				else
 					if not self.ccCache then self.ccCache = {} end
-					local newAbility = {["type"] = ccType, ["recorded"] = time, ["id"] = aId, ["name"] = name}
+					local newAbility = {["type"] = ccType, ["recorded"] = time, ["id"] = aId, ["name"] = aName}
 					table.insert(self.ccCache, newAbility)
-					self:PrintDebug("ccCache", "Caching ability "..name.." ID: "..aId)
+					self:PrintDebug("ccCache", "Caching ability "..aName.." ID: "..aId)
 					break
 				end
 			end
@@ -258,10 +307,7 @@ end
 
 function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,endTime,_,_,_,buffType,abilityType,_,unitName,_,aId,sType)
 	--  self:PrintDebug("enabled", unitName.." - "..GetUnitName("player"))
-	
-	if not self.couldBeRoot then self.couldBeRoot = {} end	-- initialize "couldBeRoot" table
-	if not self.couldJustBeSnare then self.couldJustBeSnare = {} end -- initialize "couldJustBeSnare" table
-	
+		
 	if not (unitTag == "player" or unitName == self.currentCharacterName) then
 		return
 	elseif self.SV.ignored[aId] or self.constants.ignore[aId] then
@@ -272,6 +318,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 		-- self.UI.ApplyIcons()
 		-- return
 	else
+		local eName = self:CropZOSString(eName)
 		local playCCSound = false
 		local ccChanged = false
 		local time = GetFrameTimeMilliseconds()
@@ -285,34 +332,24 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 			end
 			return
 		elseif changeType == EFFECT_RESULT_FADED or changeType == EFFECT_RESULT_ITERATION_END --[[or changeType == EFFECT_RESULT_TRANSFER]] then
-			local inList, num = self:AbilityInList(aId)
+			local inList, num = self:AbilityInList(aId, self.ccActive)
 			if inList then
+				self:PrintDebug("actualSnares", "additionalRootList", "Effect "..aId..": "..eName.." faded, checking for actual root/snare")
 											--"snare"
-				if self.ccActive[num].type == 10 and self.couldBeRoot and next(self.couldBeRoot) then
+				if self.ccActive[num].type == 10 and next(self.couldBeRoot) then
 					self:CheckForActualRoot(aId)
-				elseif self.ccActive[num].type == "root" and self.couldJustBeSnare and next(self.couldJustBeSnare) then
+				elseif self.ccActive[num].type == "root" and next(self.couldJustBeSnare) then
 					self:CheckForActualSnare(aId)
+					self:PrintDebug("actualSnares", "Root faded, checking if "..aId..": "..eName.." was actually a snare")
 				end
 				table.remove(self.ccActive, num)
 				ccChanged = true
 			end
-			-- for i, entry in ipairs(self.ccActive) do
-				-- if entry.id == aId or entry.cacheId == aId then
-									-- "snare"
-					-- if entry.type == 10 and self.couldBeRoot and next(self.couldBeRoot) then
-						-- self:CheckForActualRoot(entry.id)
-					-- end
-					-- table.remove(self.ccActive, i)
-					-- ccChanged = true
-					-- break
-				-- end
-			-- end
 		elseif changeType == EFFECT_RESULT_GAINED or changeType == EFFECT_RESULT_FULL_REFRESH or changeType == EFFECT_RESULT_ITERATION_BEGIN --[[or changeType == EFFECT_RESULT_UPDATED]] then
-			local inList, num = self:AbilityInList(aId)
-			local name = self:CropZOSString(eName)
+			local inList, num = self:AbilityInList(aId, self.ccActive)
 			if inList then
 				self.ccActive[num].endTime = endTime*1000
-				self:PrintDebug("ccActive", "Adjusting endTime of ability "..aId.." - "..name)
+				self:PrintDebug("ccActive", "Adjusting endTime of ability "..aId.." - "..eName)
 				self.ccAdded.endTimeUpdated = self.ccAdded.endTimeUpdated + 1
 				self:PrintDebug("ccAdded", "Updated the endtime of "..self.ccAdded.endTimeUpdated.." cc abilities")
 			else
@@ -348,7 +385,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 						ccChanged = true
 					end
 					table.insert(self.ccActive, newAbility)
-					self:PrintDebug("ccActive", "New cc "..name.." - ID: "..newAbility.id.." - "..self.ccVariables[newAbility.type].name)
+					self:PrintDebug("ccActive", "New cc "..eName.." - ID: "..newAbility.id.." - "..self.ccVariables[newAbility.type].name)
 					self.ccAdded.effectsChanged = self.ccAdded.effectsChanged + 1
 					self:PrintDebug("ccAdded", "So far I've added "..self.ccAdded.combatEvents.." cc abilities from combatEvents and "..self.ccAdded.effectsChanged.." from effectsChanged")
 					--------------------------
@@ -362,32 +399,27 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 			if self.ccCache and next(self.ccCache) then
 				local debugMessageSent = false
 				for i = #self.ccCache, 1, -1 do
-					inList, num = self:AbilityInList(self.ccCache[i].id)
+					inList, num = self:AbilityInList(self.ccCache[i].id, self.ccActive)
 					if inList then
 						self.ccActive[num].endTime = endTime*1000
 						self:PrintDebug("ccActive", "Adjusting endTime of ability "..aId.." - "..self.ccCache[i].name)
 					else
 						local ending = ((endTime-beginTime~=0) and endTime) or 0
 						local newAbility = {["id"] = aId, ["type"] = self.ccCache[i].type, ["endTime"] = ending*1000, ["cacheId"] = self.ccCache[i].id }
-						-- local inList, num = self:AbilityInList(aId, newAbility.cacheId)
-						-- if not inList then
-							if not self:TypeInList(newAbility.type) then
-								if self.SV.sound[self.ccVariables[newAbility.type].name].enabled then
-									self.ccVariables[newAbility.type].playSound = true
-									playCCSound = true
-								end
-								ccChanged = true
+						if not self:TypeInList(newAbility.type) then
+							if self.SV.sound[self.ccVariables[newAbility.type].name].enabled then
+								self.ccVariables[newAbility.type].playSound = true
+								playCCSound = true
 							end
-							table.insert(self.ccActive, newAbility)
-							self:PrintDebug("ccActive", "ccCache", "New cc from cache "..self.ccCache[i].name.." - ID: "..self.ccCache[i].id.." - "..self.ccVariables[self.ccCache[i].type].name)
-							self.ccAdded.effectsChanged = self.ccAdded.effectsChanged + 1
-							self:PrintDebug("ccAdded", "So far I've added "..self.ccAdded.combatEvents.." cc abilities from combatEvents and "..self.ccAdded.effectsChanged.." from effectsChanged")
-					-- else
-						-- self.ccActive[num].endTime = endTime*1000
-						-- end
-						--------------------------
+							ccChanged = true
+						end
+						table.insert(self.ccActive, newAbility)
+						self:PrintDebug("ccActive", "ccCache", "New cc from cache "..self.ccCache[i].name.." - ID: "..self.ccCache[i].id.." - "..self.ccVariables[self.ccCache[i].type].name)
+						self.ccAdded.effectsChanged = self.ccAdded.effectsChanged + 1
+						self:PrintDebug("ccAdded", "So far I've added "..self.ccAdded.combatEvents.." cc abilities from combatEvents and "..self.ccAdded.effectsChanged.." from effectsChanged")
+						----------------------
 						-- IGNORE CC CHAT LINKS --
-						--------------------------
+						----------------------
 						if self.SV.settings.ccIgnoreLinks then
 							self:PrintIgnoreLink(name, newAbility.cacheId)
 						end
