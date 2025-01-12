@@ -123,8 +123,7 @@ CCTracker.DEFAULT_SAVED_VARS = {
 	-------------------
 CCTracker.constants = CCTracker.constants or {
 	["possibleRoots"] = {34706,44305,28452,183009,35391,14523,63168,126700,1856,5655,5656,5657,8373,8668,10896,14138,14467,14468,14469,16353,16668,18391,20253,20527,20528,20816,21114,21776,22004,23277,23402,23831,23916,23924,26118,26869,27145,27156,27167,27303,27304,27306,27307,27309,27311,28025,28308,29721,30083,30085,30087,30089,30092,30095,30218,30221,30224,31713,32685,33903,33912,33921,34183,34187,34578,35750,37001,38705,38984,38989,40372,40382,40769,40773,40777,40977,40988,40995,41000,41006,41013,42008,42706,42713,42720,42727,42737,42747,42757,42764,42771,45481,47084,47086,47109,47210,48287,49557,49630,50286,50287,50544,50981,52436,54795,54819,55485,56731,60790,60792,60798,60799,60801,64133,65892,65893,65894,67514,68564,70246,72208,73652,76423,76448,76449,79122,79124,79457,79459,80574,80812,80815,80821,80822,80823,80830,80831,80834,82054,82055,82318,84434,85128,86175,86176,86177,86178,86179,86180,86181,86182,86183,86184,86185,86186,86238,86506,86508,86510,86518,86520,86522,87236,87260,87264,87443,87560,88310,88462,88801,89680,89812,91224,91227,91246,91627,92038,92038,92039,92039,92058,92060,97002,97005,98637,99367,100420,101755,102008,102023,104196,104686,104688,104894,104897,104900,105011,105017,105232,105235,105286,105292,105293,105627,105641,105642,107238,107303,107305,107311,107312,110190,110916,110919,110920,110922,110923,110940,110965,110966,110968,110969,110970,110971,110975,110976,110977,110978,111346,111570,111571,111847,112131,112550,112763,113133,113261,113513,113566,114162,115177,116798,117133,118308,118352,119035,119068,124575,127193,127194,127226,127227,129348,129897,129907,137917,137918,141310,142962,146956,149956,149957,157747,160299,160301,160302,163569,165357,165363,165379,165871,167678,167683,169698,169701,171560,171566,171581,171582,171583,171584,171603,171742,171751,171752,171759,171760,171761,171789,171879,171880,172831,172833,174174,174455,174958,175540,175810,175811,176658,176659,176660,177194,177195,177196,177197,177564,177578,177595,178464,178566,178863,178864,178865,178875,178969,179089,179205,179413,179553,181211,182338,182401,183006,183401,185817,185823,187362,188624,188627,188678,188679,188680,188695,188696,188699,191568,193017,195893,198781,201973,201974,201978,201979,201980,201981,202047,202048,202049,202050,202075,202718,202725,202727,202728,202729,202777,203033,203034,203035,203036,203378,204176,204942,206265,206266,206296,206297,206298,206299,206762,206763,206764,206765,206766,207298,209479,209483,209884,209886,209891,209892,209894,209904,209905,209906,209907,209908,209910,209911,209912,209913,210053,210054,210107,210415,210417,210424,210433,210434,210435,210436,210460,210461,210477,214487,215348,215349,215350,215351,215358,215662,215663,215664,216393,216399,216972,217190,217208,217209,217529,217529,218162,218251,218252,218334,218335,219388,219407,219418,222594,222595,222597,222611,222612,222614,223477,20115177,20118308,20118352,20183006,20183401,20185817,20185823,20217190,30115177,30118308,30118352,30183006,30183401,30185817,30185823,30217190,40115177,40118308,40118352,40183006,40183401,40185817,40185823,40217190},
-	--["dodgeRoll"] = 29721,	-- buff id
-	["rollDodge"] = 28549,	--ability id
+	["rollDodge"] = {["abilityId"] = 28549,	["buffId"] = 29721},
 	["breakFree"] = 16565,
 	["exceptions"] = {
 		-- [41952] = "Cower",
@@ -209,11 +208,11 @@ function CCTracker:IsPossibleRoot(id)
 	if CCTracker:AbilityInList(id, self.constants.possibleRoots) then
 	-- for _, check in ipairs(self.constants.possibleRoots) do
 		-- if check == id then
-			self:PrintDebug("roots", "Found possible root. It took "..tostring(GetFrameTimeMilliseconds()-time).."ms")
+			if not self:AbilityInList(id, self.SV.additionalRoots) then self:PrintDebug("roots", "Found possible root "..self:CropZOSString(GetAbilityName(id)).." with ID: "..id) end
 			return true
 		-- end
 	end
-	self:PrintDebug("roots", "Checked for possible root, looked for "..tostring(GetFrameTimeMilliseconds()-time).."ms, it seems you were simply hit by a snare.")
+	if not self:AbilityInList(id, self.SV.additionalRoots) then self:PrintDebug("roots", "Checked "..self.CropZOSString(GetAbilityName(id)).." - "..id.." for possible root, it seems you were simply hit by a snare.") end
 	return false
 end
 
@@ -223,6 +222,18 @@ function CCTracker:CCChanged(playSound)
 	end
 	self.UI.ApplyIcons()
 	self.menu.CreateListOfActiveCC()
+	if self.SV.debug.activeCCList then self:CreateActiveCCString() end
+end
+
+function CCTracker:CreateActiveCCString()
+	local stringOfAllActiveCC
+	for i, entry in ipairs(self.menu.ccList.active.string) do
+		if i == 1 then
+			stringOfAllActiveCC = tostring(self.menu.ccList.active.id[i].." "..entry)
+		else
+			stringOfAllActiveCC = tostring("/n "..self.menu.ccList.active.id[i].." "..entry)
+		end
+	end
 end
 
 -- function CCTracker:NameInList(aName)
@@ -252,25 +263,24 @@ function CCTracker:ClearOutdatedLists(time, client)
 		self:ClearOutdatedSnareCache(time)
 	end
 	
-	for i, entry in pairs(self.activeEffects) do
-		if entry.time ~= time and not entry.subeffects then self.activeEffects[i] = nil end
+	if self.activeEffects and next(self.activeEffects) then
+		self:ClearOutdatedActiveEffects(time)
 	end
 end
 
 	-------------------
 	---- CC active ----
 	-------------------
+function CCTracker:ClearOutdatedActiveEffects(time)
+	for id, entry in pairs(self.activeEffects) do
+		if entry.time ~= time and (not entry.subeffects or (entry.subeffects and not next(entry.subeffects))) then
+			self.activeEffects[id] = nil
+			self:CCChanged()
+		end
+	end
+end
 
-function CCTracker:ClearOutdatedCC(time)
-	-- for i = #self.ccActive, 1, -1 do
-		-- if self.ccActive[i].endTime ~= 0 then
-			-- if self.ccActive[i].endTime < time then
-				-- table.remove(self.ccActive, i)
-				-- self:PrintDebug("enabled", "deleting entries in cc list")
-			-- end
-		-- end
-	-- end
-	
+function CCTracker:ClearOutdatedCC(time)	
 	local newActive = {}
 	for _, entry in ipairs(self.ccActive) do
 		if entry.endTime == 0 or entry.endTime > time then
@@ -316,10 +326,6 @@ function CCTracker:RolldodgeDetected()
 		if entry.type ~= "root" then
 			table.insert(newActive, entry)
 		else
-			-- local doCheck = false
-			-- for _, id in ipairs(self.SV.additionalRoots) do
-				-- if id == entry.id then doCheck = true end
-			-- end
 			if not CCTracker:AbilityInList(entry.id, self.SV.additionalRoots) then
 				local couldJustBeSnare = {}
 				couldJustBeSnare.time = time
@@ -349,27 +355,24 @@ function CCTracker:RolldodgeDetected()
 	-- self:PrintDebug("enabled", "Found a dodgeRoll, you lucky guy")
 end
 
-function CCTracker:CheckForActualRoot(id)
-	if CCTracker:AbilityInList(id, self.couldBeRoot) then
-	-- for _, check in ipairs(self.couldBeRoot) do
-		-- if check.id == id then
-			table.insert(self.SV.additionalRoots, check.id)				-- add ability id to saved variables
-			table.insert(self.constants.possibleRoots, check.id)		-- add ability it to possibleRoots list to be sorted correctly in the future without reloading ui
-			self:PrintDebug("additionalRootList", "Added "..self:CropZOSString(GetAbilityName(check.id)).." - "..check.id.." - to additional roots")
-			-- break
-		-- end
+function CCTracker:SnareRootCheck(id, num, name)
+	if self.ccActive[num].type == 10 or self.ccActive[num] == "root" then 
+		local ccType
+		if self.ccActive[num].type == 10 then
+			ccType = "Snare"
+		else
+			ccType = "Root"
+		end
+		-- self:PrintDebug("actualSnares", "additionalRootList", ccType.." effect "..id..": "..name.." faded, checking for actual "..ccType)
 	end
-end
-
-function CCTracker:CheckForActualSnare(id)
-	-- for _, check in ipairs(self.couldJustBeSnare) do
-		self:PrintDebug("actualSnares", "Checking ability "..check.id..": "..self:CropZOSString(GetAbilityName(check.id)))
-		if CCTracker:AbilityInList(id, self.couldJustBeSnare) then
-		-- if check.id == id then
-			table.insert(self.SV.actualSnares, id)
-			self:PrintDebug("actualSnares", "Added"..self:CropZOSString(GetAbilityName(check.id)).." - "..check.id.." - to actualSnares")
-			-- break
-		-- end
+	
+	if self.ccActive[num].type == 10 and next(self.couldBeRoot) and self:AbilityInList(id, self.couldBeRoot) then
+		table.insert(self.SV.additionalRoots, id)				-- add ability id to saved variables
+		table.insert(self.constants.possibleRoots, id)			-- add ability it to possibleRoots list to be sorted correctly in the future without reloading ui
+		self:PrintDebug("additionalRootList", "Added "..self:CropZOSString(GetAbilityName(id)).." - "..id.." - to additional roots")
+	elseif self.ccActive[num].type == "root" and next(self.couldJustBeSnare) and self:AbilityInList(id, self.couldJustBeSnare) then
+		table.insert(self.SV.actualSnares, id)
+		self:PrintDebug("actualSnares", "Added"..self:CropZOSString(GetAbilityName(id)).." - "..id.." - to actualSnares")
 	end
 end
 	
@@ -610,7 +613,7 @@ end
 
 function CCTracker:SetAllDebugFalse()
 	for option, _ in pairs(self.SV.debug) do
-		self.SV.debug[option] = false
+		if option ~= "activeCCList" then self.SV.debug[option] = false end
 	end
 end
 

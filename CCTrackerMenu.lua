@@ -513,6 +513,14 @@ function CCTracker:BuildMenu()
 			type = "header",
 			name = "Debug section",
 		},
+		{	
+			type = "checkbox",
+			name = "Show live list of active CC",
+			getFunc = function() return self.SV.debug.activeCCList end,
+			setFunc = function(value)
+				self.SV.debug.activeCCList = value
+			end,
+		},
         {	
 			type = "checkbox",
             name = "Enable debugging",
@@ -524,7 +532,6 @@ function CCTracker:BuildMenu()
 				if not value then
 					self:SetAllDebugFalse()
 				end
-                -- self.log = value
             end
         },
 		{ 
@@ -538,7 +545,6 @@ function CCTracker:BuildMenu()
 					getFunc = function() return self.SV.debug.ccActive end,
 					setFunc = function(value)
 						self.SV.debug.ccActive = value
-						-- self.log = value
 					end,
 					width = "half",
 				},
@@ -549,7 +555,6 @@ function CCTracker:BuildMenu()
 					getFunc = function() return self.SV.debug.ccAdded end,
 					setFunc = function(value)
 						self.SV.debug.ccAdded = value
-						-- self.log = value
 					end,
 					width = "half",
 				},
@@ -560,7 +565,6 @@ function CCTracker:BuildMenu()
 					getFunc = function() return self.SV.debug.ccCache end,
 					setFunc = function(value)
 						self.SV.debug.ccCache = value
-						-- self.log = value
 					end,
 					width = "half",
 				},
@@ -571,7 +575,6 @@ function CCTracker:BuildMenu()
 					getFunc = function() return self.SV.debug.roots end,
 					setFunc = function(value)
 						self.SV.debug.roots = value
-						-- self.log = value
 					end,
 					width = "half",
 				},
@@ -582,7 +585,6 @@ function CCTracker:BuildMenu()
 					getFunc = function() return self.SV.debug.ignoreList end,
 					setFunc = function(value)
 						self.SV.debug.ignoreList = value
-						-- self.log = value
 					end,
 					width = "half",
 				},
@@ -593,7 +595,6 @@ function CCTracker:BuildMenu()
 					getFunc = function() return self.SV.debug.actualSnares end,
 					setFunc = function(value)
 						self.SV.debug.actualSnares = value
-						-- self.log = value
 					end,
 					width = "half",
 				},
@@ -604,7 +605,6 @@ function CCTracker:BuildMenu()
 					getFunc = function() return self.SV.debug.additionalRootList end,
 					setFunc = function(value)
 						self.SV.debug.additionalRootList = value
-						-- self.log = value
 					end,
 					width = "half",
 				},

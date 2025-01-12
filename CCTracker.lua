@@ -9,6 +9,9 @@ CCTracker = {
 	["menu"] = {},
 	["SV"] = {},
 	["activeEffects"] = {},
+	["status"] = {
+		["immunityToImmobilization"] = false,
+	},
 	["ccActive"] = {},
 	["UI"] = {},
 	["couldBeRoot"] = {},
@@ -190,8 +193,8 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 	-- useful debug section do not delete!--
 	----------------------------------------
 	
-	local checkInList = self:AbilityInList(aId, self.couldJustBeSnare)
-	if checkInList then
+	local checkInList, k = self:AbilityInList(aId, self.couldJustBeSnare)
+	if checkInList and GetFrameTimeMilliseconds() == self.couldJustBeSnare[k].time then
 		self:PrintDebug("actualSnares", "Snare in list "..aId..": "..aName.." - "..res)
 	end
 	
@@ -199,7 +202,7 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 		if aId == self.constants.breakFree and self.currentCharacterName == self:CropZOSString(sName) and self:DoesBreakFreeWork() then			-- remove stuns, fear and charm if player breaks free
 			self:BreakFreeDetected()
 			return
-		elseif aId == self.constants.rollDodge and self.currentCharacterName == self:CropZOSString(sName) and res == ACTION_RESULT_EFFECT_GAINED then	-- remove roots when player uses dodgeroll
+		elseif aId == self.constants.rollDodge.abilityId and self.currentCharacterName == self:CropZOSString(sName) and res == ACTION_RESULT_EFFECT_GAINED then	-- remove roots when player uses dodgeroll
 			self:RolldodgeDetected()
 			return
 		elseif self.constants.ignore[aId] or self.SV.ignored[aId] then
@@ -211,38 +214,57 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 		self:ClearOutdatedLists(time, "Combat events")
 		
 		if res == ACTION_RESULT_EFFECT_FADED then
+			if aId == self.constants.rollDodge.buffId then
+				self.status.immunityToImmobilization = false
+				return
+			end
 			if self.activeEffects[aId] and self.activeEffects[aId].subeffects then
-				for _, j in ipairs(self.activeEffects[aId].subeffects) do
-					local inList, num = self:AbilityInList(j, self.ccActive)
-					if inList then
-						table.remove(self.ccActive, num)
+				for _, id in ipairs(self.activeEffects[aId].subeffects) do
+					local inActiveList, number = self:AbilityInList(id, self.ccActive)
+					if inActiveList then
+						self:SnareRootCheck(aId, number, aName)
+						table.remove(self.ccActive, number)
+						
+						-----------------------------------------------------------------------------
+						-- removing ability from all possible subeffects it may have been saved to --
+						-----------------------------------------------------------------------------
+						for _, entry in pairs(self.activeEffects) do
+							if entry.subeffects and next(entry.subeffects) then
+								for k, check in ipairs(entry.subeffects) do
+									if check == id then table.remove(entry.subeffects, k) end
+								end
+							end
+						end
+						
 						self:CCChanged()
-						self:PrintDebug("ccActive", "Removing ability "..self:CropZOSString(GetAbilityName(j)).." from ccActive list")
+						self:PrintDebug("ccActive", "Removing ability "..self:CropZOSString(GetAbilityName(id)).." from ccActive list")
 					end
 				end
-				return
+				-- return
 			end
 			local inList, num = self:AbilityInList(aId, self.ccActive)
 			if inList then
-				self:PrintDebug("actualSnares", "additionalRootList", "Effect "..aId..": "..aName.." faded, checking for actual root/snare")
-				if self.ccActive[num].type == 10 and self.couldBeRoot and next(self.couldBeRoot) then
-					self:CheckForActualRoot(aId)
-				elseif self.ccActive[num].type == "root" and self.couldJustBeSnare and next(self.couldJustBeSnare) then
-					self:CheckForActualSnare(aId)
-					self:PrintDebug("actualSnares", "Root faded, checking if "..aId..": "..aName.." was actually a snare")
-				end
+				self:SnareRootCheck(aId, num, aName)
 				table.remove(self.ccActive, num)
 				self:CCChanged()
 				self:PrintDebug("ccActive", "Removing ability "..aName.." from ccActive list")
+				return
 			end
-			return
 		elseif res == ACTION_RESULT_EFFECT_GAINED then
+			if aId == self.constants.rollDodge.buffId then
+				self.status.immunityToImmobilization = true
+				return
+			end
 			local newEffect = {["name"] = aName, ["time"] = time}
 			self.activeEffects[aId] = newEffect
 			return
 		end
 		if res == ACTION_RESULT_SNARED then
 			if CCTracker:IsPossibleRoot(aId) then res = 2480 end
+			if res == 2480 and self.status.immunityToImmobilization then
+				self:PrintDebug("roots", "actualSnares", "Someone tried to root you, when you were immune to immobilization. That was a rookie mistake")
+				return
+			end
 		end
 		for ccType, check in pairs(self.ccVariables) do
 			if check.res == res and check.tracked and not self.constants.exceptions[aId] then
@@ -252,7 +274,6 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 					if entry.time == time then
 						if not entry.subeffects then entry.subeffects = {} end
 						table.insert(entry.subeffects, aId)
-						break
 					end
 				end
 				
@@ -313,10 +334,6 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 	elseif self.SV.ignored[aId] or self.constants.ignore[aId] then
 		self:PrintDebug("ignoreList", "ccActvie", "Ignored CC from ignore-list "..aId..": "..self:CropZOSString(eName))
 		return
-	-- elseif aId == self.constants.dodgeRoll and sType == COMBAT_UNIT_TYPE_PLAYER and changeType == EFFECT_RESULT_UPDATED and self:TypeInList("root") then	-- remove roots if player uses dodgeroll
-		-- self:RolldodgeDetected()
-		-- self.UI.ApplyIcons()
-		-- return
 	else
 		local eName = self:CropZOSString(eName)
 		local playCCSound = false
@@ -327,25 +344,28 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 		
 		if IsUnitDeadOrReincarnating("player") then
 			if self.ccActive and next(self.ccActive) then
-				self.ccActive = {}
+				for _, entry in ipairs(self.ccActive) do
+					entry = nil
+				end
 				self:CCChanged()
 			end
 			return
 		elseif changeType == EFFECT_RESULT_FADED or changeType == EFFECT_RESULT_ITERATION_END --[[or changeType == EFFECT_RESULT_TRANSFER]] then
+			if aId == self.constants.rollDodge.buffId then
+				self.status.immunityToImmobilization = false
+				return
+			end
 			local inList, num = self:AbilityInList(aId, self.ccActive)
 			if inList then
-				self:PrintDebug("actualSnares", "additionalRootList", "Effect "..aId..": "..eName.." faded, checking for actual root/snare")
-											--"snare"
-				if self.ccActive[num].type == 10 and next(self.couldBeRoot) then
-					self:CheckForActualRoot(aId)
-				elseif self.ccActive[num].type == "root" and next(self.couldJustBeSnare) then
-					self:CheckForActualSnare(aId)
-					self:PrintDebug("actualSnares", "Root faded, checking if "..aId..": "..eName.." was actually a snare")
-				end
+				self:SnareRootCheck(aId, num, eName)
 				table.remove(self.ccActive, num)
 				ccChanged = true
 			end
 		elseif changeType == EFFECT_RESULT_GAINED or changeType == EFFECT_RESULT_FULL_REFRESH or changeType == EFFECT_RESULT_ITERATION_BEGIN --[[or changeType == EFFECT_RESULT_UPDATED]] then
+			if aId == self.constants.rollDodge.buffId then
+				self.status.immunityToImmobilization = true
+				return
+			end
 			local inList, num = self:AbilityInList(aId, self.ccActive)
 			if inList then
 				self.ccActive[num].endTime = endTime*1000
@@ -355,6 +375,10 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 			else
 				if abilityType == ABILITY_TYPE_SNARE then
 					if CCTracker:IsPossibleRoot(aId) then abilityType = "root" end
+					if abilityType == "root" and self.status.immunityToImmobilization then
+						self:PrintDebug("roots", "actualSnares", "Someone tried to root you, when you were immune to immobilization. That was a rookie mistake")
+						return
+					end
 				end
 				if self.ccVariables[abilityType] and self.ccVariables[abilityType].tracked then
 					local ending = ((endTime-beginTime~=0) and endTime) or 0
