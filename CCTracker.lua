@@ -3,8 +3,8 @@ CCTracker = {
 	["name"] = "barnysCCTracker",
 	["version"] = {
 		["patch"] = 1,
-		["major"] = 0,
-		["minor"] = 6,
+		["major"] = 1,
+		["minor"] = 0,
 	},
 	["menu"] = {},
 	["SV"] = {},
@@ -217,63 +217,66 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 			if aId == self.constants.rollDodge.buffId then
 				self.status.immunityToImmobilization = false
 				return
-			end
-			if self.activeEffects[aId] and self.activeEffects[aId].subeffects then
+			elseif self.activeEffects[aId] and self.activeEffects[aId].subeffects then
 				for _, id in ipairs(self.activeEffects[aId].subeffects) do
 					local inActiveList, number = self:AbilityInList(id, self.ccActive)
 					if inActiveList then
-						self:SnareRootCheck(aId, number, aName)
+						self:SnareRootCheck(id, number, aName)
 						table.remove(self.ccActive, number)
 						
 						-----------------------------------------------------------------------------
 						-- removing ability from all possible subeffects it may have been saved to --
 						-----------------------------------------------------------------------------
-						for _, entry in pairs(self.activeEffects) do
-							if entry.subeffects and next(entry.subeffects) then
-								for k, check in ipairs(entry.subeffects) do
-									if check == id then table.remove(entry.subeffects, k) end
-								end
-							end
-						end
+						self:ClearSubeffects(id, time)
 						
 						self:CCChanged()
 						self:PrintDebug("ccActive", "Removing ability "..self:CropZOSString(GetAbilityName(id)).." from ccActive list")
 					end
 				end
-				-- return
-			end
-			local inList, num = self:AbilityInList(aId, self.ccActive)
-			if inList then
-				self:SnareRootCheck(aId, num, aName)
-				table.remove(self.ccActive, num)
-				self:CCChanged()
-				self:PrintDebug("ccActive", "Removing ability "..aName.." from ccActive list")
 				return
+			else
+				local inList, num = self:AbilityInList(aId, self.ccActive)
+				if inList then
+					self:SnareRootCheck(aId, num, aName)
+					table.remove(self.ccActive, num)
+					self:CCChanged()
+					self:PrintDebug("ccActive", "Removing ability "..aName.." from ccActive list")
+					return
+				end
 			end
 		elseif res == ACTION_RESULT_EFFECT_GAINED then
 			if aId == self.constants.rollDodge.buffId then
 				self.status.immunityToImmobilization = true
 				return
+			elseif not (self.activeEffects[aId] and self.activeEffects[aId].subeffects) then
+				local newEffect = {["name"] = aName, ["time"] = time}
+				self.activeEffects[aId] = newEffect
 			end
-			local newEffect = {["name"] = aName, ["time"] = time}
-			self.activeEffects[aId] = newEffect
 			return
 		end
 		if res == ACTION_RESULT_SNARED then
-			if CCTracker:IsPossibleRoot(aId) then res = 2480 end
-			if res == 2480 and self.status.immunityToImmobilization then
-				self:PrintDebug("roots", "actualSnares", "Someone tried to root you, when you were immune to immobilization. That was a rookie mistake")
-				return
+			if CCTracker:IsPossibleRoot(aId) then
+				res = 2480
+				if self.status.immunityToImmobilization then
+					self:PrintDebug("roots", "actualSnares", "Someone tried to root you, when you were immune to immobilization. What a foolisch rookie mistake")
+					return
+				end
 			end
 		end
 		for ccType, check in pairs(self.ccVariables) do
 			if check.res == res and check.tracked and not self.constants.exceptions[aId] then
 				-- self:PrintDebug("ccCache", "Caching cc result")
 				
-				for _, entry in pairs(self.activeEffects) do
+				for eId, entry in pairs(self.activeEffects) do
+					-- self:PrintDebug("ccActive", "Checking for active effects at time: "..time)
 					if entry.time == time then
-						if not entry.subeffects then entry.subeffects = {} end
+						-- self:PrintDebug("ccActive", "Found active effect and will add "..aId.." to active effect "..eId)
+						if not entry.subeffects then
+							-- self:PrintDebug("ccActive", "Initializing subeffects for effect "..eId)
+							entry.subeffects = {}
+						end
 						table.insert(entry.subeffects, aId)
+						-- self:PrintDebug("ccActive", "Adding effect "..aId.." to subeffects for effect "..eId)
 					end
 				end
 				
@@ -284,23 +287,16 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 					newAbility.type = ccType
 					newAbility.endTime = 0
 					newAbility.cacheId = 0
-					local ccChanged = false
 					local inList, num = self:AbilityInList(aId, self.ccActive)
 					if not inList then
 						if not self:TypeInList(newAbility.type) then
-							ccChanged = true
+							check.playSound = true
 						end
 						table.insert(self.ccActive, newAbility)
 						self:PrintDebug("ccActive", "New cc from combat events "..aName.." - ID: "..aId.." - "..check.name)
 						self.ccAdded.combatEvents = self.ccAdded.combatEvents + 1
 						self:PrintDebug("ccAdded", "So far I've added "..self.ccAdded.combatEvents.." cc abilities from combatEvents and "..self.ccAdded.effectsChanged.." from effectsChanged")
-					end
-					if ccChanged then
-						self.UI.ApplyIcons()
-						if self.SV.sound[check.name].enabled then
-							check.playSound = true
-							self:PlayCCSound()
-						end
+						if check.playSound then self:CCChanged(check.playSound) end
 					end
 					--------------------------
 					-- IGNORE CC CHAT LINKS --
