@@ -17,3 +17,5 @@ As this is a beta version, it may include bugs or unfinished features. Please sh
 [/quote]
 
 Your support and feedback are greatly appreciated. Thank you for helping to improve barny's CC Tracker for the community!
+
+If you like my work and want to support what I'm doing, consider supporting me on [url=https://ko-fi.com/barnyteso][color=green]Ko-Fi[/color][/url].
