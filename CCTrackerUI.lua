@@ -67,21 +67,77 @@ function CCTracker:BuildUI()
 		frame:SetHidden(true)
 		
 		local controls = {
-		tlw = tlw,
-		tlwShadow = tlwShadow,
-		tlwLabel = tlwLabel,
-		frame = frame,
-		icon = icon,
-		fragment = fragment,
+			tlw = tlw,
+			tlwShadow = tlwShadow,
+			tlwLabel = tlwLabel,
+			frame = frame,
+			icon = icon,
+			fragment = fragment,
 		}
+		
 		return {
-		controls = controls,
+			controls = controls,
 		}
 	end
 	
 	for _, entry in pairs(self.ccVariables) do
 		indicator[entry.name] = GetIndicator(entry.name, entry.icon)
 		-- indicator[entry.name].tracker = ZO_HUDFadeSceneFragment:New(tlw)
+	end
+	
+	local function CreateLiveCCWindow()
+		local tlw = WM:CreateTopLevelWindow(self.name.."LiveCCFrame")
+		tlw:SetDimensionConstraints(10, 10, 800, 400)
+		tlw:SetDimensions(self.SV.UI.debugWindow.width, self.SV.UI.debugWindow.height)
+		tlw:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, self.SV.UI.debugWindow.xOffset, self.SV.UI.debugWindow.yOffset)
+		tlw:SetDrawTier(DT_HIGH)
+		tlw:SetClampedToScreen(false)
+		tlw:SetResizeHandleSize(2)
+		tlw:SetMouseEnabled(true)
+		tlw:SetMovable(true)
+		tlw:SetHandler("OnMoveStop", function(...)
+			self.SV.UI.debugWindow.xOffset = tlw:GetLeft()
+			self.SV.UI.debugWindow.yOffset = tlw:GetTop()
+		end)
+		tlw:SetHandler("OnResizeStop", function(...)
+			self.SV.UI.debugWindow.width = tlw:GetWidth()
+			self.SV.UI.debugWindow.height = tlw:GetHeight()
+		end)
+		local fragment = ZO_HUDFadeSceneFragment:New(tlw)
+		
+		local tlwShadow = WM:CreateControl(self.name.."LiveCCBG", tlw, CT_BACKDROP)
+		tlwShadow:SetAnchorFill()
+		tlwShadow:SetDimensions(self.SV.UI.debugWindow.width, self.SV.UI.debugWindow.height)
+		tlwShadow:SetEdgeColor(0,0,0,1)
+		tlwShadow:SetEdgeTexture(nil,1,1,0,0)
+		tlwShadow:SetCenterColor(0.25,0.25,0.25,0.75)
+		tlwShadow:SetDrawTier(DT_HIGH)
+		tlwShadow:SetHidden(true)
+				
+		local tlwLabel = WM:CreateControl(self.name.."LiveCCLabel", tlw, CT_LABEL)
+		tlwLabel:SetText("")
+		tlwLabel:SetAnchor(TOPLEFT, tlw, TOPLEFT, 4, 2)
+		tlwLabel:SetHidden(true)
+		tlwLabel:SetFont("$(MEDIUM_FONT)|17|outline")
+		tlwLabel:SetDrawTier(DT_HIGH)
+		
+		local controls = {
+			fragment = fragment,
+			tlw = tlw,
+			tlwShadow = tlwShadow,
+			tlwLabel = tlwLabel,
+		}
+		
+		return {
+			controls = controls,
+		}
+	end
+	
+	local liveCCWindow = CreateLiveCCWindow()
+	
+	local function HideLiveCCWindow(value)
+		liveCCWindow.controls.tlwShadow:SetHidden(not value)
+		liveCCWindow.controls.tlwLabel:SetHidden(not value)
 	end
 	 
 	local function FadeScenes(value)
@@ -90,6 +146,8 @@ function CCTracker:BuildUI()
 				SCENE_MANAGER:GetScene("hud"):AddFragment(CCTracker.UI.indicator[entry.name].controls.fragment)
 				SCENE_MANAGER:GetScene("hudui"):AddFragment(CCTracker.UI.indicator[entry.name].controls.fragment)
 			end
+			SCENE_MANAGER:GetScene("hud"):AddFragment(CCTracker.UI.liveCCWindow.controls.fragment)
+			SCENE_MANAGER:GetScene("hudui"):AddFragment(CCTracker.UI.liveCCWindow.controls.fragment)
 		elseif value == "Unlocked" then
 			for _, entry in pairs(CCTracker.ccVariables) do
 				SCENE_MANAGER:GetScene("gameMenuInGame"):AddFragment(CCTracker.UI.indicator[entry.name].controls.fragment)
@@ -184,5 +242,7 @@ function CCTracker:BuildUI()
 	SetUnlocked = SetUnlocked,
 	FadeScenes = FadeScenes,
 	ApplyAlpha = ApplyAlpha,
+	liveCCWindow = liveCCWindow,
+	HideLiveCCWindow = HideLiveCCWindow,
 	}
 end

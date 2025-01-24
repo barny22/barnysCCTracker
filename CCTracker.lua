@@ -89,8 +89,10 @@ function CCTracker:Init()
 	self.UI = self:BuildUI()
 	
 	self.UI.SetUnlocked(self.SV.settings.unlocked)
+	self.UI.HideLiveCCWindow(self.SV.debug.activeCCList)
 	self.UI.FadeScenes("UI")
 	self:BuildMenu()
+	self:CCChanged()
 	
 	self:CheckForCCRegister()
 end
@@ -162,7 +164,6 @@ function CCTracker:Register()
 		end
 	)
 	
-	self:IgnoreSwitch("start")
 	self.registered = true
 end
 
@@ -193,10 +194,10 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 	-- useful debug section do not delete!--
 	----------------------------------------
 	
-	local checkInList, k = self:AbilityInList(aId, self.couldJustBeSnare)
-	if checkInList and GetFrameTimeMilliseconds() == self.couldJustBeSnare[k].time then
-		self:PrintDebug("actualSnares", "Snare in list "..aId..": "..aName.." - "..res)
-	end
+	-- local checkInList, k = self:AbilityInList(aId, self.couldJustBeSnare)
+	-- if checkInList and GetFrameTimeMilliseconds() == self.couldJustBeSnare[k].time then
+		-- self:PrintDebug("actualSnares", "Root in list "..aId..": "..aName.." - "..res)
+	-- end
 	
 	if self:CropZOSString(tName) == self.currentCharacterName then
 		if aId == self.constants.breakFree and self.currentCharacterName == self:CropZOSString(sName) and self:DoesBreakFreeWork() then			-- remove stuns, fear and charm if player breaks free
@@ -258,7 +259,8 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 			if CCTracker:IsPossibleRoot(aId) then
 				res = 2480
 				if self.status.immunityToImmobilization then
-					self:PrintDebug("roots", "actualSnares", "Someone tried to root you, when you were immune to immobilization. What a foolisch rookie mistake")
+					self:PrintDebug("roots", "actualSnares", "Someone tried to root you, when you were immune to immobilization. What a foolish rookie mistake, it's probably just a snare though.")
+					if not self:AbilityInList(aId, self.SV.actualSnares) then table.insert(self.SV.actualSnares, aId) end
 					return
 				end
 			end
@@ -305,12 +307,12 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 						self:PrintIgnoreLink(aName, aId)
 					end
 					break
-				else
-					if not self.ccCache then self.ccCache = {} end
-					local newAbility = {["type"] = ccType, ["recorded"] = time, ["id"] = aId, ["name"] = aName}
-					table.insert(self.ccCache, newAbility)
-					self:PrintDebug("ccCache", "Caching ability "..aName.." ID: "..aId)
-					break
+				-- else
+					-- if not self.ccCache then self.ccCache = {} end
+					-- local newAbility = {["type"] = ccType, ["recorded"] = time, ["id"] = aId, ["name"] = aName}
+					-- table.insert(self.ccCache, newAbility)
+					-- self:PrintDebug("ccCache", "Caching ability "..aName.." ID: "..aId)
+					-- break
 				end
 			end
 		end
@@ -379,24 +381,24 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				if self.ccVariables[abilityType] and self.ccVariables[abilityType].tracked then
 					local ending = ((endTime-beginTime~=0) and endTime) or 0
 					local newAbility = {["id"] = aId, ["type"] = abilityType, ["endTime"] = ending*1000}
-					if self.ccCache and next(self.ccCache) then
-						for i = #self.ccCache, 1, -1 do
-							if self.ccCache[i].type == abilityType then
-								newAbility.cacheId = self.ccCache[i].id
-								table.remove(self.ccCache, i)
-								self:PrintDebug("ccCache", "Clearing CC cache position "..i)
-								break
-							elseif self.ccCache and self.ccCache[i].type == "charm" and self.ccVariables.charm.tracked then
-								newAbility.type = "charm"
-								newAbility.cacheId = self.ccCache[i].id
-								table.remove(self.ccCache, i)
-								self:PrintDebug("ccCache", "Clearing CC cache position "..i..". Charm was detected")
-								break
-							end
-						end
-					else
-						newAbility.cacheId = 0
-					end
+					-- if self.ccCache and next(self.ccCache) then
+						-- for i = #self.ccCache, 1, -1 do
+							-- if self.ccCache[i].type == abilityType then
+								-- newAbility.cacheId = self.ccCache[i].id
+								-- table.remove(self.ccCache, i)
+								-- self:PrintDebug("ccCache", "Clearing CC cache position "..i)
+								-- break
+							-- elseif self.ccCache and self.ccCache[i].type == "charm" and self.ccVariables.charm.tracked then
+								-- newAbility.type = "charm"
+								-- newAbility.cacheId = self.ccCache[i].id
+								-- table.remove(self.ccCache, i)
+								-- self:PrintDebug("ccCache", "Clearing CC cache position "..i..". Charm was detected")
+								-- break
+							-- end
+						-- end
+					-- else
+						-- newAbility.cacheId = 0
+					-- end
 					if not self:TypeInList(newAbility.type) then
 						if self.SV.sound[self.ccVariables[abilityType].name].enabled then
 							self.ccVariables[abilityType].playSound = true
@@ -416,42 +418,42 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 					end
 				end
 			end
-			if self.ccCache and next(self.ccCache) then
-				local debugMessageSent = false
-				for i = #self.ccCache, 1, -1 do
-					inList, num = self:AbilityInList(self.ccCache[i].id, self.ccActive)
-					if inList then
-						self.ccActive[num].endTime = endTime*1000
-						self:PrintDebug("ccActive", "Adjusting endTime of ability "..aId.." - "..self.ccCache[i].name)
-					else
-						local ending = ((endTime-beginTime~=0) and endTime) or 0
-						local newAbility = {["id"] = aId, ["type"] = self.ccCache[i].type, ["endTime"] = ending*1000, ["cacheId"] = self.ccCache[i].id }
-						if not self:TypeInList(newAbility.type) then
-							if self.SV.sound[self.ccVariables[newAbility.type].name].enabled then
-								self.ccVariables[newAbility.type].playSound = true
-								playCCSound = true
-							end
-							ccChanged = true
-						end
-						table.insert(self.ccActive, newAbility)
-						self:PrintDebug("ccActive", "ccCache", "New cc from cache "..self.ccCache[i].name.." - ID: "..self.ccCache[i].id.." - "..self.ccVariables[self.ccCache[i].type].name)
-						self.ccAdded.effectsChanged = self.ccAdded.effectsChanged + 1
-						self:PrintDebug("ccAdded", "So far I've added "..self.ccAdded.combatEvents.." cc abilities from combatEvents and "..self.ccAdded.effectsChanged.." from effectsChanged")
-						----------------------
+			-- if self.ccCache and next(self.ccCache) then
+				-- local debugMessageSent = false
+				-- for i = #self.ccCache, 1, -1 do
+					-- inList, num = self:AbilityInList(self.ccCache[i].id, self.ccActive)
+					-- if inList then
+						-- self.ccActive[num].endTime = endTime*1000
+						-- self:PrintDebug("ccActive", "Adjusting endTime of ability "..aId.." - "..self.ccCache[i].name)
+					-- else
+						-- local ending = ((endTime-beginTime~=0) and endTime) or 0
+						-- local newAbility = {["id"] = aId, ["type"] = self.ccCache[i].type, ["endTime"] = ending*1000, ["cacheId"] = self.ccCache[i].id }
+						-- if not self:TypeInList(newAbility.type) then
+							-- if self.SV.sound[self.ccVariables[newAbility.type].name].enabled then
+								-- self.ccVariables[newAbility.type].playSound = true
+								-- playCCSound = true
+							-- end
+							-- ccChanged = true
+						-- end
+						-- table.insert(self.ccActive, newAbility)
+						-- self:PrintDebug("ccActive", "ccCache", "New cc from cache "..self.ccCache[i].name.." - ID: "..self.ccCache[i].id.." - "..self.ccVariables[self.ccCache[i].type].name)
+						-- self.ccAdded.effectsChanged = self.ccAdded.effectsChanged + 1
+						-- self:PrintDebug("ccAdded", "So far I've added "..self.ccAdded.combatEvents.." cc abilities from combatEvents and "..self.ccAdded.effectsChanged.." from effectsChanged")
+						--------------------
 						-- IGNORE CC CHAT LINKS --
-						----------------------
-						if self.SV.settings.ccIgnoreLinks then
-							self:PrintIgnoreLink(name, newAbility.cacheId)
-						end
-						if not debugMessageSent then
-							self:PrintDebug("ccActive", "ccCache", "Adding "..i.." additional CC abilities from combat events")
-							debugMessageSent = true
+						--------------------
+						-- if self.SV.settings.ccIgnoreLinks then
+							-- self:PrintIgnoreLink(name, newAbility.cacheId)
+						-- end
+						-- if not debugMessageSent then
+							-- self:PrintDebug("ccActive", "ccCache", "Adding "..i.." additional CC abilities from combat events")
+							-- debugMessageSent = true
 							-- self.debug:Print("CC ability detected from combat event. Clearing CC cache position "..i)
-						end
-					end
-				end
-				self.ccCache = {}
-			end
+						-- end
+					-- end
+				-- end
+				-- self.ccCache = {}
+			-- end
 			if ccChanged then self:CCChanged(playCCSound) end
 		end
 	end

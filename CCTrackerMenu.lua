@@ -228,6 +228,7 @@ function CCTracker:BuildMenu()
         version = self.version.patch.."."..self.version.major.."."..self.version.minor,
 		website = "https://www.esoui.com/downloads/info3971-barnysCCTracker.html",
 		feedback = "https://www.esoui.com/portal.php?&id=386",
+		donation = "https://ko-fi.com/barnyteso",
         slashCommand = "/bcc",
         registerForRefresh = true,
 		registerForDefaults = true,
@@ -336,24 +337,6 @@ function CCTracker:BuildMenu()
 			type = "submenu",
 			name = "CC to track",
 			controls = {},
-		},
-		{
-			type = "submenu",
-			name = "Exceptions",
-			controls = {
-				{	
-					type = "checkbox",
-					name = "Ignore CC when reviving",
-					default = true,
-					tooltip = "This ignores the stun an slow during revive",
-					disabled = function() return not (self.SV.settings.tracked.Snare or self.SV.settings.tracked.Stun) end,
-					getFunc = function() return self.SV.settings.tracked.exceptions.death end,
-					setFunc = function(value)
-						self.SV.settings.tracked.exceptions.death = value
-						self:IgnoreSwitch("death")
-					end,
-				},				
-			},
 		},
 		{
 			type = "submenu",
@@ -519,6 +502,8 @@ function CCTracker:BuildMenu()
 			getFunc = function() return self.SV.debug.activeCCList end,
 			setFunc = function(value)
 				self.SV.debug.activeCCList = value
+				self.UI.HideLiveCCWindow(value)
+				if value then self:CCChanged() end
 			end,
 		},
         {	

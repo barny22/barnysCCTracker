@@ -7,7 +7,7 @@ You can easily access the options menu using the [b]/bcc[/b] slash command. If y
 [b]Dependencies: [color=red]LibAddonMenu-2.0[/color][/b]
 [b]Optional dependency: [color=yellow]LibChatMessage[/color][/b] for debugging.
 
-If you like my work and want to support what I'm doing, consider supporting me on [url=https://ko-fi.com/barnyteso][color=green]Ko-Fi[/color][/url].
+If you like my work and want to support what I'm doing, consider supporting me on [url=https://ko-fi.com/barnyteso][color=green]Ko-Fi[/color][/url] or on [url=https://buymeacoffee.com/barnyteso][color=green]buymeacoffee[/color][/url].
 
 [b]TL;DR:[/b]
 [list]
@@ -17,5 +17,5 @@ If you like my work and want to support what I'm doing, consider supporting me o
 [*] Access options with [b]/bcc[/b].
 [*] [url=https://www.esoui.com/portal.php?id=386&a=listbugs]Report bugs[/url] and [url=https://www.esoui.com/portal.php?id=386&a=listfeatures]request features[/url] via the ESOUI portal.
 [*] Beta versions on [url=https://github.com/barny22/barnysCCTracker/tree/development]GitHub[/url] or [url=https://www.esoui.com/downloads/info3988-barnysCCTracker-beta.html]ESOUI[/url].
-[*] Support me on [url=https://ko-fi.com/barnyteso][color=green]Ko-Fi[/color][/url].
+[*] Support me on [url=https://ko-fi.com/barnyteso][color=green]Ko-Fi[/color][/url] or on [url=https://buymeacoffee.com/barnyteso][color=green]buymeacoffee[/color][/url].
 [/list]
