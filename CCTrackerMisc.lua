@@ -191,16 +191,21 @@ function CCTracker:TypeInList(cachedType)
     return false -- 'cachedType' not found
 end
 
-function CCTracker:IsPossibleRoot(id)
-	if self:AbilityInList(id, self.SV.actualSnares) then 
-		self:PrintDebug("actualSnares", "Checked ability: "..self:CropZOSString(GetAbilityName(id)).."-"..id.." for possible root, but it was specificly marked as snare, so it will be ignored")
-		return false
-	elseif CCTracker:AbilityInList(id, self.constants.possibleRoots) then
-		if not self:AbilityInList(id, self.SV.additionalRoots) then self:PrintDebug("roots", "Found possible root "..self:CropZOSString(GetAbilityName(id)).." with ID: "..id) end
+function CCTracker:IsRoot(id)
+	local possibleRoot , _ = self:AbilityInList(id, self.constants.possibleRoots)
+	local markedAsRoot, _ = self:AbilityInList(id, self.SV.additionalRoots)
+	
+	if markedAsRoot then
+		self:PrintDebug("roots", "Checked "..self:CropZOSString(GetAbilityName(id)).." - "..id..". It was specificly marked as root!")
 		return true
+	elseif possibleRoot then
+		if not markedAsRoot then self:PrintDebug("roots", "Found possible root "..self:CropZOSString(GetAbilityName(id)).." with ID: "..id) end
+		return true
+	elseif not (markedAsRoot or possibleRoot) then
+		table.insert(self.SV.actualSnares, id)
+		self:PrintDebug("roots", "Checked "..self:CropZOSString(GetAbilityName(id)).." - "..id.." for possible root, it seems you were simply hit by a snare.")
+		return false
 	end
-	if not self:AbilityInList(id, self.SV.additionalRoots) then self:PrintDebug("roots", "Checked "..self:CropZOSString(GetAbilityName(id)).." - "..id.." for possible root, it seems you were simply hit by a snare.") end
-	return false
 end
 
 function CCTracker:CCChanged(playSound)
@@ -249,9 +254,9 @@ function CCTracker:ClearOutdatedLists(time, client)
 		ccChanged = self:ClearOutdatedCC(time)
 	end
 	-- deleting outdated cache entries
-	if self.ccCache and next(self.ccCache) then
-		self:ClearOutdatedCache(client, time)
-	end
+	-- if self.ccCache and next(self.ccCache) then
+		-- self:ClearOutdatedCache(client, time)
+	-- end
 	-- deleting outdated "couldBeRoot" entries
 	if self.couldBeRoot and next(self.couldBeRoot) then
 		self:ClearOutdatedRootCache(time)
@@ -338,31 +343,38 @@ function CCTracker:RolldodgeDetected()
 	local newActive = {}
 	local time = GetFrameTimeMilliseconds()
 	for _, entry in ipairs(self.ccActive) do
-		if entry.type ~= "root" then
-			table.insert(newActive, entry)
-		else
-			if not CCTracker:AbilityInList(entry.id, self.SV.additionalRoots) then
-				local couldJustBeSnare = {}
-				couldJustBeSnare.time = time
-				if entry.cacheId == 0 then
-					couldJustBeSnare.id = entry.id
-				else
-					couldJustBeSnare.id = entry.cacheId
-				end
-				self:PrintDebug("actualSnares", "Saving ability "..couldJustBeSnare.id..": "..self:CropZOSString(GetAbilityName(couldJustBeSnare.id))..", for possible snare list")
-				table.insert(self.couldJustBeSnare, couldJustBeSnare)
-			end
-		end
-					-- "snare"
-		if entry.type == 10 then
-			local couldBeRoot = {}
-			couldBeRoot.time = time
-			if entry.cacheId == 0 then
-				couldBeRoot.id = entry.id
+		local markedAsRoot, _  = self:AbilityInList(entry.id, self.SV.additionalRoots)
+		local markedAsSnare, _ = self:AbilityInList(entry.id, self.SV.actualSnares)
+		
+		if not markedAsRoot and not markedAsSnare then
+		
+			if entry.type ~= "root" then
+				table.insert(newActive, entry)
 			else
-				couldBeRoot.id = entry.cacheId
+				if not markedAsRoot then
+					local couldJustBeSnare = {}
+					couldJustBeSnare.time = time
+					if entry.cacheId == 0 then
+						couldJustBeSnare.id = entry.id
+					else
+						couldJustBeSnare.id = entry.cacheId
+					end
+					self:PrintDebug("actualSnares", "Saving ability "..couldJustBeSnare.id..": "..self:CropZOSString(GetAbilityName(couldJustBeSnare.id))..", for possible snare list")
+					table.insert(self.couldJustBeSnare, couldJustBeSnare)
+					table.insert(self.couldBeRoot, couldJustBeSnare)
+				end
 			end
-			table.insert(self.couldBeRoot, couldBeRoot)
+						-- "snare"
+			if entry.type == 10 and not markedAsSnare then
+				local couldBeRoot = {}
+				couldBeRoot.time = time
+				if entry.cacheId == 0 then
+					couldBeRoot.id = entry.id
+				else
+					couldBeRoot.id = entry.cacheId
+				end
+				table.insert(self.couldBeRoot, couldBeRoot)
+			end
 		end
 	end
 	self.ccActive = newActive
@@ -398,17 +410,17 @@ end
 	---- CC Cache ----
 	------------------
 
-function CCTracker:ClearOutdatedCache(client, time)
-    local newCache = {}
-    for _, entry in ipairs(self.ccCache) do
-        if entry.recorded == time then
-            table.insert(newCache, entry)
-        else
-			self:PrintDebug("ccCache", client.." clearing outdated CC from cache: "..entry.name)
-        end
-    end
-    self.ccCache = newCache
-end
+-- function CCTracker:ClearOutdatedCache(client, time)
+    -- local newCache = {}
+    -- for _, entry in ipairs(self.ccCache) do
+        -- if entry.recorded == time then
+            -- table.insert(newCache, entry)
+        -- else
+			-- self:PrintDebug("ccCache", client.." clearing outdated CC from cache: "..entry.name)
+        -- end
+    -- end
+    -- self.ccCache = newCache
+-- end
 
 function CCTracker:ClearOutdatedRootCache(time)
 	local newCache = {}
@@ -432,6 +444,10 @@ function CCTracker:ClearSnareCache()
 				self.couldJustBeSnare[i] = nil
 			else
 				table.insert(self.SV.actualSnares, entry.id)
+				local inList, num = self:AbilityInList(entry.id, self.constants.possibleRoots)
+				if inList then
+					table.remove(self.constants.possibleRoots, num)
+				end
 				self:PrintDebug("actualSnares", "There seems to be a misidentified root. Added "..entry.id.." - "..self:CropZOSString(GetAbilityName(entry.id)).." to actual snares list.")
 				self.couldJustBeSnare[i] = nil
 			end

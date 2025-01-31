@@ -601,18 +601,58 @@ function CCTracker:BuildMenu()
 							type = "dropdown",
 							name = "Current additional roots",
 							disabled = function() return #self.SV.additionalRoots == 0 end,
-							choices = CCTracker.menu.additionalRootList,
-							getFunc = function() if next(self.SV.additionalRoots) then return self.SV.additionalRoots[1] end end,
-							setFunc = function() return end,
+							choices = self.menu.additionalRootList,
+							getFunc = function() if next(self.SV.additionalRoots) then return self.menu.additionalRootList[1] end end,
+							setFunc = function(value) 
+								for i, id in ipairs(self.SV.additionalRoots) do
+									local str = tostring("|t20:20:"..GetAbilityIcon(id).."|t "..id.." - "..CCTracker:CropZOSString(GetAbilityName(id)))
+									if str == value then
+										self.menu.rootId = id
+										self.menu.rootNum = i
+										break
+									end
+								end
+							end,
 							width = "half",
 						},
 						{
 							type = "dropdown",
 							name = "Current actual snares",
 							disabled = function() return #self.SV.actualSnares == 0 end,
-							choices = CCTracker.menu.actualSnaresList,
-							getFunc = function() if next(self.SV.actualSnares) then return self.SV.actualSnares[1] end end,
-							setFunc = function() return end,
+							choices = self.menu.actualSnaresList,
+							getFunc = function() if next(self.SV.actualSnares) then return self.menu.actualSnaresList[1] end end,
+							setFunc = function(value) 
+								for i, id in ipairs(self.SV.actualSnares) do
+									local str = tostring("|t20:20:"..GetAbilityIcon(id).."|t "..id.." - "..CCTracker:CropZOSString(GetAbilityName(id)))
+									if str == value then
+										self.menu.snareId = id
+										self.menu.snareNum = i
+										break
+									end
+								end
+							end,
+							width = "half",
+						},
+						{
+							type = "button",
+							name = "Remove ability from roots",
+							tooltip = "If an ability was wrongfully declared as root, you can remove it manually",
+							disabled = function() return ((#self.SV.additionalRoots == 0) or not self.menu.rootId) end,
+							func = function()
+								table.remove(self.SV.additionalRoots, self.menu.rootNum)
+								CCTracker.menu.CreateAdditionalRootList()
+							end,
+							width = "half",
+						},
+						{
+							type = "button",
+							name = "Remove ability from snares",
+							tooltip = "If an ability was wrongfully declared as snare, you can remove it manually",
+							disabled = function() return ((#self.SV.actualSnares == 0) or not self.menu.snareId) end,
+							func = function()
+								table.remove(self.SV.actualSnares, self.menu.snareNum)
+								CCTracker.menu.CreateActualSnaresList()
+							end,
 							width = "half",
 						},
 					},

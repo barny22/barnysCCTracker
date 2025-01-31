@@ -10,6 +10,7 @@ CCTracker = {
 	["SV"] = {},
 	["activeEffects"] = {},
 	["status"] = {
+		["alive"] = true,
 		["immunityToImmobilization"] = false,
 	},
 	["ccActive"] = {},
@@ -56,18 +57,30 @@ function CCTracker:Init()
 		self:SetAllDebugFalse()
 	end
 	
-	if NonContiguousCount(self.SV.additionalRoots) > 0 then
-		self:PrintDebug("additionalRootList", "Importing additional root abilities to constants")
-		for _, entry in ipairs(self.SV.additionalRoots) do
-			if not self:IsPossibleRoot(entry) then
-				table.insert(self.constants.possibleRoots, entry)
-			else
-				self:PrintDebug("additionalRootList", "Skipping skill "..entry..": "..self:CropZOSString(GetAbilityName(entry))..". Already in list")
+	-- if NonContiguousCount(self.SV.additionalRoots) > 0 then
+		-- self:PrintDebug("additionalRootList", "Importing additional root abilities to constants")
+		-- for _, entry in ipairs(self.SV.additionalRoots) do
+			-- if not self:IsRoot(entry) then
+				-- table.insert(self.constants.possibleRoots, entry)
+			-- else
+				-- self:PrintDebug("additionalRootList", "Skipping skill "..entry..": "..self:CropZOSString(GetAbilityName(entry))..". Already in list")
+			-- end
+		-- end
+	-- end
+	
+	if NonContiguousCount(self.SV.actualSnares) > 0 then
+		self:PrintDebug("actualSnares", "Deleting snares from possible root constants")
+		for _, entry in ipairs(self.SV.actualSnares) do
+			local inList, num = self:AbilityInList(entry, self.constants.possibleRoots)
+			if inList then
+				table.remove(self.constants.possibleRoots, num)
 			end
 		end
 	end
 	
 	self.started = true
+	
+	self.status.alive = not IsUnitDead("player")
 	
 	self.ccAdded = {["combatEvents"] = 0, ["effectsChanged"] = 0, ["endTimeUpdated"] = 0,}
 	
@@ -125,24 +138,36 @@ function CCTracker:Register()
 			CCTracker:HandleEffectsChanged(...)
 		end
 	)
-	EM:RegisterForEvent(
-		self.name.."PlayerDeactivated",
-		EVENT_PLAYER_DEACTIVATED,
-		function()
+	-- EM:RegisterForEvent(
+		-- self.name.."PlayerDeactivated",
+		-- EVENT_PLAYER_DEACTIVATED,
+		-- function()
 			-- Clear all CC when player is deactivated
-			if NonContiguousCount(CCTracker.ccActive) > 0 then
-				CCTracker.ccActive = {}
-				CCTracker:CCChanged()
-			end
+			-- if NonContiguousCount(CCTracker.ccActive) > 0 then
+				-- for _, entry in ipairs(CCTracker.ccActive) do
+					-- entry = nil
+				-- end
+				-- CCTracker:CCChanged()
+			-- end
+		-- end
+	-- )
+	EM:RegisterForEvent(
+		self.name.."PlayerAlive",
+		EVENT_PLAYER_ALIVE,
+		function()
+			self.status.alive = true
 		end
 	)
 	EM:RegisterForEvent(
 		self.name.."PlayerDead",
 		EVENT_PLAYER_DEAD,
 		function()
+			self.status.alive = false
 			-- Clear all CC when player dies
 			if NonContiguousCount(CCTracker.ccActive) > 0 then
-				CCTracker.ccActive = {}
+				for _, entry in ipairs(CCTracker.ccActive) do
+					entry = nil
+				end
 				CCTracker:CCChanged()
 			end
 		end
@@ -173,9 +198,12 @@ function CCTracker:Unregister()
 		
 	EM:UnregisterForEvent(
 		self.name.."EffectsChanged")
-	
+		
 	EM:UnregisterForEvent(
-		self.name.."PlayerDeactivated")
+		self.name.."PlayerAlive")
+	
+	-- EM:UnregisterForEvent(
+		-- self.name.."PlayerDeactivated")
 	
 	EM:UnregisterForEvent(
 		self.name.."PlayerDead")
@@ -199,7 +227,9 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 		-- self:PrintDebug("actualSnares", "Root in list "..aId..": "..aName.." - "..res)
 	-- end
 	
-	if self:CropZOSString(tName) == self.currentCharacterName then
+	if not self.status.alive then
+		return
+	elseif self:CropZOSString(tName) == self.currentCharacterName then
 		if aId == self.constants.breakFree and self.currentCharacterName == self:CropZOSString(sName) and self:DoesBreakFreeWork() then			-- remove stuns, fear and charm if player breaks free
 			self:BreakFreeDetected()
 			return
@@ -255,14 +285,16 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 			end
 			return
 		end
-		if res == ACTION_RESULT_SNARED then
-			if CCTracker:IsPossibleRoot(aId) then
-				res = 2480
-				if self.status.immunityToImmobilization then
-					self:PrintDebug("roots", "actualSnares", "Someone tried to root you, when you were immune to immobilization. What a foolish rookie mistake, it's probably just a snare though.")
-					if not self:AbilityInList(aId, self.SV.actualSnares) then table.insert(self.SV.actualSnares, aId) end
-					return
+		if res == ACTION_RESULT_SNARED and not self:AbilityInList(aId, self.SV.actualSnares) and CCTracker:IsRoot(aId) then
+			res = 2480
+			if self.status.immunityToImmobilization then
+				self:PrintDebug("roots", "actualSnares", "Someone tried to root you, when you were immune to immobilization. What a foolish rookie mistake, it's probably just a snare though.")
+				table.insert(self.SV.actualSnares, aId)
+				local inList, num = self:AbilityInList(aId, self.SV.additionalRoots)
+				if inList then
+					table.remove(self.SV.additionalRoots, num)
 				end
+				return
 			end
 		end
 		for ccType, check in pairs(self.ccVariables) do
@@ -327,7 +359,7 @@ end
 function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,endTime,_,_,_,buffType,abilityType,_,unitName,_,aId,sType)
 	--  self:PrintDebug("enabled", unitName.." - "..GetUnitName("player"))
 		
-	if not (unitTag == "player" or unitName == self.currentCharacterName) then
+	if not (unitTag == "player" or unitName == self.currentCharacterName) or not self.status.alive then
 		return
 	elseif self.SV.ignored[aId] or self.constants.ignore[aId] then
 		self:PrintDebug("ignoreList", "ccActvie", "Ignored CC from ignore-list "..aId..": "..self:CropZOSString(eName))
@@ -371,10 +403,15 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				self.ccAdded.endTimeUpdated = self.ccAdded.endTimeUpdated + 1
 				self:PrintDebug("ccAdded", "Updated the endtime of "..self.ccAdded.endTimeUpdated.." cc abilities")
 			else
-				if abilityType == ABILITY_TYPE_SNARE then
-					if CCTracker:IsPossibleRoot(aId) then abilityType = "root" end
-					if abilityType == "root" and self.status.immunityToImmobilization then
+				if abilityType == ABILITY_TYPE_SNARE and not self:AbilityInList(aId, self.SV.actualSnares) and self:IsRoot(aId) then
+					abilityType = "root"
+					if self.status.immunityToImmobilization then
 						self:PrintDebug("roots", "actualSnares", "Someone tried to root you, when you were immune to immobilization. That was a rookie mistake")
+						table.insert(self.SV.actualSnares, aId)
+						local inList, num = self:AbilityInList(aId, self.SV.additionalRoots)
+						if inList then
+							table.remove(self.SV.additionalRoots, num)
+						end
 						return
 					end
 				end
