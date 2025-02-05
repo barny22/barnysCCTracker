@@ -264,11 +264,14 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 						self:PrintDebug("ccActive", "Removing ability "..self:CropZOSString(GetAbilityName(id)).." from ccActive list")
 					end
 				end
+				self.activeEffects[aId] = nil
+				self:PrintDebug("ccActive", "Cleared active effect "..aId.." - "..aName)
 				return
 			else
 				local inList, num = self:AbilityInList(aId, self.ccActive)
 				if inList then
 					self:SnareRootCheck(aId, num, aName)
+					self:ClearSubeffects(aId, time)
 					table.remove(self.ccActive, num)
 					self:CCChanged()
 					self:PrintDebug("ccActive", "Removing ability "..aName.." from ccActive list")
@@ -279,13 +282,13 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 			if aId == self.constants.rollDodge.buffId then
 				self.status.immunityToImmobilization = true
 				return
-			elseif not (self.activeEffects[aId] and self.activeEffects[aId].subeffects) then
+			elseif not self.activeEffects[aId] then
 				local newEffect = {["name"] = aName, ["time"] = time}
 				self.activeEffects[aId] = newEffect
 			end
 			return
-		end
-		if res == ACTION_RESULT_SNARED and not self:AbilityInList(aId, self.SV.actualSnares) and CCTracker:IsRoot(aId) then
+		else
+			if res == ACTION_RESULT_SNARED and not self:AbilityInList(aId, self.SV.actualSnares) and CCTracker:IsRoot(aId) then
 			res = 2480
 			if self.status.immunityToImmobilization then
 				self:PrintDebug("roots", "actualSnares", "Someone tried to root you, when you were immune to immobilization. What a foolish rookie mistake, it's probably just a snare though.")
@@ -296,55 +299,55 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 				end
 				return
 			end
-		end
-		for ccType, check in pairs(self.ccVariables) do
-			if check.res == res and check.tracked and not self.constants.exceptions[aId] then
-				-- self:PrintDebug("ccCache", "Caching cc result")
-				
-				for eId, entry in pairs(self.activeEffects) do
-					-- self:PrintDebug("ccActive", "Checking for active effects at time: "..time)
-					if entry.time == time then
-						-- self:PrintDebug("ccActive", "Found active effect and will add "..aId.." to active effect "..eId)
-						if not entry.subeffects then
-							-- self:PrintDebug("ccActive", "Initializing subeffects for effect "..eId)
-							entry.subeffects = {}
+			for ccType, check in pairs(self.ccVariables) do
+				if check.res == res and check.tracked and not self.constants.exceptions[aId] then
+					-- self:PrintDebug("ccCache", "Caching cc result")
+					
+					for eId, entry in pairs(self.activeEffects) do
+						-- self:PrintDebug("ccActive", "Checking for active effects at time: "..time)
+						if entry.time == time then
+							-- self:PrintDebug("ccActive", "Found active effect and will add "..aId.." to active effect "..eId)
+							if not entry.subeffects then
+								-- self:PrintDebug("ccActive", "Initializing subeffects for effect "..eId)
+								entry.subeffects = {}
+							end
+							table.insert(entry.subeffects, aId)
+							-- self:PrintDebug("ccActive", "Adding effect "..aId.." to subeffects for effect "..eId)
 						end
-						table.insert(entry.subeffects, aId)
-						-- self:PrintDebug("ccActive", "Adding effect "..aId.." to subeffects for effect "..eId)
 					end
-				end
-				
-				-- trying direct import of abilities from combat events
-				local newAbility = {}
-				newAbility.id = aId
-				if --[[self.SV.settings.advancedTracking and self:CropZOSString(sName) ~= self.currentCharacterName and]] not err then
-					newAbility.type = ccType
-					newAbility.endTime = 0
-					newAbility.cacheId = 0
-					local inList, num = self:AbilityInList(aId, self.ccActive)
-					if not inList then
-						if not self:TypeInList(newAbility.type) then
-							check.playSound = true
+					
+					-- trying direct import of abilities from combat events
+					local newAbility = {}
+					newAbility.id = aId
+					if --[[self.SV.settings.advancedTracking and self:CropZOSString(sName) ~= self.currentCharacterName and]] not err then
+						newAbility.type = ccType
+						newAbility.endTime = 0
+						newAbility.cacheId = 0
+						local inList, num = self:AbilityInList(aId, self.ccActive)
+						if not inList then
+							if not self:TypeInList(newAbility.type) then
+								check.playSound = true
+							end
+							table.insert(self.ccActive, newAbility)
+							self:PrintDebug("ccActive", "New cc from combat events "..aName.." - ID: "..aId.." - "..check.name)
+							self.ccAdded.combatEvents = self.ccAdded.combatEvents + 1
+							self:PrintDebug("ccAdded", "So far I've added "..self.ccAdded.combatEvents.." cc abilities from combatEvents and "..self.ccAdded.effectsChanged.." from effectsChanged")
+							if check.playSound then self:CCChanged(check.playSound) end
 						end
-						table.insert(self.ccActive, newAbility)
-						self:PrintDebug("ccActive", "New cc from combat events "..aName.." - ID: "..aId.." - "..check.name)
-						self.ccAdded.combatEvents = self.ccAdded.combatEvents + 1
-						self:PrintDebug("ccAdded", "So far I've added "..self.ccAdded.combatEvents.." cc abilities from combatEvents and "..self.ccAdded.effectsChanged.." from effectsChanged")
-						if check.playSound then self:CCChanged(check.playSound) end
+						--------------------------
+						-- IGNORE CC CHAT LINKS --
+						--------------------------
+						if self.SV.settings.ccIgnoreLinks then
+							self:PrintIgnoreLink(aName, aId)
+						end
+						break
+					-- else
+						-- if not self.ccCache then self.ccCache = {} end
+						-- local newAbility = {["type"] = ccType, ["recorded"] = time, ["id"] = aId, ["name"] = aName}
+						-- table.insert(self.ccCache, newAbility)
+						-- self:PrintDebug("ccCache", "Caching ability "..aName.." ID: "..aId)
+						-- break
 					end
-					--------------------------
-					-- IGNORE CC CHAT LINKS --
-					--------------------------
-					if self.SV.settings.ccIgnoreLinks then
-						self:PrintIgnoreLink(aName, aId)
-					end
-					break
-				-- else
-					-- if not self.ccCache then self.ccCache = {} end
-					-- local newAbility = {["type"] = ccType, ["recorded"] = time, ["id"] = aId, ["name"] = aName}
-					-- table.insert(self.ccCache, newAbility)
-					-- self:PrintDebug("ccCache", "Caching ability "..aName.." ID: "..aId)
-					-- break
 				end
 			end
 		end
