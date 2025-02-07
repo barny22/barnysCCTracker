@@ -289,15 +289,16 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 			return
 		else
 			if res == ACTION_RESULT_SNARED and not self:AbilityInList(aId, self.SV.actualSnares) and CCTracker:IsRoot(aId) then
-			res = 2480
-			if self.status.immunityToImmobilization then
-				self:PrintDebug("roots", "actualSnares", "Someone tried to root you, when you were immune to immobilization. What a foolish rookie mistake, it's probably just a snare though.")
-				table.insert(self.SV.actualSnares, aId)
-				local inList, num = self:AbilityInList(aId, self.SV.additionalRoots)
-				if inList then
-					table.remove(self.SV.additionalRoots, num)
+				res = 2480
+				if self.status.immunityToImmobilization then
+					self:PrintDebug("roots", "actualSnares", "Someone tried to root you, when you were immune to immobilization. What a foolish rookie mistake, it's probably just a snare though.")
+					table.insert(self.SV.actualSnares, aId)
+					local inList, num = self:AbilityInList(aId, self.SV.additionalRoots)
+					if inList then
+						table.remove(self.SV.additionalRoots, num)
+					end
+					return
 				end
-				return
 			end
 			for ccType, check in pairs(self.ccVariables) do
 				if check.res == res and check.tracked and not self.constants.exceptions[aId] then
