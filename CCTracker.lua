@@ -156,15 +156,22 @@ function CCTracker:Register()
 		EVENT_ZONE_CHANGED,
 		function()
 			local ccChanged = false
-			if CCTracker.ccVariables[9].active then
+			if NonContiguousCount(CCTracker.ccActive) then
+				local time = GetFrameTimeMilliseconds()
+				local cache = {}
 				for _, entry in ipairs(CCTracker.ccActive) do
-					if entry.type == 9 then
-						if entry.isSubeffect then self:ClearSubeffects(entry.id, GetFrameTimeMilliseconds()) end
-						entry = nil
+					if entry.endTime ~= 0 then
+						table.insert(cache, entry)
+					else
 						ccChanged = true
+						if entry.isSubeffect then CCTracker:ClearSubeffects(entry.id, time) end
 					end
 				end
-				if ccChanged then CCTracker:CCChanged() end
+				CCTracker.ccActive = cache
+				if ccChanged then
+					CCTracker:CCChanged()
+					CCTracker:PrintDebug("enabled", "Zone was changed. Cleared all active CC effects that are not debuffs")
+				end
 			end
 		end
 	)
@@ -179,11 +186,12 @@ function CCTracker:Register()
 		self.name.."PlayerDead",
 		EVENT_PLAYER_DEAD,
 		function()
-			self.status.alive = false
+			CCTracker.status.alive = false
+			local time = GetFrameTimeMilliseconds()
 			-- Clear all CC when player dies
 			if NonContiguousCount(CCTracker.ccActive) > 0 then
 				for _, entry in ipairs(CCTracker.ccActive) do
-					if entry.isSubeffect then self:ClearSubeffects(entry.id, GetFrameTimeMilliseconds()) end
+					if entry.isSubeffect then CCTracker:ClearSubeffects(entry.id, time) end
 					entry = nil
 				end
 				CCTracker:CCChanged()
@@ -194,14 +202,15 @@ function CCTracker:Register()
 		self.name.."WeaponPairLockChanged",
 		EVENT_WEAPON_PAIR_LOCK_CHANGED,
 		function(e, isLocked)
-			local cache = {}
 			--clear knockbacks if not isLocked
 			if CCTracker.ccVariables[17].active and not isLocked then
+				local cache = {}
+				local time = GetFrameTimeMilliseconds()
 				for _, entry in ipairs(CCTracker.ccActive) do
 					if entry.type ~= 17 then
 						table.insert(cache, entry)
-					elseif entry.type == 17 and entry.isSubeffect then
-						self:ClearSubeffects(entry.id, GetFrameTimeMilliseconds())					
+					elseif entry.isSubeffect then
+						self:ClearSubeffects(entry.id, time)					
 					end
 				end
 				CCTracker.ccActive = cache
@@ -262,7 +271,7 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 			self:RolldodgeDetected()
 			return
 		elseif self.constants.ignore[aId] or self.SV.ignored[aId] then
-			self:PrintDebug("ignoreList", "ccActive", "Ignored CC from ignore-list "..aId..": "..aName)
+			self:PrintDebug("ignoreList", "Ignored CC from ignore-list "..aId..": "..aName)
 			return
 		end	
 		local time = GetFrameTimeMilliseconds()
@@ -393,7 +402,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 	if not (unitTag == "player" or unitName == self.currentCharacterName) or not self.status.alive then
 		return
 	elseif self.SV.ignored[aId] or self.constants.ignore[aId] then
-		self:PrintDebug("ignoreList", "ccActive", "Ignored CC from ignore-list "..aId..": "..self:CropZOSString(eName))
+		self:PrintDebug("ignoreList", "Ignored CC from ignore-list "..aId..": "..self:CropZOSString(eName))
 		return
 	else
 		local eName = self:CropZOSString(eName)
