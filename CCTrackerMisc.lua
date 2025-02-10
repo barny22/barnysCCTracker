@@ -148,6 +148,9 @@ CCTracker.constants = CCTracker.constants or {
 		[39518] = "Vampire Initiation",
 		[14646] = "Revive (Snare)",
 		[14644] = "Revive (Stun)",
+		[40602] = "MQ - Returning home after final quest",
+		[80290] = "Goldcoast MQ - Travel to Jarell",
+		[80298] = "Goldcoast MQ - Travel to Anvil",
 	},
 }
 	--------------------------
@@ -182,14 +185,14 @@ function CCTracker:AbilityInList(aId, list)--, cacheId)
 	end
 end
 
-function CCTracker:TypeInList(cachedType)
-	for _, entry in ipairs(self.ccActive) do
-        if entry.type == cachedType then
-            return true -- 'cachedType' found
-        end
-    end
-    return false -- 'cachedType' not found
-end
+-- function CCTracker:TypeInList(cachedType)
+	-- for _, entry in ipairs(self.ccActive) do
+        -- if entry.type == cachedType then
+            -- return true -- 'cachedType' found
+        -- end
+    -- end
+    -- return false -- 'cachedType' not found
+-- end
 
 function CCTracker:IsRoot(id)
 	local possibleRoot , _ = self:AbilityInList(id, self.constants.possibleRoots)
@@ -280,21 +283,21 @@ function CCTracker:ClearOutdatedActiveEffects(time)
 end
 
 function CCTracker:ClearSubeffects(id, time)
-	local removedAbility = false
+	-- local removedAbility = false
 	for eId, entry in pairs(self.activeEffects) do
 		if entry.subeffects and next(entry.subeffects) then
 			local inList, num = self:AbilityInList(id, entry.subeffects)
 			if inList then
 				table.remove(entry.subeffects, num)
-				removedAbility = true
+				-- removedAbility = true
 			end
 		end
 	end
 	
-	if removedAbility then 
+	-- if removedAbility then 
 		self:ClearOutdatedActiveEffects(time)
 		self:PrintDebug("ccActive", "Cleared out all instances of subeffect "..id.." - "..self:CropZOSString(GetAbilityName(id)))
-	end
+	-- end
 end
 
 function CCTracker:ClearOutdatedCC(time)	
@@ -302,10 +305,8 @@ function CCTracker:ClearOutdatedCC(time)
 	for _, entry in ipairs(self.ccActive) do
 		if entry.endTime == 0 or entry.endTime > time then
 			table.insert(newActive, entry)
-		else
-			if self.activeEffects and next(self.activeEffects) then
-				self:ClearSubeffects(entry.id, time)
-			end
+		elseif entry.isSubeffect then
+			self:ClearSubeffects(entry.id, time)
 			self:PrintDebug("ccActive", "Removing outdated CC ability "..self:CropZOSString(GetAbilityName(entry.id)).." - "..entry.id)
 		end
 	end
