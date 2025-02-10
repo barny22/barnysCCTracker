@@ -4,6 +4,7 @@
       <Action name="CCTRACKER_RESET">
         <Down>
 			CCTracker.ccActive = {}
+			CCTracker.activeEffects = {}
 			CCTracker:CCChanged()
 		</Down>
         <Up></Up>
