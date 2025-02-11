@@ -155,8 +155,8 @@ function CCTracker:Register()
 		self.name.."ZoneChanged",
 		EVENT_ZONE_CHANGED,
 		function()
-			local ccChanged = false
 			if NonContiguousCount(CCTracker.ccActive) then
+				local ccChanged = false
 				local time = GetFrameTimeMilliseconds()
 				local cache = {}
 				for _, entry in ipairs(CCTracker.ccActive) do
@@ -167,8 +167,8 @@ function CCTracker:Register()
 						if entry.isSubeffect then CCTracker:ClearSubeffects(entry.id, time) end
 					end
 				end
-				CCTracker.ccActive = cache
 				if ccChanged then
+					CCTracker.ccActive = cache
 					CCTracker:CCChanged()
 					CCTracker:PrintDebug("enabled", "Zone was changed. Cleared all active CC effects that are not debuffs")
 				end
@@ -187,9 +187,9 @@ function CCTracker:Register()
 		EVENT_PLAYER_DEAD,
 		function()
 			CCTracker.status.alive = false
-			local time = GetFrameTimeMilliseconds()
 			-- Clear all CC when player dies
 			if NonContiguousCount(CCTracker.ccActive) > 0 then
+				local time = GetFrameTimeMilliseconds()
 				for _, entry in ipairs(CCTracker.ccActive) do
 					if entry.isSubeffect then CCTracker:ClearSubeffects(entry.id, time) end
 					entry = nil
