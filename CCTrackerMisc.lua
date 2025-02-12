@@ -355,34 +355,32 @@ function CCTracker:RolldodgeDetected()
 		local markedAsDefiniteRoot, _ = self:AbilityInList(entry.id, self.constants.definiteRoots)
 		local markedAsSnare, _ = self:AbilityInList(entry.id, self.SV.actualSnares)
 		
-		if not markedAsRoot and not markedAsSnare then
+		if not markedAsRoot and not markedAsSnare and not markedAsDefiniteRoot then
 		
 			if entry.type ~= "root" then
 				table.insert(newActive, entry)
-			else
-				if not (markedAsRoot or markedAsDefiniteRoot) then
-					local couldJustBeSnare = {}
-					couldJustBeSnare.time = time
+							-- "snare"
+				if entry.type == 10 then
+					local couldBeRoot = {}
+					couldBeRoot.time = time
 					if entry.cacheId == 0 then
-						couldJustBeSnare.id = entry.id
+						couldBeRoot.id = entry.id
 					else
-						couldJustBeSnare.id = entry.cacheId
+						couldBeRoot.id = entry.cacheId
 					end
-					self:PrintDebug("actualSnares", "Saving ability "..couldJustBeSnare.id..": "..self:CropZOSString(GetAbilityName(couldJustBeSnare.id))..", for possible snare list")
-					table.insert(self.couldJustBeSnare, couldJustBeSnare)
-					table.insert(self.couldBeRoot, couldJustBeSnare)
+					table.insert(self.couldBeRoot, couldBeRoot)
 				end
-			end
-						-- "snare"
-			if entry.type == 10 and not markedAsSnare then
-				local couldBeRoot = {}
-				couldBeRoot.time = time
+			else
+				local couldJustBeSnare = {}
+				couldJustBeSnare.time = time
 				if entry.cacheId == 0 then
-					couldBeRoot.id = entry.id
+					couldJustBeSnare.id = entry.id
 				else
-					couldBeRoot.id = entry.cacheId
+					couldJustBeSnare.id = entry.cacheId
 				end
-				table.insert(self.couldBeRoot, couldBeRoot)
+				self:PrintDebug("actualSnares", "Saving ability "..couldJustBeSnare.id..": "..self:CropZOSString(GetAbilityName(couldJustBeSnare.id))..", for possible snare list")
+				table.insert(self.couldJustBeSnare, couldJustBeSnare)
+				table.insert(self.couldBeRoot, couldJustBeSnare)
 			end
 		end
 	end
@@ -405,7 +403,7 @@ function CCTracker:SnareRootCheck(id, num, name)
 	
 	if self.ccActive[num].type == 10 and next(self.couldBeRoot) and self:AbilityInList(id, self.couldBeRoot) then
 		table.insert(self.SV.additionalRoots, id)				-- add ability id to saved variables
-		table.insert(self.constants.possibleRoots, id)			-- add ability it to possibleRoots list to be sorted correctly in the future without reloading ui
+		-- table.insert(self.constants.possibleRoots, id)			-- add ability it to possibleRoots list to be sorted correctly in the future without reloading ui
 		self:PrintDebug("additionalRootList", "Added "..self:CropZOSString(GetAbilityName(id)).." - "..id.." - to additional roots")
 	elseif self.ccActive[num].type == "root" and next(self.couldJustBeSnare) then
 		local inList, num = self:AbilityInList(id, self.couldJustBeSnare)
@@ -445,13 +443,13 @@ function CCTracker:ClearSnareCache()
 	if self.couldJustBeSnare and next(self.couldJustBeSnare) then
 		self:PrintDebug("actualSnares", "Clearing actual snares list")
 		for i, entry in ipairs(self.couldJustBeSnare) do
-			if self:AbilityInList(entry.id, self.SV.additionalRoots) or self:AbilityInList(entry.id, self.constants.definiteRoots) then
-				self:PrintDebug("actualSnares", "The ability "..entry.id.." - "..self:CropZOSString(GetAbilityName(entry.id)).." was specificly marked as root. Skipping check on this one.")
-				self.couldJustBeSnare[i] = nil
-			elseif self:AbilityInList(entry.id, self.SV.actualSnares) then
-				self:PrintDebug("actualSnares", "The ability "..entry.id.." - "..self:CropZOSString(GetAbilityName(entry.id)).." was already marked as snare. Skipping check on this one.")
-				self.couldJustBeSnare[i] = nil
-			else
+			-- if self:AbilityInList(entry.id, self.SV.additionalRoots) or self:AbilityInList(entry.id, self.constants.definiteRoots) then
+				-- self:PrintDebug("actualSnares", "The ability "..entry.id.." - "..self:CropZOSString(GetAbilityName(entry.id)).." was specificly marked as root. Skipping check on this one.")
+				-- self.couldJustBeSnare[i] = nil
+			-- elseif self:AbilityInList(entry.id, self.SV.actualSnares) then
+				-- self:PrintDebug("actualSnares", "The ability "..entry.id.." - "..self:CropZOSString(GetAbilityName(entry.id)).." was already marked as snare. Skipping check on this one.")
+				-- self.couldJustBeSnare[i] = nil
+			-- else
 				table.insert(self.SV.actualSnares, entry.id)
 				local inList, num = self:AbilityInList(entry.id, self.constants.possibleRoots)
 				if inList then
@@ -459,7 +457,7 @@ function CCTracker:ClearSnareCache()
 				end
 				self:PrintDebug("actualSnares", "There seems to be a misidentified root. Added "..entry.id.." - "..self:CropZOSString(GetAbilityName(entry.id)).." to actual snares list.")
 				self.couldJustBeSnare[i] = nil
-			end
+			-- end
 		end
 	end
 end

@@ -10,8 +10,9 @@ CCTracker = {
 	["SV"] = {},
 	["activeEffects"] = {},
 	["status"] = {
-		["alive"] = true,
+		["alive"] = 0,
 		["immunityToImmobilization"] = false,
+		["zone"] = "",
 	},
 	["ccActive"] = {},
 	["UI"] = {},
@@ -95,7 +96,7 @@ function CCTracker:Init()
 	
 	self.started = true
 	
-	self.status.alive = not IsUnitDead("player")
+	self.status.alive = GetFrameTimeMilliseconds()
 	
 	self.ccAdded = {["combatEvents"] = 0, ["effectsChanged"] = 0, ["endTimeUpdated"] = 0,}
 	
@@ -169,23 +170,26 @@ function CCTracker:Register()
 	EM:RegisterForEvent(
 		self.name.."ZoneChanged",
 		EVENT_ZONE_CHANGED,
-		function()
-			if NonContiguousCount(CCTracker.ccActive) then
-				local ccChanged = false
-				local time = GetFrameTimeMilliseconds()
-				local cache = {}
-				for _, entry in ipairs(CCTracker.ccActive) do
-					if entry.endTime ~= 0 then
-						table.insert(cache, entry)
-					else
-						ccChanged = true
-						if entry.isSubeffect then CCTracker:ClearSubeffects(entry.id, time) end
+		function(zName,_,_,_,_)
+			if self.status.zone ~= zName then
+				self.status.zone = zName
+				if NonContiguousCount(CCTracker.ccActive) then
+					local ccChanged = false
+					local time = GetFrameTimeMilliseconds()
+					local cache = {}
+					for _, entry in ipairs(CCTracker.ccActive) do
+						if entry.endTime ~= 0 then
+							table.insert(cache, entry)
+						else
+							ccChanged = true
+							if entry.isSubeffect then CCTracker:ClearSubeffects(entry.id, time) end
+						end
 					end
-				end
-				if ccChanged then
-					CCTracker.ccActive = cache
-					CCTracker:CCChanged()
-					CCTracker:PrintDebug("enabled", "Zone was changed. Cleared all active CC effects that are not debuffs")
+					if ccChanged then
+						CCTracker.ccActive = cache
+						CCTracker:CCChanged()
+						CCTracker:PrintDebug("enabled", "Zone was changed. Cleared all active CC effects that are not debuffs")
+					end
 				end
 			end
 		end
@@ -194,14 +198,14 @@ function CCTracker:Register()
 		self.name.."PlayerAlive",
 		EVENT_PLAYER_ALIVE,
 		function()
-			self.status.alive = true
+			self.status.alive = GetFrameTimeMilliseconds()
 		end
 	)
 	EM:RegisterForEvent(
 		self.name.."PlayerDead",
 		EVENT_PLAYER_DEAD,
 		function()
-			CCTracker.status.alive = false
+			CCTracker.status.alive = 0
 			-- Clear all CC when player dies
 			if NonContiguousCount(CCTracker.ccActive) > 0 then
 				local time = GetFrameTimeMilliseconds()
@@ -276,7 +280,8 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 		-- self:PrintDebug("actualSnares", "Root in list "..aId..": "..aName.." - "..res)
 	-- end
 	
-	if not self.status.alive then
+	local time = GetFrameTimeMilliseconds()
+	if self.status.alive == 0 or self.status.alive == time then
 		return
 	elseif self:CropZOSString(tName) == self.currentCharacterName then
 		if aId == self.constants.breakFree and self.currentCharacterName == self:CropZOSString(sName) and self:DoesBreakFreeWork() then			-- remove stuns, fear and charm if player breaks free
@@ -289,7 +294,6 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 			self:PrintDebug("ignoreList", "Ignored CC from ignore-list "..aId..": "..aName)
 			return
 		end	
-		local time = GetFrameTimeMilliseconds()
 		
 		self:ClearOutdatedLists(time, "Combat events")
 		
