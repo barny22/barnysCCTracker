@@ -57,23 +57,38 @@ function CCTracker:Init()
 		self:SetAllDebugFalse()
 	end
 	
-	-- if NonContiguousCount(self.SV.additionalRoots) > 0 then
-		-- self:PrintDebug("additionalRootList", "Importing additional root abilities to constants")
-		-- for _, entry in ipairs(self.SV.additionalRoots) do
-			-- if not self:IsRoot(entry) then
-				-- table.insert(self.constants.possibleRoots, entry)
-			-- else
-				-- self:PrintDebug("additionalRootList", "Skipping skill "..entry..": "..self:CropZOSString(GetAbilityName(entry))..". Already in list")
-			-- end
-		-- end
-	-- end
+	if NonContiguousCount(self.SV.additionalRoots) > 0 then
+		self:PrintDebug("additionalRootList", "Importing additional root abilities to constants")
+		for i = #self.SV.additionalRoots, 1, -1 do
+			local rId = self.SV.additionalRoots[i]
+			local inPossibleList, num = self:AbilityInList(rId, self.constants.possibleRoots)
+			local inRootList, number = self:AbilityInList(rId, self.constants.definiteRoots)
+			if inPossibleList then
+				table.remove(self.constants.possibleRoots, num)
+			end
+			if not inRootList then
+				table.insert(self.constants.definiteRoots, rId)
+			else
+				self:PrintDebug("additionalRootList", "Deleting skill "..rId..": "..self:CropZOSString(GetAbilityName(rId)).." from additional roots. Already in definite list")
+				table.remove(self.SV.additionalRoots, i)
+			end
+		end
+	end
 	
 	if NonContiguousCount(self.SV.actualSnares) > 0 then
-		self:PrintDebug("actualSnares", "Deleting snares from possible root constants")
-		for _, entry in ipairs(self.SV.actualSnares) do
-			local inList, num = self:AbilityInList(entry, self.constants.possibleRoots)
-			if inList then
+		self:PrintDebug("actualSnares", "Deleting snares from possible root constants and cleaning up actual snares list")
+		for i = #self.SV.actualSnares, 1, -1 do
+			local sId = self.SV.actualSnares[i]
+			local inPossibleList, num = self:AbilityInList(sId, self.constants.possibleRoots)
+			local inSnaresList, number = self:AbilityInList(sId, self.constants.definiteSnares)
+			if inPossibleList then
 				table.remove(self.constants.possibleRoots, num)
+			end
+			if inSnaresList then
+				self:PrintDebug("actualSnares", "Deleting skill "..sId..": "..self:CropZOSString(GetAbilityName(sId)).." from actual snares. Already in definite list")
+				table.remove(self.SV.actualSnares, i)
+			else
+				table.insert(self.constants.definiteSnares, sId)
 			end
 		end
 	end
@@ -322,7 +337,7 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 			end
 			return
 		elseif not err then
-			if res == ACTION_RESULT_SNARED and not self:AbilityInList(aId, self.SV.actualSnares) and CCTracker:IsRoot(aId) then
+			if res == ACTION_RESULT_SNARED and not (self:AbilityInList(aId, self.constants.definiteSnares) or self:AbilityInList(aId, self.SV.actualSnares)) and CCTracker:IsRoot(aId) then
 				res = 2480
 				if self.status.immunityToImmobilization then
 					self:PrintDebug("roots", "actualSnares", "Someone tried to root you, when you were immune to immobilization. What a foolish rookie mistake, it's probably just a snare though.")
@@ -443,7 +458,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				self.ccAdded.endTimeUpdated = self.ccAdded.endTimeUpdated + 1
 				self:PrintDebug("ccAdded", "Updated the endtime of "..self.ccAdded.endTimeUpdated.." cc abilities")
 			else
-				if abilityType == ABILITY_TYPE_SNARE and not self:AbilityInList(aId, self.SV.actualSnares) and self:IsRoot(aId) then
+				if abilityType == ABILITY_TYPE_SNARE and not (self:AbilityInList(aId, self.constants.definiteSnares) or self:AbilityInList(aId, self.SV.actualSnares)) and self:IsRoot(aId) then
 					abilityType = "root"
 					if self.status.immunityToImmobilization then
 						self:PrintDebug("roots", "actualSnares", "Someone tried to root you, when you were immune to immobilization. That was a rookie mistake")
