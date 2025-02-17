@@ -97,6 +97,7 @@ function CCTracker:Init()
 	self.started = true
 	
 	self.status.alive = GetFrameTimeMilliseconds()
+	-- self.status.zone = GetUnitZone("player")
 	
 	self.ccAdded = {["combatEvents"] = 0, ["effectsChanged"] = 0, ["endTimeUpdated"] = 0,}
 	
@@ -168,30 +169,43 @@ function CCTracker:Register()
 		-- end
 	-- )
 	EM:RegisterForEvent(
+		self.name.."PlayerActivated",
+		EVENT_PLAYER_ACTIVATED,
+		function()
+			CCTracker:UpdateZone()
+		end
+	)
+	EM:RegisterForEvent(
 		self.name.."ZoneChanged",
 		EVENT_ZONE_CHANGED,
-		function(zName,_,_,_,_)
-			if self.status.zone ~= zName then
-				self.status.zone = zName
-				if NonContiguousCount(CCTracker.ccActive) then
-					local ccChanged = false
-					local time = GetFrameTimeMilliseconds()
-					local cache = {}
-					for _, entry in ipairs(CCTracker.ccActive) do
-						if entry.endTime ~= 0 then
-							table.insert(cache, entry)
-						else
-							ccChanged = true
-							if entry.isSubeffect then CCTracker:ClearSubeffects(entry.id, time) end
-						end
-					end
-					if ccChanged then
-						CCTracker.ccActive = cache
-						CCTracker:CCChanged()
-						CCTracker:PrintDebug("enabled", "Zone was changed. Cleared all active CC effects that are not debuffs")
-					end
-				end
-			end
+		function(e,zName,_,_,zId,sZId)
+		-- EVENT_ZONE_UPDATE,
+		-- function(e, tag, zName)
+			CCTracker:UpdateZone(zId)
+			-- CCTracker:PrintDebug("enabled", zName)
+			-- if self.status.zone == zName then
+				-- return
+			-- else
+				-- self.status.zone = zName 
+				-- if NonContiguousCount(CCTracker.ccActive) then
+					-- local ccChanged = false
+					-- local time = GetFrameTimeMilliseconds()
+					-- local cache = {}
+					-- for _, entry in ipairs(CCTracker.ccActive) do
+						-- if entry.endTime ~= 0 then
+							-- table.insert(cache, entry)
+						-- else
+							-- ccChanged = true
+							-- if entry.isSubeffect then CCTracker:ClearSubeffects(entry.id, time) end
+						-- end
+					-- end
+					-- if ccChanged then
+						-- CCTracker.ccActive = cache
+						-- CCTracker:CCChanged()
+						-- CCTracker:PrintDebug("enabled", "Zone was changed. Cleared all active CC effects that are not debuffs")
+					-- end
+				-- end
+			-- end
 		end
 	)
 	EM:RegisterForEvent(
@@ -251,6 +265,9 @@ function CCTracker:Unregister()
 		
 	EM:UnregisterForEvent(
 		self.name.."PlayerAlive")
+	
+	EM:UnregisterForEvent(
+		self.name.."PlayerActivated")
 	
 	-- EM:UnregisterForEvent(
 		-- self.name.."PlayerDeactivated")
@@ -375,6 +392,7 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 					local newAbility = {
 						["id"] = aId,
 						["type"] = ccType,
+						["startTime"] = time,
 						["endTime"] = 0,
 						["cacheId"] = 0,
 						["isSubeffect"] = isSubeffect,
@@ -476,7 +494,12 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 				end
 				if self.ccVariables[abilityType] and self.ccVariables[abilityType].tracked then
 					local ending = ((endTime-beginTime~=0) and endTime) or 0
-					local newAbility = {["id"] = aId, ["type"] = abilityType, ["endTime"] = ending*1000}
+					local newAbility = {
+						["id"] = aId,
+						["type"] = abilityType,
+						["startTime"] = time,
+						["endTime"] = ending*1000
+					}
 					-- if self.ccCache and next(self.ccCache) then
 						-- for i = #self.ccCache, 1, -1 do
 							-- if self.ccCache[i].type == abilityType then
