@@ -57,17 +57,17 @@ function CCTracker:Init()
 	else 
 		self:SetAllDebugFalse()
 	end
-	
 	if NonContiguousCount(self.SV.additionalRoots) > 0 then
 		self:PrintDebug("additionalRootList", "Importing additional root abilities to constants")
 		for i = #self.SV.additionalRoots, 1, -1 do
 			local rId = self.SV.additionalRoots[i]
 			local inPossibleList, num = self:AbilityInList(rId, self.constants.possibleRoots)
-			local inRootList, number = self:AbilityInList(rId, self.constants.definiteRoots)
+			local inRootList, _ = self:AbilityInList(rId, self.constants.definiteRoots)
+			local inSnaresList, _ = self:AbilityInList(rId, self.constants.definiteSnares)
 			if inPossibleList then
 				table.remove(self.constants.possibleRoots, num)
 			end
-			if not inRootList then
+			if not inRootList and not inSnaresList then
 				table.insert(self.constants.definiteRoots, rId)
 			else
 				self:PrintDebug("additionalRootList", "Deleting skill "..rId..": "..self:CropZOSString(GetAbilityName(rId)).." from additional roots. Already in definite list")
@@ -81,15 +81,16 @@ function CCTracker:Init()
 		for i = #self.SV.actualSnares, 1, -1 do
 			local sId = self.SV.actualSnares[i]
 			local inPossibleList, num = self:AbilityInList(sId, self.constants.possibleRoots)
-			local inSnaresList, number = self:AbilityInList(sId, self.constants.definiteSnares)
+			local inSnaresList, _ = self:AbilityInList(sId, self.constants.definiteSnares)
+			local inRootList, _ = self:AbilityInList(sId, self.constants.definiteRoots)
 			if inPossibleList then
 				table.remove(self.constants.possibleRoots, num)
 			end
-			if inSnaresList then
+			if not inSnaresList and not inRootList then
+				table.insert(self.constants.definiteSnares, sId)
+			else
 				self:PrintDebug("actualSnares", "Deleting skill "..sId..": "..self:CropZOSString(GetAbilityName(sId)).." from actual snares. Already in definite list")
 				table.remove(self.SV.actualSnares, i)
-			else
-				table.insert(self.constants.definiteSnares, sId)
 			end
 		end
 	end
