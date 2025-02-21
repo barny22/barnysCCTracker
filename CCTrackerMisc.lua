@@ -317,6 +317,17 @@ end
 	-------------------
 	---- CC active ----
 	-------------------
+function CCTracker:ClearAllCC()
+	if NonContiguousCount(CCTracker.ccActive) > 0 then
+		local time = GetFrameTimeMilliseconds()
+		for _, entry in ipairs(CCTracker.ccActive) do
+			if entry.isSubeffect then CCTracker:ClearSubeffects(entry.id, time) end
+			entry = nil
+		end
+		CCTracker:CCChanged()
+	end
+end
+
 function CCTracker:ClearOutdatedActiveEffects(time)
 	for eId, entry in pairs(self.activeEffects) do
 		if entry.time ~= time and (not entry.subeffects or (entry.subeffects and not next(entry.subeffects))) then

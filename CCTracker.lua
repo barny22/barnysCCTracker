@@ -222,14 +222,7 @@ function CCTracker:Register()
 		function()
 			CCTracker.status.alive = 0
 			-- Clear all CC when player dies
-			if NonContiguousCount(CCTracker.ccActive) > 0 then
-				local time = GetFrameTimeMilliseconds()
-				for _, entry in ipairs(CCTracker.ccActive) do
-					if entry.isSubeffect then CCTracker:ClearSubeffects(entry.id, time) end
-					entry = nil
-				end
-				CCTracker:CCChanged()
-			end
+			CCTracker:ClearAllCC()
 		end
 	)
 	EM:RegisterForEvent(
@@ -287,7 +280,6 @@ end
 
 function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tName, 
 										 _,	hVal, 	_,		_, _, _, 	_, aId,   _)
-	local aName = self:CropZOSString(aName)
 	
 	----------------------------------------
 	-- useful debug section do not delete!--
@@ -298,10 +290,13 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 		-- self:PrintDebug("actualSnares", "Root in list "..aId..": "..aName.." - "..res)
 	-- end
 	
-	local time = GetFrameTimeMilliseconds()
-	if self.status.alive == 0 or self.status.alive == time then
+	if self.status.alive == 0 then
 		return
 	elseif self:CropZOSString(tName) == self.currentCharacterName then
+	
+		local aName = self:CropZOSString(aName)
+		local time = GetFrameTimeMilliseconds()
+		
 		if aId == self.constants.breakFree and self.currentCharacterName == self:CropZOSString(sName) and self:DoesBreakFreeWork() then			-- remove stuns, fear and charm if player breaks free
 			self:BreakFreeDetected()
 			return
@@ -437,7 +432,7 @@ end
 function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,endTime,_,_,_,buffType,abilityType,_,unitName,_,aId,sType)
 	--  self:PrintDebug("enabled", unitName.." - "..GetUnitName("player"))
 		
-	if not (unitTag == "player" or unitName == self.currentCharacterName) or not self.status.alive then
+	if not (unitTag == "player" or unitName == self.currentCharacterName) or self.status.alive == 0 then
 		return
 	elseif self.SV.ignored[aId] or self.constants.ignore[aId] then
 		self:PrintDebug("ignoreList", "Ignored CC from ignore-list "..aId..": "..self:CropZOSString(eName))
@@ -451,12 +446,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 		self:ClearOutdatedLists(time, "Effect changed")
 		
 		if IsUnitDeadOrReincarnating("player") then
-			if self.ccActive and next(self.ccActive) then
-				for _, entry in ipairs(self.ccActive) do
-					entry = nil
-				end
-				self:CCChanged()
-			end
+			CCTracker:ClearAllCC()
 			return
 		elseif changeType == EFFECT_RESULT_FADED or changeType == EFFECT_RESULT_ITERATION_END --[[or changeType == EFFECT_RESULT_TRANSFER]] then
 			if aId == self.constants.rollDodge.buffId then
