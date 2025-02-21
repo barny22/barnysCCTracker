@@ -11,6 +11,7 @@ CCTracker = {
 	["activeEffects"] = {},
 	["status"] = {
 		["alive"] = 0,
+		["dead"] = 0,
 		["immunityToImmobilization"] = false,
 		["zone"] = "",
 	},
@@ -214,6 +215,7 @@ function CCTracker:Register()
 		EVENT_PLAYER_ALIVE,
 		function()
 			self.status.alive = GetFrameTimeMilliseconds()
+			self.status.dead = 0
 		end
 	)
 	EM:RegisterForEvent(
@@ -221,6 +223,7 @@ function CCTracker:Register()
 		EVENT_PLAYER_DEAD,
 		function()
 			CCTracker.status.alive = 0
+			CCTracker.status.dead = GetFrameTimeMilliseconds()
 			-- Clear all CC when player dies
 			CCTracker:ClearAllCC()
 		end
@@ -290,12 +293,13 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 		-- self:PrintDebug("actualSnares", "Root in list "..aId..": "..aName.." - "..res)
 	-- end
 	
-	if self.status.alive == 0 then
+	local time = GetFrameTimeMilliseconds()
+		
+	if self.status.alive == 0 or self.status.dead <= time then
 		return
 	elseif self:CropZOSString(tName) == self.currentCharacterName then
 	
 		local aName = self:CropZOSString(aName)
-		local time = GetFrameTimeMilliseconds()
 		
 		if aId == self.constants.breakFree and self.currentCharacterName == self:CropZOSString(sName) and self:DoesBreakFreeWork() then			-- remove stuns, fear and charm if player breaks free
 			self:BreakFreeDetected()
@@ -431,8 +435,10 @@ end
 
 function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,endTime,_,_,_,buffType,abilityType,_,unitName,_,aId,sType)
 	--  self:PrintDebug("enabled", unitName.." - "..GetUnitName("player"))
+	
+	local time = GetFrameTimeMilliseconds()
 		
-	if not (unitTag == "player" or unitName == self.currentCharacterName) or self.status.alive == 0 then
+	if not (unitTag == "player" or unitName == self.currentCharacterName) or self.status.alive == 0 or self.status.dead <= time then
 		return
 	elseif self.SV.ignored[aId] or self.constants.ignore[aId] then
 		self:PrintDebug("ignoreList", "Ignored CC from ignore-list "..aId..": "..self:CropZOSString(eName))
@@ -441,7 +447,6 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 		local eName = self:CropZOSString(eName)
 		local playCCSound = false
 		local ccChanged = false
-		local time = GetFrameTimeMilliseconds()
 		
 		self:ClearOutdatedLists(time, "Effect changed")
 		
