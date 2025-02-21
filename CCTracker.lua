@@ -14,6 +14,8 @@ CCTracker = {
 		["dead"] = 0,
 		["immunityToImmobilization"] = false,
 		["zone"] = "",
+		["subzone"] = "",
+		["playerDeactivated"] = 0,
 	},
 	["ccActive"] = {},
 	["UI"] = {},
@@ -99,7 +101,8 @@ function CCTracker:Init()
 	self.started = true
 	
 	self.status.alive = GetFrameTimeMilliseconds()
-	-- self.status.zone = GetUnitZone("player")
+	-- self.status.zone = self:CropZOSString(GetPlayerActiveZoneName())
+	-- self.status.subzone = self:CropZOSString(GetPlayerActiveSubzoneName())
 	
 	self.ccAdded = {["combatEvents"] = 0, ["effectsChanged"] = 0, ["endTimeUpdated"] = 0,}
 	
@@ -157,57 +160,30 @@ function CCTracker:Register()
 			CCTracker:HandleEffectsChanged(...)
 		end
 	)
-	-- EM:RegisterForEvent(
-		-- self.name.."PlayerDeactivated",
-		-- EVENT_PLAYER_DEACTIVATED,
-		-- function()
-			-- Clear all CC when player is deactivated
-			-- if NonContiguousCount(CCTracker.ccActive) > 0 then
-				-- for _, entry in ipairs(CCTracker.ccActive) do
-					-- entry = nil
-				-- end
-				-- CCTracker:CCChanged()
-			-- end
-		-- end
-	-- )
+	EM:RegisterForEvent(
+		self.name.."PlayerDeactivated",
+		EVENT_PLAYER_DEACTIVATED,
+		function()
+			self.status.zone = self:CropZOSString(GetPlayerActiveZoneName())
+			self.status.subzone = self:CropZOSString(GetPlayerActiveSubzoneName())
+		end
+	)
 	EM:RegisterForEvent(
 		self.name.."PlayerActivated",
 		EVENT_PLAYER_ACTIVATED,
 		function()
-			CCTracker:UpdateZone()
-		end
-	)
-	EM:RegisterForEvent(
-		self.name.."ZoneChanged",
-		EVENT_ZONE_CHANGED,
-		function(e,zName,_,_,zId,sZId)
-		-- EVENT_ZONE_UPDATE,
-		-- function(e, tag, zName)
-			CCTracker:UpdateZone(zId)
-			-- CCTracker:PrintDebug("enabled", zName)
-			-- if self.status.zone == zName then
-				-- return
-			-- else
-				-- self.status.zone = zName 
-				-- if NonContiguousCount(CCTracker.ccActive) then
-					-- local ccChanged = false
-					-- local time = GetFrameTimeMilliseconds()
-					-- local cache = {}
-					-- for _, entry in ipairs(CCTracker.ccActive) do
-						-- if entry.endTime ~= 0 then
-							-- table.insert(cache, entry)
-						-- else
-							-- ccChanged = true
-							-- if entry.isSubeffect then CCTracker:ClearSubeffects(entry.id, time) end
-						-- end
-					-- end
-					-- if ccChanged then
-						-- CCTracker.ccActive = cache
-						-- CCTracker:CCChanged()
-						-- CCTracker:PrintDebug("enabled", "Zone was changed. Cleared all active CC effects that are not debuffs")
-					-- end
-				-- end
-			-- end
+			local zName, sZName
+			zName = self:CropZOSString(GetPlayerActiveZoneName())
+			sZName = self:CropZOSString(GetPlayerActiveSubzoneName())
+			
+			
+			if NonContiguousCount(CCTracker.ccActive) then
+				if zName ~= self.status.zone then
+					CCTracker:ClearCCThatIsNotBuff()
+				elseif sZName ~= self.status.subzone then
+					CCTracker:ClearCCThatIsNotBuff()
+				end
+			end
 		end
 	)
 	EM:RegisterForEvent(

@@ -194,38 +194,25 @@ function CCTracker:AbilityInList(aId, list)--, cacheId)
 	end
 end
 
-function CCTracker:UpdateZone(id)
-	if id == 0 then
-		return
-	elseif not id then
-		zName = self:CropZOSString(GetUnitZone('player'))
-	else
-		zName = self.CropZOSString(GetZoneNameById(id))
-	end
-	-- CCTracker:PrintDebug("enabled", zName)
-	if self.status.zone == zName then
-		return
-	else
-		self.status.zone = zName 
-		if NonContiguousCount(CCTracker.ccActive) then
-			local ccChanged = false
-			local time = GetFrameTimeMilliseconds()
-			local cache = {}
-			for _, entry in ipairs(CCTracker.ccActive) do
-				if entry.endTime ~= 0 or entry.startTime == time then
-					table.insert(cache, entry)
-				else
-					ccChanged = true
-					if entry.isSubeffect then CCTracker:ClearSubeffects(entry.id, time) end
-				end
-			end
-			if ccChanged then
-				CCTracker.ccActive = cache
-				CCTracker:CCChanged()
-				CCTracker:PrintDebug("enabled", "Zone was changed. Cleared all active CC effects that are not debuffs at time: "..time)
+function CCTracker:ClearCCThatIsNotBuff()
+	-- if NonContiguousCount(CCTracker.ccActive) then
+		local ccChanged = false
+		local time = GetFrameTimeMilliseconds()
+		local cache = {}
+		for _, entry in ipairs(CCTracker.ccActive) do
+			if entry.endTime ~= 0 or entry.startTime == time then
+				table.insert(cache, entry)
+			else
+				ccChanged = true
+				if entry.isSubeffect then CCTracker:ClearSubeffects(entry.id, time) end
 			end
 		end
-	end
+		if ccChanged then
+			CCTracker.ccActive = cache
+			CCTracker:CCChanged()
+			CCTracker:PrintDebug("enabled", "Zone was changed. Cleared all active CC effects that are not debuffs at time: "..time)
+		end
+	-- end
 end
 
 -- function CCTracker:TypeInList(cachedType)
@@ -320,9 +307,10 @@ end
 function CCTracker:ClearAllCC()
 	if NonContiguousCount(CCTracker.ccActive) > 0 then
 		local time = GetFrameTimeMilliseconds()
-		for _, entry in ipairs(CCTracker.ccActive) do
+		for i = #CCTracker.ccActive, 1, -1 do
+			local entry = CCTracker.ccActive[i]
 			if entry.isSubeffect then CCTracker:ClearSubeffects(entry.id, time) end
-			entry = nil
+			CCTracker.ccActive[i] = nil
 		end
 		CCTracker:CCChanged()
 	end
