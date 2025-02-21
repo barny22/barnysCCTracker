@@ -295,7 +295,7 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 	
 	local time = GetFrameTimeMilliseconds()
 		
-	if self.status.alive == 0 or self.status.dead <= time then
+	if self.status.alive == 0 or (self.status.dead ~= 0 and self.status.dead <= time) then
 		return
 	elseif self:CropZOSString(tName) == self.currentCharacterName then
 	
@@ -438,7 +438,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 	
 	local time = GetFrameTimeMilliseconds()
 		
-	if not (unitTag == "player" or unitName == self.currentCharacterName) or self.status.alive == 0 or self.status.dead <= time then
+	if not (unitTag == "player" or unitName == self.currentCharacterName) or self.status.alive == 0 or (self.status.dead ~= 0 and self.status.dead <= time) then
 		return
 	elseif self.SV.ignored[aId] or self.constants.ignore[aId] then
 		self:PrintDebug("ignoreList", "Ignored CC from ignore-list "..aId..": "..self:CropZOSString(eName))
