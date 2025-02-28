@@ -13,7 +13,9 @@ This version introduces new features and improvements that are still being teste
 
 [b]Important Notes:[/b]
 [quote]
-As this is a beta version, it may include bugs or unfinished features. Please share your feedback and bug reports on the [url=https://www.esoui.com/downloads/info3988-barnysCCTracker-beta.html#comments]comment section[/url] or via the [url=https://github.com/barny22/barnysCCTracker/issues]GitHub issue tracker[/url].
+As this is a beta version, it may include bugs or unfinished features. Please share your feedback and bug reports in the [url=https://www.esoui.com/downloads/info3988-barnysCCTracker-beta.html#comments]comment section[/url] or via the [url=https://github.com/barny22/barnysCCTracker/issues]GitHub issue tracker[/url].
 [/quote]
 
 Your support and feedback are greatly appreciated. Thank you for helping to improve barny's CC Tracker for the community!
+
+If you like my work and want to support what I'm doing, consider supporting me on [url=https://ko-fi.com/barnyteso][color=green]Ko-Fi[/color][/url] or on [url=https://buymeacoffee.com/barnyteso][color=green]buymeacoffee[/color][/url].
