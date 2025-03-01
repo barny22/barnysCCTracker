@@ -605,7 +605,7 @@ function CCTracker:BuildMenu()
 							getFunc = function() if next(self.SV.additionalRoots) then return self.menu.additionalRootList[1] end end,
 							setFunc = function(value) 
 								for i, id in ipairs(self.SV.additionalRoots) do
-									local str = tostring("|t20:20:"..GetAbilityIcon(id).."|t "..id.." - "..CCTracker:CropZOSString(GetAbilityName(id)))
+									local str = tostring("|t20:20:"..GetAbilityIcon(id).."|t "..id.." - "..CCTracker:CropZOSString(GetAbilityName(id), "ability"))
 									if str == value then
 										self.menu.rootId = id
 										self.menu.rootNum = i
@@ -623,7 +623,7 @@ function CCTracker:BuildMenu()
 							getFunc = function() if next(self.SV.actualSnares) then return self.menu.actualSnaresList[1] end end,
 							setFunc = function(value) 
 								for i, id in ipairs(self.SV.actualSnares) do
-									local str = tostring("|t20:20:"..GetAbilityIcon(id).."|t "..id.." - "..CCTracker:CropZOSString(GetAbilityName(id)))
+									local str = tostring("|t20:20:"..GetAbilityIcon(id).."|t "..id.." - "..CCTracker:CropZOSString(GetAbilityName(id), "ability"))
 									if str == value then
 										self.menu.snareId = id
 										self.menu.snareNum = i

@@ -4,7 +4,7 @@ CCTracker = {
 	["version"] = {
 		["patch"] = 1,
 		["major"] = 1,
-		["minor"] = 0,
+		["minor"] = 1,
 	},
 	["menu"] = {},
 	["SV"] = {},
@@ -73,7 +73,7 @@ function CCTracker:Init()
 			if not inRootList and not inSnaresList then
 				table.insert(self.constants.definiteRoots, rId)
 			else
-				self:PrintDebug("additionalRootList", "Deleting skill "..rId..": "..self:CropZOSString(GetAbilityName(rId)).." from additional roots. Already in definite list")
+				self:PrintDebug("additionalRootList", "Deleting skill "..rId..": "..self:CropZOSString(GetAbilityName(rId), "ability").." from additional roots. Already in definite list")
 				table.remove(self.SV.additionalRoots, i)
 			end
 		end
@@ -92,7 +92,7 @@ function CCTracker:Init()
 			if not inSnaresList and not inRootList then
 				table.insert(self.constants.definiteSnares, sId)
 			else
-				self:PrintDebug("actualSnares", "Deleting skill "..sId..": "..self:CropZOSString(GetAbilityName(sId)).." from actual snares. Already in definite list")
+				self:PrintDebug("actualSnares", "Deleting skill "..sId..": "..self:CropZOSString(GetAbilityName(sId), "ability").." from actual snares. Already in definite list")
 				table.remove(self.SV.actualSnares, i)
 			end
 		end
@@ -101,12 +101,12 @@ function CCTracker:Init()
 	self.started = true
 	
 	self.status.alive = GetFrameTimeMilliseconds()
-	-- self.status.zone = self:CropZOSString(GetPlayerActiveZoneName())
-	-- self.status.subzone = self:CropZOSString(GetPlayerActiveSubzoneName())
+	-- self.status.zone = self:CropZOSString(GetPlayerActiveZoneName(), "location")
+	-- self.status.subzone = self:CropZOSString(GetPlayerActiveSubzoneName(), "location")
 	
 	self.ccAdded = {["combatEvents"] = 0, ["effectsChanged"] = 0, ["endTimeUpdated"] = 0,}
 	
-	self.currentCharacterName = self:CropZOSString(GetUnitName("player"))
+	self.currentCharacterName = self:CropZOSString(GetUnitName("player"), "name")
 	self.ccVariables = {
 		["charm"] = {["icon"] = "/esoui/art/icons/ability_u34_sea_witch_mindcontrol.dds", ["tracked"] = self.SV.settings.tracked.Charm, ["res"] = 3510, ["active"] = false, ["name"] = "Charm",}, --ACTION_RESULT_CHARMED
 		[32] = {["icon"] = "/esoui/art/icons/ability_debuff_disorient.dds", ["tracked"] = self.SV.settings.tracked.Disoriented, ["res"] = 2340, ["active"] = false, ["name"] = "Disoriented",}, --ABILITY_TYPE_DISORIENT
@@ -164,8 +164,8 @@ function CCTracker:Register()
 		self.name.."PlayerDeactivated",
 		EVENT_PLAYER_DEACTIVATED,
 		function()
-			self.status.zone = self:CropZOSString(GetPlayerActiveZoneName())
-			self.status.subzone = self:CropZOSString(GetPlayerActiveSubzoneName())
+			self.status.zone = self:CropZOSString(GetPlayerActiveZoneName(), "location")
+			self.status.subzone = self:CropZOSString(GetPlayerActiveSubzoneName(), "location")
 		end
 	)
 	EM:RegisterForEvent(
@@ -173,8 +173,8 @@ function CCTracker:Register()
 		EVENT_PLAYER_ACTIVATED,
 		function()
 			local zName, sZName
-			zName = self:CropZOSString(GetPlayerActiveZoneName())
-			sZName = self:CropZOSString(GetPlayerActiveSubzoneName())
+			zName = self:CropZOSString(GetPlayerActiveZoneName(), "location")
+			sZName = self:CropZOSString(GetPlayerActiveSubzoneName(), "location")
 			
 			
 			if NonContiguousCount(CCTracker.ccActive) then
@@ -273,14 +273,14 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 		
 	if self.status.alive == 0 or (self.status.dead ~= 0 and self.status.dead <= time) then
 		return
-	elseif self:CropZOSString(tName) == self.currentCharacterName then
+	elseif self:CropZOSString(tName, "name") == self.currentCharacterName then
 	
-		local aName = self:CropZOSString(aName)
+		local aName = self:CropZOSString(aName, "ability")
 		
-		if aId == self.constants.breakFree and self.currentCharacterName == self:CropZOSString(sName) and self:DoesBreakFreeWork() then			-- remove stuns, fear and charm if player breaks free
+		if aId == self.constants.breakFree and self.currentCharacterName == self:CropZOSString(sName, "name") and self:DoesBreakFreeWork() then			-- remove stuns, fear and charm if player breaks free
 			self:BreakFreeDetected()
 			return
-		elseif aId == self.constants.rollDodge.abilityId and self.currentCharacterName == self:CropZOSString(sName) and res == ACTION_RESULT_EFFECT_GAINED then	-- remove roots when player uses dodgeroll
+		elseif aId == self.constants.rollDodge.abilityId and self.currentCharacterName == self:CropZOSString(sName, "name") and res == ACTION_RESULT_EFFECT_GAINED then	-- remove roots when player uses dodgeroll
 			self:RolldodgeDetected()
 			return
 		elseif self.constants.ignore[aId] or self.SV.ignored[aId] then
@@ -307,7 +307,7 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 						
 						table.remove(self.ccActive, number)
 						self:CCChanged()
-						self:PrintDebug("ccActive", "Removing ability "..self:CropZOSString(GetAbilityName(id)).." from ccActive list")
+						self:PrintDebug("ccActive", "Removing ability "..self:CropZOSString(GetAbilityName(id), "ability").." from ccActive list")
 					end
 				end
 				self.activeEffects[aId] = nil
@@ -417,10 +417,10 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 	if not (unitTag == "player" or unitName == self.currentCharacterName) or self.status.alive == 0 or (self.status.dead ~= 0 and self.status.dead <= time) then
 		return
 	elseif self.SV.ignored[aId] or self.constants.ignore[aId] then
-		self:PrintDebug("ignoreList", "Ignored CC from ignore-list "..aId..": "..self:CropZOSString(eName))
+		self:PrintDebug("ignoreList", "Ignored CC from ignore-list "..aId..": "..self:CropZOSString(eName, "ability"))
 		return
 	else
-		local eName = self:CropZOSString(eName)
+		local eName = self:CropZOSString(eName, "ability")
 		local playCCSound = false
 		local ccChanged = false
 		

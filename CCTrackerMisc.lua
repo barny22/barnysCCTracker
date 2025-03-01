@@ -166,14 +166,21 @@ CCTracker.constants = CCTracker.constants or {
 	---- Helper functions ----
 	--------------------------
 	
-function CCTracker:CropZOSString(zosString)
-    local _, zosStringDivider = string.find(zosString, "%^")
+function CCTracker:CropZOSString(zosString, formatter)
+    -- local _, zosStringDivider = string.find(zosString, "%^")
     
-    if zosStringDivider then
-        return string.sub(zosString, 1, zosStringDivider - 1)
-    else
-        return zosString
-    end
+    -- if zosStringDivider then
+        -- return string.sub(zosString, 1, zosStringDivider - 1)
+    -- else
+        -- return zosString
+    -- end
+	if formatter == "ability" then
+		return zo_strformat(SI_ABILITY_NAME, zosString)
+	elseif formatter == "name" then
+		return zo_strformat(SI_TOOLTIP_UNIT_NAME, zosString)
+	elseif formatter == "location" then
+		return zo_strformat(SI_WORLD_MAP_LOCATION_NAME, zosString)
+	end
 end
 
 function CCTracker:AbilityInList(aId, list)--, cacheId)
@@ -230,14 +237,14 @@ function CCTracker:IsRoot(id)
 	local markedAsRoot, _ = self:AbilityInList(id, self.SV.additionalRoots)
 	
 	if markedAsRoot or markedAsDefiniteRoot then
-		self:PrintDebug("roots", "Checked "..self:CropZOSString(GetAbilityName(id)).." - "..id..". It was specificly marked as root!")
+		self:PrintDebug("roots", "Checked "..self:CropZOSString(GetAbilityName(id), "ability").." - "..id..". It was specificly marked as root!")
 		return true
 	elseif possibleRoot then
-		self:PrintDebug("roots", "Found possible root "..self:CropZOSString(GetAbilityName(id)).." with ID: "..id)
+		self:PrintDebug("roots", "Found possible root "..self:CropZOSString(GetAbilityName(id), "ability").." with ID: "..id)
 		return true
 	else
 		table.insert(self.SV.actualSnares, id)
-		self:PrintDebug("roots", "Checked "..self:CropZOSString(GetAbilityName(id)).." - "..id.." for possible root, it seems you were simply hit by a snare.")
+		self:PrintDebug("roots", "Checked "..self:CropZOSString(GetAbilityName(id), "ability").." - "..id.." for possible root, it seems you were simply hit by a snare.")
 		return false
 	end
 end
@@ -320,7 +327,7 @@ function CCTracker:ClearOutdatedActiveEffects(time)
 	for eId, entry in pairs(self.activeEffects) do
 		if entry.time ~= time and (not entry.subeffects or (entry.subeffects and not next(entry.subeffects))) then
 			self.activeEffects[eId] = nil
-			-- self:PrintDebug("ccActive", "Clearing active effect "..eId.." - "..self:CropZOSString(GetAbilityName(eId)))
+			-- self:PrintDebug("ccActive", "Clearing active effect "..eId.." - "..self:CropZOSString(GetAbilityName(eId), "ability"))
 		end
 	end
 end
@@ -339,7 +346,7 @@ function CCTracker:ClearSubeffects(id, time)
 	
 	-- if removedAbility then 
 		self:ClearOutdatedActiveEffects(time)
-		self:PrintDebug("ccActive", "Cleared out all instances of subeffect "..id.." - "..self:CropZOSString(GetAbilityName(id)).." at time: "..time)
+		self:PrintDebug("ccActive", "Cleared out all instances of subeffect "..id.." - "..self:CropZOSString(GetAbilityName(id), "ability").." at time: "..time)
 	-- end
 end
 
@@ -350,7 +357,7 @@ function CCTracker:ClearOutdatedCC(time)
 			table.insert(newActive, entry)
 		elseif entry.isSubeffect then
 			self:ClearSubeffects(entry.id, time)
-			self:PrintDebug("ccActive", "Removing outdated CC ability "..self:CropZOSString(GetAbilityName(entry.id)).." - "..entry.id)
+			self:PrintDebug("ccActive", "Removing outdated CC ability "..self:CropZOSString(GetAbilityName(entry.id), "ability").." - "..entry.id)
 		end
 	end
 	if #self.ccActive == #newActive then
@@ -414,7 +421,7 @@ function CCTracker:RolldodgeDetected()
 				else
 					couldJustBeSnare.id = entry.cacheId
 				end
-				self:PrintDebug("actualSnares", "Saving ability "..couldJustBeSnare.id..": "..self:CropZOSString(GetAbilityName(couldJustBeSnare.id))..", for possible snare list")
+				self:PrintDebug("actualSnares", "Saving ability "..couldJustBeSnare.id..": "..self:CropZOSString(GetAbilityName(couldJustBeSnare.id), "ability")..", for possible snare list")
 				table.insert(self.couldJustBeSnare, couldJustBeSnare)
 				table.insert(self.couldBeRoot, couldJustBeSnare)
 			end
@@ -440,7 +447,7 @@ function CCTracker:SnareRootCheck(id, num, name)
 	if self.ccActive[num].type == 10 and next(self.couldBeRoot) and self:AbilityInList(id, self.couldBeRoot) then
 		table.insert(self.SV.additionalRoots, id)				-- add ability id to saved variables
 		-- table.insert(self.constants.possibleRoots, id)			-- add ability it to possibleRoots list to be sorted correctly in the future without reloading ui
-		self:PrintDebug("additionalRootList", "Added "..self:CropZOSString(GetAbilityName(id)).." - "..id.." - to additional roots")
+		self:PrintDebug("additionalRootList", "Added "..self:CropZOSString(GetAbilityName(id), "ability").." - "..id.." - to additional roots")
 	elseif self.ccActive[num].type == "root" and next(self.couldJustBeSnare) then
 		local inList, num = self:AbilityInList(id, self.couldJustBeSnare)
 		if inList then
@@ -480,10 +487,10 @@ function CCTracker:ClearSnareCache()
 		self:PrintDebug("actualSnares", "Clearing actual snares list")
 		for i, entry in ipairs(self.couldJustBeSnare) do
 			-- if self:AbilityInList(entry.id, self.SV.additionalRoots) or self:AbilityInList(entry.id, self.constants.definiteRoots) then
-				-- self:PrintDebug("actualSnares", "The ability "..entry.id.." - "..self:CropZOSString(GetAbilityName(entry.id)).." was specificly marked as root. Skipping check on this one.")
+				-- self:PrintDebug("actualSnares", "The ability "..entry.id.." - "..self:CropZOSString(GetAbilityName(entry.id), "ability").." was specificly marked as root. Skipping check on this one.")
 				-- self.couldJustBeSnare[i] = nil
 			-- elseif self:AbilityInList(entry.id, self.SV.actualSnares) then
-				-- self:PrintDebug("actualSnares", "The ability "..entry.id.." - "..self:CropZOSString(GetAbilityName(entry.id)).." was already marked as snare. Skipping check on this one.")
+				-- self:PrintDebug("actualSnares", "The ability "..entry.id.." - "..self:CropZOSString(GetAbilityName(entry.id), "ability").." was already marked as snare. Skipping check on this one.")
 				-- self.couldJustBeSnare[i] = nil
 			-- else
 				table.insert(self.SV.actualSnares, entry.id)
@@ -491,7 +498,7 @@ function CCTracker:ClearSnareCache()
 				if inList then
 					table.remove(self.constants.possibleRoots, num)
 				end
-				self:PrintDebug("actualSnares", "There seems to be a misidentified root. Added "..entry.id.." - "..self:CropZOSString(GetAbilityName(entry.id)).." to actual snares list.")
+				self:PrintDebug("actualSnares", "There seems to be a misidentified root. Added "..entry.id.." - "..self:CropZOSString(GetAbilityName(entry.id), "ability").." to actual snares list.")
 				self.couldJustBeSnare[i] = nil
 			-- end
 		end
@@ -543,7 +550,7 @@ function CCTracker.menu.CreateAdditionalRootList()
 	end
 	
 	for i, id in ipairs(CCTracker.SV.additionalRoots) do
-		local str = tostring("|t20:20:"..GetAbilityIcon(id).."|t "..id.." - "..CCTracker:CropZOSString(GetAbilityName(id)))
+		local str = tostring("|t20:20:"..GetAbilityIcon(id).."|t "..id.." - "..CCTracker:CropZOSString(GetAbilityName(id), "ability"))
 		table.insert(CCTracker.menu.additionalRootList, str)
 	end
 	
@@ -564,7 +571,7 @@ function CCTracker.menu.CreateActualSnaresList()
 	end
 	
 	for i, id in ipairs(CCTracker.SV.actualSnares) do
-		local str = tostring("|t20:20:"..GetAbilityIcon(id).."|t "..id.." - "..CCTracker:CropZOSString(GetAbilityName(id)))
+		local str = tostring("|t20:20:"..GetAbilityIcon(id).."|t "..id.." - "..CCTracker:CropZOSString(GetAbilityName(id), "ability"))
 		table.insert(CCTracker.menu.actualSnaresList, str)
 	end
 	
@@ -589,7 +596,7 @@ function CCTracker.menu.CreateListOfActiveCC()
 	if NonContiguousCount(CCTracker.ccActive) ~= 0 then
 		for i, entry in ipairs(CCTracker.ccActive) do
 			if entry then
-				local abilityString = tostring("|t20:20:"..GetAbilityIcon(entry.id).."|t "..CCTracker:CropZOSString(GetAbilityName(entry.id))..", "..CCTracker.ccVariables[entry.type].name)
+				local abilityString = tostring("|t20:20:"..GetAbilityIcon(entry.id).."|t "..CCTracker:CropZOSString(GetAbilityName(entry.id), "ability")..", "..CCTracker.ccVariables[entry.type].name)
 				CCTracker.menu.ccList.active.string[i] = abilityString
 				if entry.cacheId and entry.cacheId ~= 0 then
 					CCTracker.menu.ccList.active.id[i] = entry.cacheId
@@ -702,7 +709,7 @@ end
 
 function CCTracker:PrintIgnoreLink(name, id)
 	self.debug:Print("New cc ability detected "..name)
-	self.debug:Print("Click |c2a52be|H1:CC_ABILITY_IGNORE_LINK:"..name..":"..id..":"..self:CropZOSString(GetUnitZone('player')).."|h[here]|h|r to ignore it in the future,")
+	self.debug:Print("Click |c2a52be|H1:CC_ABILITY_IGNORE_LINK:"..name..":"..id..":"..self:CropZOSString(GetUnitZone('player'), "location").."|h[here]|h|r to ignore it in the future,")
 	self.debug:Print("or ignore the ID: "..id.." manually in the |c2a52be/bcc|r menu")
 end
 	---------------
