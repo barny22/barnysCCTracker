@@ -15,7 +15,6 @@ CCTracker = {
 		["immunityToImmobilization"] = false,
 		["zone"] = "",
 		["subzone"] = "",
-		["playerDeactivated"] = 0,
 	},
 	["ccActive"] = {},
 	["UI"] = {},
