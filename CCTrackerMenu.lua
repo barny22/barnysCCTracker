@@ -228,7 +228,7 @@ function CCTracker:BuildMenu()
         version = self.version.patch.."."..self.version.major.."."..self.version.minor,
 		website = "https://www.esoui.com/downloads/info3971-barnysCCTracker.html",
 		feedback = "https://www.esoui.com/portal.php?&id=386",
-		donation = "https://ko-fi.com/barnyteso",
+		donation = "https://buymeacoffee.com/barnyteso",
         slashCommand = "/bcc",
         registerForRefresh = true,
 		registerForDefaults = true,
