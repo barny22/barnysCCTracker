@@ -5,7 +5,7 @@
 ## AddOnVersion: 010101
 ## APIVersion: 101045
 ## SavedVariables: CCTrackerSV
-## DependsOn: LibAddonMenu-2.0>=35 libAddonKeybinds>=5
+## DependsOn: LibAddonMenu-2.0>=38 libAddonKeybinds>=5
 ## OptionalDependsOn: LibChatMessage>=113
 
 ; This Add-on is not created by, affiliated with or sponsored by ZeniMax
