@@ -4,6 +4,9 @@ Welcome to the beta version of [b]barny's CC Tracker[/b]!
 
 This version introduces new features and improvements that are still being tested. By using this beta, you play a vital role in refining the add-on and making it more reliable for all players.
 
+[b]!! Important !![/b]
+[b]New dependency: LibNotification[/b]
+
 [b]Key Features of the Beta:[/b]
 [list]
 [*] [color=#00FF00]Enhanced tracking of crowd control effects[/color]

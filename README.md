@@ -4,7 +4,7 @@ Additionally, barny's CC Tracker allows you to set a keybind to manually reset t
 
 You can easily access the options menu using the [b]/bcc[/b] slash command. If you encounter any bugs or have feature requests, you can submit them via the [url=https://www.esoui.com/portal.php?id=386&a=listbugs]Bug Report page[/url] or the [url=https://www.esoui.com/portal.php?id=386&a=listfeatures]Feature Request page[/url]. For those interested in testing new features, beta versions are available on [url=https://github.com/barny22/barnysCCTracker/tree/development]GitHub[/url] or on [url=https://www.esoui.com/downloads/info3988-barnysCCTracker-beta.html]ESOUI[/url].
 
-[b]Dependencies: [color=red]LibAddonMenu-2.0[/color][/b]
+[b]Dependencies: [color=red]LibAddonMenu-2.0[/color], [color=red]LibNotification[/color] (new)[/b]
 [b]Optional dependency: [color=yellow]LibChatMessage[/color][/b] for debugging.
 
 If you like my work and want to support what I'm doing, consider supporting me on [url=https://ko-fi.com/barnyteso][color=green]Ko-Fi[/color][/url] or on [url=https://buymeacoffee.com/barnyteso][color=green]buymeacoffee[/color][/url].

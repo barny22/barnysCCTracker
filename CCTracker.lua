@@ -1,4 +1,7 @@
 local EM = EVENT_MANAGER
+
+local beta = true
+
 CCTracker = {
 	["name"] = "barnysCCTracker",
 	["version"] = {
@@ -6,6 +9,7 @@ CCTracker = {
 		["major"] = 1,
 		["minor"] = 1,
 	},
+	["beta"] = beta,
 	["menu"] = {},
 	["SV"] = {},
 	["activeEffects"] = {},
@@ -21,6 +25,9 @@ CCTracker = {
 	["couldBeRoot"] = {},
 	["couldJustBeSnare"] = {},
 }
+
+CCTracker.versionString = tostring(CCTracker.version.patch.."."CCTracker.version.major.."."CCTracker.version.minor)
+CCTracker.versionCheck = tonumber(string.format("%s%02d%02d", CCTracker.version.patch, CCTracker.version.major, CCTracker.version.minor))
 
 local function OnAddOnLoaded(eventCode, addOnName)
     --Check if that is your addons on Load, if not quit
@@ -59,6 +66,9 @@ function CCTracker:Init()
 	else 
 		self:SetAllDebugFalse()
 	end
+	
+	self.msg = LibNotification
+	
 	if NonContiguousCount(self.SV.additionalRoots) > 0 then
 		self:PrintDebug("additionalRootList", "Importing additional root abilities to constants")
 		for i = #self.SV.additionalRoots, 1, -1 do
@@ -129,6 +139,8 @@ function CCTracker:Init()
 	self:CCChanged()
 	
 	self:CheckForCCRegister()
+	
+	self:CreateNotifications()
 end
 
 	-----------------------------

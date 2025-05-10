@@ -3,6 +3,8 @@ CCTracker = CCTracker or {}
 
 CCTracker.DEFAULT_SAVED_VARS = {
 	["version"] = 1,
+	["showBetaMessage"] = true,
+	["lastAddOnVersion"] = 0,
 	["global"] = true,
 	["UI"] = {
 		["xOffsets"] = {
@@ -712,6 +714,96 @@ function CCTracker:PrintIgnoreLink(name, id)
 	self.debug:Print("Click |c2a52be|H1:CC_ABILITY_IGNORE_LINK:"..name..":"..id..":"..self:CropZOSString(GetUnitZone('player'), "location").."|h[here]|h|r to ignore it in the future,")
 	self.debug:Print("or ignore the ID: "..id.." manually in the |c2a52be/bcc|r menu")
 end
+
+	-----------------------
+	---- Notifications ----
+	-----------------------
+
+local function RemoveNotification(provider, identifier)
+	local notifications = provider.notifications
+	for i = #notifications, 1, -1 do
+		if notifications[i].heading == identifier then
+			table.remove(notifications, i)
+			provider:UpdateNotifications()
+			break
+		end
+	end
+end
+
+local function BetaNotification(provider)
+	local identifier = "CCTracker Beta User"
+	local function accept()
+		CCTracker.SV.showBetaMessage = false
+		RemoveNotification(provider, identifier) 
+	end
+
+	local msg = {
+	dataType = NOTIFICATIONS_REQUEST_DATA,
+	secsSinceRequest = ZO_NormalizeSecondsSince(0),
+	note = "If you encounter any unwanted 'features' pls report them in the ESOUI 'Comment' section (You can find the link in the menu metadata).\nAccepting this message will disable it.",
+	message = "You are currently using CCTracker's beta version",
+	heading = identifier,
+	texture = "/esoui/art/miscellaneous/eso_icon_warning.dds",
+	shortDisplayText = "CCTracker beta warning",
+	controlsOwnSounds = false,
+	keyboardAcceptCallback = accept,
+    keyboardDeclineCallback = function() RemoveNotification(provider, identifier) end,
+    gamepadAcceptCallback = accept,
+    gamepadDeclineCallback = function() RemoveNotification(provider, identifier) end,
+	data = {}, -- Place any custom data you want to store here
+    }
+	
+	-- CCTracker:PrintDebug("enabled", "You're currently using CCTracker's beta version")
+	
+	return msg
+end
+
+local function NewVersionAlert(provider)
+	local identifier = "CCTracker version update"
+	local function decline()
+		CCTracker.SV.lastAddOnVersion = CCTracker.versionCheck
+		RemoveNotification(provider, identifier)
+	end
+
+	local msg = {
+	dataType = NOTIFICATIONS_ALERT_DATA,
+	secsSinceRequest = ZO_NormalizeSecondsSince(0),
+	note = "Your new version is: "..CCTracker.versionCheck.."\nSometimes due to updates some values in your saved vars have been reset and you need to adjust your options. I apologize for the inconvenience.",
+	message = "You are now using CCTracker version "..CCTracker.versionCheck.."\nCheck the changelog for new features. Dismiss to disable this message.",
+	heading = identifier,
+	texture = "/esoui/art/journal/u26_progress_digsite_checked_complete.dds",
+	shortDisplayText = "CCTracker updated",
+	controlsOwnSounds = false,
+	keyboardAcceptCallback = function() RemoveNotification(provider, identifier) end,
+	keyboardDeclineCallback = decline,
+	gamepadAcceptCallback = function() RemoveNotification(provider, identifier) end,
+	gamepadDeclineCallback = decline,
+	data = {}, -- Place any custom data you want to store here
+    }
+	
+	-- CCTracker:PrintDebug("enabled", "New Version was detected. Current version: "..tostring(CCTracker.versionCheck))
+	
+	return msg
+end
+
+function CCTracker:CreateNotifications()
+	local provider = self.msg:CreateProvider()
+	local msg
+	
+	if self.beta and self.SV.showBetaMessage then
+		msg = BetaNotification(provider)
+		table.insert(provider.notifications, msg)
+	end
+	
+	if self.versionCheck ~= self.SV.lastAddOnVersion then
+		msg = NewVersionAlert(provider)
+		table.insert(provider.notifications, msg)
+	end
+	
+	provider:UpdateNotifications()
+end
+
+
 	---------------
 	---- Debug ----
 	---------------
