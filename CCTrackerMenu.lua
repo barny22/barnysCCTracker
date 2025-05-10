@@ -206,6 +206,13 @@ function CCTracker:BuildMenu()
 		self.menu.UpdateLists()
 	end)
 	
+	local websiteString
+	if self.beta then
+		websiteString = "https://www.esoui.com/downloads/info3988-barnysCCTracker-beta.html"
+	else
+		websiteString = "https://www.esoui.com/downloads/info3971-barnysCCTracker.html"
+	end
+	
 	self.menu.ccList = {}
 	self.menu.ccList.active = {
 		["string"] = {},
@@ -225,8 +232,8 @@ function CCTracker:BuildMenu()
         name = "barnysCCTracker",
         displayName = "|c2a52beb|rarnys|c2a52beCC|rTracker",
         author = "|c2a52beb|rarny",
-        version = self.version.patch.."."..self.version.major.."."..self.version.minor,
-		website = "https://www.esoui.com/downloads/info3971-barnysCCTracker.html",
+        version = self.versionString,
+		website = websiteString,
 		feedback = "https://www.esoui.com/portal.php?&id=386",
 		donation = "https://buymeacoffee.com/barnyteso",
         slashCommand = "/bcc",
