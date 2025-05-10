@@ -26,7 +26,7 @@ CCTracker = {
 	["couldJustBeSnare"] = {},
 }
 
-CCTracker.versionString = tostring(CCTracker.version.patch.."."CCTracker.version.major.."."CCTracker.version.minor)
+CCTracker.versionString = string.format("%s.%s.%s", CCTracker.version.patch, CCTracker.version.major, CCTracker.version.minor)
 CCTracker.versionCheck = tonumber(string.format("%s%02d%02d", CCTracker.version.patch, CCTracker.version.major, CCTracker.version.minor))
 
 local function OnAddOnLoaded(eventCode, addOnName)
