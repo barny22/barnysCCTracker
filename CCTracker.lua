@@ -24,6 +24,8 @@ CCTracker = {
 	["UI"] = {},
 	["couldBeRoot"] = {},
 	["couldJustBeSnare"] = {},
+	["inPVPZone"] = false,
+	["PVEEventsRegistered"] = false,
 }
 
 CCTracker.versionString = string.format("%s.%s.%s", CCTracker.version.patch, CCTracker.version.major, CCTracker.version.minor)
@@ -195,6 +197,9 @@ function CCTracker:Register()
 					CCTracker:ClearCCThatIsNotBuff()
 				end
 			end
+			
+			self.inPVPZone = self:IsInPvPZone()
+			self:RegisterPVEEvents()
 		end
 	)
 	EM:RegisterForEvent(
@@ -240,7 +245,24 @@ function CCTracker:Register()
 	self.registered = true
 end
 
-function CCTracker:Unregister()
+function CCTracker:RegisterPVEEvents()
+	if self.inPVPZone and self.PVEEventsRegistered then
+		EM:UnregisterForEvent(
+			self.name.."TrialEndCCDelete")
+		self.PVEEventsRegistered = false
+	elseif not (self.inPVPZone and self.PVEEventsRegistered) then
+		EM:RegisterForEvent(
+			self.name.."TrialEndCCDelete",
+			EVENT_RAID_TRIAL_COMPLETE,
+			function()
+				CCTracker:ClearAllCC()
+			end
+		)
+		self.PVEEventsRegistered = true
+	end		
+end
+
+function CCTracker:Unregister()		
 	EM:UnregisterForEvent(
 		self.name.."CombatEvents")
 		

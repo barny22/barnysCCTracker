@@ -310,6 +310,15 @@ function CCTracker:ClearOutdatedLists(time, client)
 	end
 end
 
+function CCTracker:IsInPvPZone()
+	if IsActiveWorldBattleground() or IsPlayerInAvAWorld() then
+		self.inPVPZone = true
+	else
+		self.inPVPZone = false
+	end
+	return self.inPVPZone
+end
+
 	-------------------
 	---- CC active ----
 	-------------------
