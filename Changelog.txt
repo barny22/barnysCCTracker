@@ -1,6 +1,7 @@
 2025.05.10 v1.1.1
 ! Updates to string formatting
 ! Updated roots/snares
+! API bump
 + Added notifications to notify when a new version was detected or user uses the beta version
 
 2025.01.16 v1.1.0
