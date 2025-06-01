@@ -539,7 +539,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 					-- IGNORE CC CHAT LINKS --
 					--------------------------
 					if self.SV.settings.ccIgnoreLinks then
-						self:PrintIgnoreLink(name, newAbility.id)
+						self:PrintIgnoreLink(eName, newAbility.id)
 					end
 				end
 			end
