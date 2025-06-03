@@ -409,7 +409,7 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 					local inList, num = self:AbilityInList(aId, self.ccActive)
 					if not inList then
 						-- if not self:TypeInList(newAbility.type) then
-						if not self.ccVariables[ccType].active then
+						if not self.ccVariables[ccType].active and self.SV.sound[self.ccVariables[ccType].name].enabled then
 							check.playSound = true
 						end
 						table.insert(self.ccActive, newAbility)
