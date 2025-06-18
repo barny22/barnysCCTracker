@@ -63,6 +63,7 @@ CCTracker.DEFAULT_SAVED_VARS = {
 		["ccIgnoreLinks"] = false,
 	},
 	["sound"] = {
+		["MuteOnHardCC"] = false,
 		["Charm"] = {
 			["enabled"] = false,
 			["sound"] = "General_Alert_Error",
@@ -252,12 +253,15 @@ function CCTracker:IsRoot(id)
 end
 
 function CCTracker:CCChanged(playSound)
-	if playSound then
-		self:PlayCCSound()
-	end
 	self.UI.ApplyIcons()
 	-- self:PrintDebug("ccActive", "CC changed, doing stuff")
 	self.menu.CreateListOfActiveCC()
+	
+	self:RestoreAudioVolume()
+	if playSound then
+		self:PlayCCSound()
+	end
+	
 	if self.SV.debug.activeCCList then self:CreateActiveCCString() end
 end
 
@@ -671,12 +675,32 @@ end
 	---- Sounds ----
 	----------------
 
+function CCTracker:RestoreAudioVolume()
+	if tonumber(GetSetting(SETTING_TYPE_AUDIO, AUDIO_SETTING_AUDIO_VOLUME)) == 0 then
+		-- check if hard cc is over
+		if #self.ccActive > 0 then
+			for _, entry in pairs(self.ccVariables) do
+				if entry.active and entry.isHardCC then
+					self:PrintDebug("audioMute", "Hard cc still ongoing. Will not restore audio volume")
+					return
+				end
+			end
+		end
+		-- restore original UI Volume
+		self:PrintDebug("audioMute", "No more hard cc. Restoring audio volume")
+		SetSetting(SETTING_TYPE_AUDIO, AUDIO_SETTING_AUDIO_VOLUME, self.audioVolume)
+	end
+end
+
 function CCTracker:PlayCCSound()
 	-- self.debug:Print("Sound requested")
 	if #self.ccActive > 0 then
 		-- self.debug:Print("Checking which sound needs to be played")
-		for i, entry in pairs(self.ccVariables) do
-			if entry.playSound then
+		for _, entry in pairs(self.ccVariables) do
+			if self.SV.sound.MuteOnHardCC and entry.isHardCC then
+				self:PrintDebug("audioMute", "Hard cc. Setting audio volume to 0")
+				SetSetting(SETTING_TYPE_AUDIO, AUDIO_SETTING_AUDIO_VOLUME, 0)
+			elseif entry.playSound then
 				PlaySound(self.SV.sound[entry.name].sound)
 				-- self.debug:Print("Playing sound for "..entry.name)
 				entry.playSound = false

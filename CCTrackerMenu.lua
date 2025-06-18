@@ -131,7 +131,7 @@ local function CreateSoundControls()
 		control1.type = "checkbox"
 		control1.name = "Play "..CCTracker.menu.constants.sound[i].Name.." sound"
 		control1.width = "half"
-		control1.disabled = function() return not CCTracker.ccVariables[CCTracker.menu.constants.sound[i].Id].tracked end
+		control1.disabled = function() return (not CCTracker.ccVariables[CCTracker.menu.constants.sound[i].Id].tracked) or (CCTracker.ccVariables[CCTracker.menu.constants.sound[i].Id].isHardCC and CCTracker.SV.sound.MuteOnHardCC) end
 		control1.default = false
 		control1.getFunc = function() return CCTracker.SV.sound[CCTracker.menu.constants.sound[i].Name].enabled end
 		control1.setFunc = function(value)
@@ -150,7 +150,7 @@ local function CreateSoundControls()
 		control2.type = "dropdown"
 		control2.name = CCTracker.menu.constants.sound[i].Name.." sound"
 		control2.width = "half"
-		control2.disabled = function() return not CCTracker.SV.sound[CCTracker.menu.constants.sound[i].Name].enabled end
+		control2.disabled = function() return (not CCTracker.SV.sound[CCTracker.menu.constants.sound[i].Name].enabled) or (CCTracker.ccVariables[CCTracker.menu.constants.sound[i].Id].isHardCC and CCTracker.SV.sound.MuteOnHardCC) end
 		control2.choices = CCTracker.menu.constants.SoundList
 		control2.getFunc = function() return CCTracker.SV.sound[CCTracker.menu.constants.sound[i].Name].sound end
 		control2.setFunc = function(value)
@@ -349,7 +349,23 @@ function CCTracker:BuildMenu()
 			type = "submenu",
 			name = "Sound",
 			tooltip = "You can enable sounds to also get an audio cue when hit by CC",
-			controls = {},
+			controls = {
+				{
+					type = "checkbox",
+					name = "Mute UI sound when under hard CC",
+					warning = "This disables sound selection for all hard CC!",
+					disabled = function()
+						for _, isActive in pairs(CCTracker.SV.settings.tracked) do
+							if isActive then return false end
+						end
+						return true
+					end,
+					getFunc = function() return self.SV.sound.MuteOnHardCC end,
+					setFunc = function(value)
+						self.SV.sound.MuteOnHardCC = value
+					end,
+				},
+			},
 		},
 		{
 			type = "submenu",
@@ -597,6 +613,16 @@ function CCTracker:BuildMenu()
 					getFunc = function() return self.SV.debug.additionalRootList end,
 					setFunc = function(value)
 						self.SV.debug.additionalRootList = value
+					end,
+					width = "half",
+				},
+				{	
+					type = "checkbox",
+					name = "Debug mute audio",
+					disabled = function() return not self.SV.debug.enabled end,
+					getFunc = function() return self.SV.debug.audioMute end,
+					setFunc = function(value)
+						self.SV.debug.audioMute = value
 					end,
 					width = "half",
 				},

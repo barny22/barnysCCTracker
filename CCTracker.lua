@@ -119,17 +119,17 @@ function CCTracker:Init()
 	
 	self.currentCharacterName = self:CropZOSString(GetUnitName("player"), "name")
 	self.ccVariables = {
-		["charm"] = {["icon"] = "/esoui/art/icons/ability_u34_sea_witch_mindcontrol.dds", ["tracked"] = self.SV.settings.tracked.Charm, ["res"] = 3510, ["active"] = false, ["name"] = "Charm",}, --ACTION_RESULT_CHARMED
-		[32] = {["icon"] = "/esoui/art/icons/ability_debuff_disorient.dds", ["tracked"] = self.SV.settings.tracked.Disoriented, ["res"] = 2340, ["active"] = false, ["name"] = "Disoriented",}, --ABILITY_TYPE_DISORIENT
-		[27] = {["icon"] = "/esoui/art/icons/ability_debuff_fear.dds", ["tracked"] = self.SV.settings.tracked.Fear, ["res"] = 2320, ["active"] = false, ["name"] = "Fear",}, --ABILITY_TYPE_FEAR
-		[17] = {["icon"] = "/esoui/art/icons/ability_debuff_knockback.dds", ["tracked"] = self.SV.settings.tracked.Knockback, ["res"] = 2475, ["active"] = false, ["name"] = "Knockback",}, --ABILITY_TYPE_KNOCKBACK
-		[48] = {["icon"] = "/esoui/art/icons/ability_debuff_levitate.dds", ["tracked"] = self.SV.settings.tracked.Levitating, ["res"] = 2400, ["active"] = false, ["name"] = "Levitating",}, --ABILITY_TYPE_LEVITATE
-		[53] = {["icon"] = "/esoui/art/icons/ability_debuff_offbalance.dds", ["tracked"] = self.SV.settings.tracked.Offbalance, ["res"] = 2440, ["active"] = false, ["name"] = "Offbalance",}, --ABILITY_TYPE_OFFBALANCE
-		["root"] = {["icon"] = "/esoui/art/icons/ability_debuff_root.dds", ["tracked"] = self.SV.settings.tracked.Root, ["res"] = 2480, ["active"] = false, ["name"] = "Root",}, --ACTION_RESULT_ROOTED
-		[11] = {["icon"] = "/esoui/art/icons/ability_debuff_silence.dds", ["tracked"] = self.SV.settings.tracked.Silence, ["res"] = 2010, ["active"] = false, ["name"] = "Silence",}, --ABILITY_TYPE_SILENCE
-		[10] = {["icon"] = "/esoui/art/icons/ability_debuff_snare.dds", ["tracked"] = self.SV.settings.tracked.Snare, ["res"] = 2025, ["active"] = false, ["name"] = "Snare",}, --ABILITY_TYPE_SNARE
-		[33] = {["icon"] = "/esoui/art/icons/ability_debuff_stagger.dds", ["tracked"] = self.SV.settings.tracked.Stagger, ["res"] = 2470, ["active"] = false, ["name"] = "Stagger",}, --ABILITY_TYPE_STAGGER
-		[9] = {["icon"] = "/esoui/art/icons/ability_debuff_stun.dds", ["tracked"] = self.SV.settings.tracked.Stun, ["res"] = 2020, ["active"] = false, ["name"] = "Stun",}, --ABILITY_TYPE_STUN
+		["charm"] = {["icon"] = "/esoui/art/icons/ability_u34_sea_witch_mindcontrol.dds", ["tracked"] = self.SV.settings.tracked.Charm, ["res"] = 3510, ["active"] = false, ["name"] = "Charm", ["isHardCC"] = true,}, --ACTION_RESULT_CHARMED
+		[32] = {["icon"] = "/esoui/art/icons/ability_debuff_disorient.dds", ["tracked"] = self.SV.settings.tracked.Disoriented, ["res"] = 2340, ["active"] = false, ["name"] = "Disoriented", ["isHardCC"] = false,}, --ABILITY_TYPE_DISORIENT
+		[27] = {["icon"] = "/esoui/art/icons/ability_debuff_fear.dds", ["tracked"] = self.SV.settings.tracked.Fear, ["res"] = 2320, ["active"] = false, ["name"] = "Fear", ["isHardCC"] = true,}, --ABILITY_TYPE_FEAR
+		[17] = {["icon"] = "/esoui/art/icons/ability_debuff_knockback.dds", ["tracked"] = self.SV.settings.tracked.Knockback, ["res"] = 2475, ["active"] = false, ["name"] = "Knockback", ["isHardCC"] = true,}, --ABILITY_TYPE_KNOCKBACK
+		[48] = {["icon"] = "/esoui/art/icons/ability_debuff_levitate.dds", ["tracked"] = self.SV.settings.tracked.Levitating, ["res"] = 2400, ["active"] = false, ["name"] = "Levitating", ["isHardCC"] = true,}, --ABILITY_TYPE_LEVITATE
+		[53] = {["icon"] = "/esoui/art/icons/ability_debuff_offbalance.dds", ["tracked"] = self.SV.settings.tracked.Offbalance, ["res"] = 2440, ["active"] = false, ["name"] = "Offbalance", ["isHardCC"] = false,}, --ABILITY_TYPE_OFFBALANCE
+		["root"] = {["icon"] = "/esoui/art/icons/ability_debuff_root.dds", ["tracked"] = self.SV.settings.tracked.Root, ["res"] = 2480, ["active"] = false, ["name"] = "Root", ["isHardCC"] = false,}, --ACTION_RESULT_ROOTED
+		[11] = {["icon"] = "/esoui/art/icons/ability_debuff_silence.dds", ["tracked"] = self.SV.settings.tracked.Silence, ["res"] = 2010, ["active"] = false, ["name"] = "Silence", ["isHardCC"] = false,}, --ABILITY_TYPE_SILENCE
+		[10] = {["icon"] = "/esoui/art/icons/ability_debuff_snare.dds", ["tracked"] = self.SV.settings.tracked.Snare, ["res"] = 2025, ["active"] = false, ["name"] = "Snare", ["isHardCC"] = false,}, --ABILITY_TYPE_SNARE
+		[33] = {["icon"] = "/esoui/art/icons/ability_debuff_stagger.dds", ["tracked"] = self.SV.settings.tracked.Stagger, ["res"] = 2470, ["active"] = false, ["name"] = "Stagger", ["isHardCC"] = false,}, --ABILITY_TYPE_STAGGER
+		[9] = {["icon"] = "/esoui/art/icons/ability_debuff_stun.dds", ["tracked"] = self.SV.settings.tracked.Stun, ["res"] = 2020, ["active"] = false, ["name"] = "Stun", ["isHardCC"] = true,}, --ABILITY_TYPE_STUN
 	}
 	
 	self.UI = self:BuildUI()
@@ -137,6 +137,7 @@ function CCTracker:Init()
 	self.UI.SetUnlocked(self.SV.settings.unlocked)
 	self.UI.HideLiveCCWindow(self.SV.debug.activeCCList)
 	self.UI.FadeScenes("UI")
+	self.audioVolume = GetSetting(SETTING_TYPE_AUDIO, AUDIO_SETTING_AUDIO_VOLUME)
 	self:BuildMenu()
 	self:CCChanged()
 	
@@ -241,6 +242,25 @@ function CCTracker:Register()
 			end
 		end
 	)
+	
+	-- EM:RegisterForEvent(
+		-- self.name.."AudioVolumeChange",
+		-- EVENT_INTERFACE_SETTING_CHANGED ,
+		-- function(_,_,settingId)
+			-- self:PrintDebug("enabled", "Interface setting changed. Getting audio volume")
+			-- if settingId == AUDIO_SETTING_AUDIO_VOLUME then
+				-- local audioVolume = GetSetting(SETTING_TYPE_AUDIO, AUDIO_SETTING_AUDIO_VOLUME)
+				-- if audioVolume ~= 0 then self.audioVolume = audioVolume end
+			-- end
+		-- end
+	-- )
+		
+	-- EM:AddFilterForEvent(
+		-- self.name.."AudioVolumeChange",
+		-- EVENT_INTERFACE_SETTING_CHANGED ,
+		-- REGISTER_FILTER_SETTING_SYSTEM_TYPE,
+		-- SETTING_TYPE_AUDIO
+	-- )
 	
 	self.registered = true
 end
