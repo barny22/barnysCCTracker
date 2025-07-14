@@ -347,8 +347,10 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 			if aId == self.constants.rollDodge.buffId then
 				self.status.immunityToImmobilization = false
 				return
-			elseif self.activeEffects[aId] and self.activeEffects[aId].subeffects then
-				for _, id in ipairs(self.activeEffects[aId].subeffects) do
+			elseif self.activeEffects[aId] and self.activeEffects[aId].subeffects and next(self.activeEffects[aId].subeffects) then
+				local subs = self.activeEffects[aId].subeffects
+				for i = #subs, 1, -1 do
+					local id = subs[i]
 					local inActiveList, number = self:AbilityInList(id, self.ccActive)
 					if inActiveList then
 						self:SnareRootCheck(id, number, aName)
@@ -360,7 +362,7 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 						
 						table.remove(self.ccActive, number)
 						self:CCChanged()
-						self:PrintDebug("ccActive", "Removing ability "..self:CropZOSString(GetAbilityName(id), "ability").." from ccActive list")
+						self:PrintDebug("ccActive", zo_strformat("Removing subeffect ability <<1>> from ccActive list and from activeEffect <<2>>", self:CropZOSString(GetAbilityName(id), "ability"), self:CropZOSString(GetAbilityName(aId), "ability")))
 					end
 				end
 				self.activeEffects[aId] = nil
@@ -384,6 +386,7 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 			elseif not self.activeEffects[aId] then
 				local newEffect = {["name"] = aName, ["time"] = time}
 				self.activeEffects[aId] = newEffect
+				self:PrintDebug("ccActive", zo_strformat("Added new active effect <<1>> at time <<2>>", aName, time))
 			end
 			return
 		elseif not err then
@@ -403,6 +406,7 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 				if check.res == res and check.tracked and not self.constants.exceptions[aId] then
 					-- self:PrintDebug("ccCache", "Caching cc result")
 					local isSubeffect = false
+					local mainEffects = {}
 					for eId, entry in pairs(self.activeEffects) do
 						-- self:PrintDebug("ccActive", "Checking for active effects at time: "..time)
 						if entry.time == time then
@@ -412,7 +416,9 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 								entry.subeffects = {}
 							end
 							table.insert(entry.subeffects, aId)
+							self:PrintDebug("ccActive", zo_strformat("Added new subeffect <<4>> to ability <<1>> - <<2>> at time <<3>>", eId, self:CropZOSString(GetAbilityName(eId), "ability"), time, aName))
 							isSubeffect = true
+							table.insert(mainEffects, eId)
 							-- self:PrintDebug("ccActive", "Adding effect "..aId.." to subeffects for effect "..eId)
 						end
 					end
@@ -426,6 +432,7 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 						["cacheId"] = 0,
 						["isSubeffect"] = isSubeffect,
 					}
+					if next(mainEffects) then newAbility.mainEffects = mainEffects end
 					local inList, num = self:AbilityInList(aId, self.ccActive)
 					if not inList then
 						-- if not self:TypeInList(newAbility.type) then
