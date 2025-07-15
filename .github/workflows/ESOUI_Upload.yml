@@ -27,7 +27,7 @@ jobs:
         
     - name: Set beta = false in barnysCCTracker.lua
       run: |
-        sed -i 's/local beta = true/local beta = false/' barnysCCTracker/barnysCCTracker.lua
+        sed -i 's/local beta = true/local beta = false/' barnysCCTracker/CCTracker.lua
 
     - name: Detect Manifest File
       id: detect_manifest
