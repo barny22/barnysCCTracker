@@ -1,11 +1,15 @@
 local EM = EVENT_MANAGER
+
+local beta = true
+
 CCTracker = {
 	["name"] = "barnysCCTracker",
 	["version"] = {
 		["patch"] = 1,
 		["major"] = 1,
-		["minor"] = 0,
+		["minor"] = 1,
 	},
+	["beta"] = beta,
 	["menu"] = {},
 	["SV"] = {},
 	["activeEffects"] = {},
@@ -15,13 +19,17 @@ CCTracker = {
 		["immunityToImmobilization"] = false,
 		["zone"] = "",
 		["subzone"] = "",
-		["playerDeactivated"] = 0,
 	},
 	["ccActive"] = {},
 	["UI"] = {},
 	["couldBeRoot"] = {},
 	["couldJustBeSnare"] = {},
+	["inPVPZone"] = false,
+	["PVEEventsRegistered"] = false,
 }
+
+CCTracker.versionString = string.format("%s.%s.%s", CCTracker.version.patch, CCTracker.version.major, CCTracker.version.minor)
+CCTracker.versionCheck = tonumber(string.format("%s%02d%02d", CCTracker.version.patch, CCTracker.version.major, CCTracker.version.minor))
 
 local function OnAddOnLoaded(eventCode, addOnName)
     --Check if that is your addons on Load, if not quit
@@ -60,6 +68,9 @@ function CCTracker:Init()
 	else 
 		self:SetAllDebugFalse()
 	end
+	
+	self.msg = LibNotification
+	
 	if NonContiguousCount(self.SV.additionalRoots) > 0 then
 		self:PrintDebug("additionalRootList", "Importing additional root abilities to constants")
 		for i = #self.SV.additionalRoots, 1, -1 do
@@ -73,7 +84,7 @@ function CCTracker:Init()
 			if not inRootList and not inSnaresList then
 				table.insert(self.constants.definiteRoots, rId)
 			else
-				self:PrintDebug("additionalRootList", "Deleting skill "..rId..": "..self:CropZOSString(GetAbilityName(rId)).." from additional roots. Already in definite list")
+				self:PrintDebug("additionalRootList", "Deleting skill "..rId..": "..self:CropZOSString(GetAbilityName(rId), "ability").." from additional roots. Already in definite list")
 				table.remove(self.SV.additionalRoots, i)
 			end
 		end
@@ -92,7 +103,7 @@ function CCTracker:Init()
 			if not inSnaresList and not inRootList then
 				table.insert(self.constants.definiteSnares, sId)
 			else
-				self:PrintDebug("actualSnares", "Deleting skill "..sId..": "..self:CropZOSString(GetAbilityName(sId)).." from actual snares. Already in definite list")
+				self:PrintDebug("actualSnares", "Deleting skill "..sId..": "..self:CropZOSString(GetAbilityName(sId), "ability").." from actual snares. Already in definite list")
 				table.remove(self.SV.actualSnares, i)
 			end
 		end
@@ -101,24 +112,24 @@ function CCTracker:Init()
 	self.started = true
 	
 	self.status.alive = GetFrameTimeMilliseconds()
-	-- self.status.zone = self:CropZOSString(GetPlayerActiveZoneName())
-	-- self.status.subzone = self:CropZOSString(GetPlayerActiveSubzoneName())
+	-- self.status.zone = self:CropZOSString(GetPlayerActiveZoneName(), "location")
+	-- self.status.subzone = self:CropZOSString(GetPlayerActiveSubzoneName(), "location")
 	
 	self.ccAdded = {["combatEvents"] = 0, ["effectsChanged"] = 0, ["endTimeUpdated"] = 0,}
 	
-	self.currentCharacterName = self:CropZOSString(GetUnitName("player"))
+	self.currentCharacterName = self:CropZOSString(GetUnitName("player"), "name")
 	self.ccVariables = {
-		["charm"] = {["icon"] = "/esoui/art/icons/ability_u34_sea_witch_mindcontrol.dds", ["tracked"] = self.SV.settings.tracked.Charm, ["res"] = 3510, ["active"] = false, ["name"] = "Charm",}, --ACTION_RESULT_CHARMED
-		[32] = {["icon"] = "/esoui/art/icons/ability_debuff_disorient.dds", ["tracked"] = self.SV.settings.tracked.Disoriented, ["res"] = 2340, ["active"] = false, ["name"] = "Disoriented",}, --ABILITY_TYPE_DISORIENT
-		[27] = {["icon"] = "/esoui/art/icons/ability_debuff_fear.dds", ["tracked"] = self.SV.settings.tracked.Fear, ["res"] = 2320, ["active"] = false, ["name"] = "Fear",}, --ABILITY_TYPE_FEAR
-		[17] = {["icon"] = "/esoui/art/icons/ability_debuff_knockback.dds", ["tracked"] = self.SV.settings.tracked.Knockback, ["res"] = 2475, ["active"] = false, ["name"] = "Knockback",}, --ABILITY_TYPE_KNOCKBACK
-		[48] = {["icon"] = "/esoui/art/icons/ability_debuff_levitate.dds", ["tracked"] = self.SV.settings.tracked.Levitating, ["res"] = 2400, ["active"] = false, ["name"] = "Levitating",}, --ABILITY_TYPE_LEVITATE
-		[53] = {["icon"] = "/esoui/art/icons/ability_debuff_offbalance.dds", ["tracked"] = self.SV.settings.tracked.Offbalance, ["res"] = 2440, ["active"] = false, ["name"] = "Offbalance",}, --ABILITY_TYPE_OFFBALANCE
-		["root"] = {["icon"] = "/esoui/art/icons/ability_debuff_root.dds", ["tracked"] = self.SV.settings.tracked.Root, ["res"] = 2480, ["active"] = false, ["name"] = "Root",}, --ACTION_RESULT_ROOTED
-		[11] = {["icon"] = "/esoui/art/icons/ability_debuff_silence.dds", ["tracked"] = self.SV.settings.tracked.Silence, ["res"] = 2010, ["active"] = false, ["name"] = "Silence",}, --ABILITY_TYPE_SILENCE
-		[10] = {["icon"] = "/esoui/art/icons/ability_debuff_snare.dds", ["tracked"] = self.SV.settings.tracked.Snare, ["res"] = 2025, ["active"] = false, ["name"] = "Snare",}, --ABILITY_TYPE_SNARE
-		[33] = {["icon"] = "/esoui/art/icons/ability_debuff_stagger.dds", ["tracked"] = self.SV.settings.tracked.Stagger, ["res"] = 2470, ["active"] = false, ["name"] = "Stagger",}, --ABILITY_TYPE_STAGGER
-		[9] = {["icon"] = "/esoui/art/icons/ability_debuff_stun.dds", ["tracked"] = self.SV.settings.tracked.Stun, ["res"] = 2020, ["active"] = false, ["name"] = "Stun",}, --ABILITY_TYPE_STUN
+		["charm"] = {["icon"] = "/esoui/art/icons/ability_u34_sea_witch_mindcontrol.dds", ["tracked"] = self.SV.settings.tracked.Charm, ["res"] = 3510, ["active"] = false, ["name"] = "Charm", ["isHardCC"] = true,}, --ACTION_RESULT_CHARMED
+		[32] = {["icon"] = "/esoui/art/icons/ability_debuff_disorient.dds", ["tracked"] = self.SV.settings.tracked.Disoriented, ["res"] = 2340, ["active"] = false, ["name"] = "Disoriented", ["isHardCC"] = false,}, --ABILITY_TYPE_DISORIENT
+		[27] = {["icon"] = "/esoui/art/icons/ability_debuff_fear.dds", ["tracked"] = self.SV.settings.tracked.Fear, ["res"] = 2320, ["active"] = false, ["name"] = "Fear", ["isHardCC"] = true,}, --ABILITY_TYPE_FEAR
+		[17] = {["icon"] = "/esoui/art/icons/ability_debuff_knockback.dds", ["tracked"] = self.SV.settings.tracked.Knockback, ["res"] = 2475, ["active"] = false, ["name"] = "Knockback", ["isHardCC"] = true,}, --ABILITY_TYPE_KNOCKBACK
+		[48] = {["icon"] = "/esoui/art/icons/ability_debuff_levitate.dds", ["tracked"] = self.SV.settings.tracked.Levitating, ["res"] = 2400, ["active"] = false, ["name"] = "Levitating", ["isHardCC"] = true,}, --ABILITY_TYPE_LEVITATE
+		[53] = {["icon"] = "/esoui/art/icons/ability_debuff_offbalance.dds", ["tracked"] = self.SV.settings.tracked.Offbalance, ["res"] = 2440, ["active"] = false, ["name"] = "Offbalance", ["isHardCC"] = false,}, --ABILITY_TYPE_OFFBALANCE
+		["root"] = {["icon"] = "/esoui/art/icons/ability_debuff_root.dds", ["tracked"] = self.SV.settings.tracked.Root, ["res"] = 2480, ["active"] = false, ["name"] = "Root", ["isHardCC"] = false,}, --ACTION_RESULT_ROOTED
+		[11] = {["icon"] = "/esoui/art/icons/ability_debuff_silence.dds", ["tracked"] = self.SV.settings.tracked.Silence, ["res"] = 2010, ["active"] = false, ["name"] = "Silence", ["isHardCC"] = false,}, --ABILITY_TYPE_SILENCE
+		[10] = {["icon"] = "/esoui/art/icons/ability_debuff_snare.dds", ["tracked"] = self.SV.settings.tracked.Snare, ["res"] = 2025, ["active"] = false, ["name"] = "Snare", ["isHardCC"] = false,}, --ABILITY_TYPE_SNARE
+		[33] = {["icon"] = "/esoui/art/icons/ability_debuff_stagger.dds", ["tracked"] = self.SV.settings.tracked.Stagger, ["res"] = 2470, ["active"] = false, ["name"] = "Stagger", ["isHardCC"] = false,}, --ABILITY_TYPE_STAGGER
+		[9] = {["icon"] = "/esoui/art/icons/ability_debuff_stun.dds", ["tracked"] = self.SV.settings.tracked.Stun, ["res"] = 2020, ["active"] = false, ["name"] = "Stun", ["isHardCC"] = true,}, --ABILITY_TYPE_STUN
 	}
 	
 	self.UI = self:BuildUI()
@@ -126,10 +137,13 @@ function CCTracker:Init()
 	self.UI.SetUnlocked(self.SV.settings.unlocked)
 	self.UI.HideLiveCCWindow(self.SV.debug.activeCCList)
 	self.UI.FadeScenes("UI")
+	self.audioVolume = GetSetting(SETTING_TYPE_AUDIO, AUDIO_SETTING_AUDIO_VOLUME)
 	self:BuildMenu()
 	self:CCChanged()
 	
 	self:CheckForCCRegister()
+	
+	self:CreateNotifications()
 end
 
 	-----------------------------
@@ -164,8 +178,8 @@ function CCTracker:Register()
 		self.name.."PlayerDeactivated",
 		EVENT_PLAYER_DEACTIVATED,
 		function()
-			self.status.zone = self:CropZOSString(GetPlayerActiveZoneName())
-			self.status.subzone = self:CropZOSString(GetPlayerActiveSubzoneName())
+			self.status.zone = self:CropZOSString(GetPlayerActiveZoneName(), "location")
+			self.status.subzone = self:CropZOSString(GetPlayerActiveSubzoneName(), "location")
 		end
 	)
 	EM:RegisterForEvent(
@@ -173,8 +187,8 @@ function CCTracker:Register()
 		EVENT_PLAYER_ACTIVATED,
 		function()
 			local zName, sZName
-			zName = self:CropZOSString(GetPlayerActiveZoneName())
-			sZName = self:CropZOSString(GetPlayerActiveSubzoneName())
+			zName = self:CropZOSString(GetPlayerActiveZoneName(), "location")
+			sZName = self:CropZOSString(GetPlayerActiveSubzoneName(), "location")
 			
 			
 			if NonContiguousCount(CCTracker.ccActive) then
@@ -184,6 +198,9 @@ function CCTracker:Register()
 					CCTracker:ClearCCThatIsNotBuff()
 				end
 			end
+			
+			self.inPVPZone = self:IsInPvPZone()
+			self:RegisterPVEEvents()
 		end
 	)
 	EM:RegisterForEvent(
@@ -226,10 +243,46 @@ function CCTracker:Register()
 		end
 	)
 	
+	-- EM:RegisterForEvent(
+		-- self.name.."AudioVolumeChange",
+		-- EVENT_INTERFACE_SETTING_CHANGED ,
+		-- function(_,_,settingId)
+			-- self:PrintDebug("enabled", "Interface setting changed. Getting audio volume")
+			-- if settingId == AUDIO_SETTING_AUDIO_VOLUME then
+				-- local audioVolume = GetSetting(SETTING_TYPE_AUDIO, AUDIO_SETTING_AUDIO_VOLUME)
+				-- if audioVolume ~= 0 then self.audioVolume = audioVolume end
+			-- end
+		-- end
+	-- )
+		
+	-- EM:AddFilterForEvent(
+		-- self.name.."AudioVolumeChange",
+		-- EVENT_INTERFACE_SETTING_CHANGED ,
+		-- REGISTER_FILTER_SETTING_SYSTEM_TYPE,
+		-- SETTING_TYPE_AUDIO
+	-- )
+	
 	self.registered = true
 end
 
-function CCTracker:Unregister()
+function CCTracker:RegisterPVEEvents()
+	if self.inPVPZone and self.PVEEventsRegistered then
+		EM:UnregisterForEvent(
+			self.name.."TrialEndCCDelete")
+		self.PVEEventsRegistered = false
+	elseif not (self.inPVPZone and self.PVEEventsRegistered) then
+		EM:RegisterForEvent(
+			self.name.."TrialEndCCDelete",
+			EVENT_RAID_TRIAL_COMPLETE,
+			function()
+				CCTracker:ClearAllCC()
+			end
+		)
+		self.PVEEventsRegistered = true
+	end		
+end
+
+function CCTracker:Unregister()		
 	EM:UnregisterForEvent(
 		self.name.."CombatEvents")
 		
@@ -273,14 +326,14 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 		
 	if self.status.alive == 0 or (self.status.dead ~= 0 and self.status.dead <= time) then
 		return
-	elseif self:CropZOSString(tName) == self.currentCharacterName then
+	elseif self:CropZOSString(tName, "name") == self.currentCharacterName then
 	
-		local aName = self:CropZOSString(aName)
+		local aName = self:CropZOSString(aName, "ability")
 		
-		if aId == self.constants.breakFree and self.currentCharacterName == self:CropZOSString(sName) and self:DoesBreakFreeWork() then			-- remove stuns, fear and charm if player breaks free
+		if aId == self.constants.breakFree and self.currentCharacterName == self:CropZOSString(sName, "name") and self:DoesBreakFreeWork() then			-- remove stuns, fear and charm if player breaks free
 			self:BreakFreeDetected()
 			return
-		elseif aId == self.constants.rollDodge.abilityId and self.currentCharacterName == self:CropZOSString(sName) and res == ACTION_RESULT_EFFECT_GAINED then	-- remove roots when player uses dodgeroll
+		elseif aId == self.constants.rollDodge.abilityId and self.currentCharacterName == self:CropZOSString(sName, "name") and res == ACTION_RESULT_EFFECT_GAINED then	-- remove roots when player uses dodgeroll
 			self:RolldodgeDetected()
 			return
 		elseif self.constants.ignore[aId] or self.SV.ignored[aId] then
@@ -294,8 +347,10 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 			if aId == self.constants.rollDodge.buffId then
 				self.status.immunityToImmobilization = false
 				return
-			elseif self.activeEffects[aId] and self.activeEffects[aId].subeffects then
-				for _, id in ipairs(self.activeEffects[aId].subeffects) do
+			elseif self.activeEffects[aId] and self.activeEffects[aId].subeffects and next(self.activeEffects[aId].subeffects) then
+				local subs = self.activeEffects[aId].subeffects
+				for i = #subs, 1, -1 do
+					local id = subs[i]
 					local inActiveList, number = self:AbilityInList(id, self.ccActive)
 					if inActiveList then
 						self:SnareRootCheck(id, number, aName)
@@ -307,7 +362,7 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 						
 						table.remove(self.ccActive, number)
 						self:CCChanged()
-						self:PrintDebug("ccActive", "Removing ability "..self:CropZOSString(GetAbilityName(id)).." from ccActive list")
+						self:PrintDebug("ccActive", zo_strformat("Removing subeffect ability <<1>> from ccActive list and from activeEffect <<2>>", self:CropZOSString(GetAbilityName(id), "ability"), self:CropZOSString(GetAbilityName(aId), "ability")))
 					end
 				end
 				self.activeEffects[aId] = nil
@@ -331,6 +386,7 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 			elseif not self.activeEffects[aId] then
 				local newEffect = {["name"] = aName, ["time"] = time}
 				self.activeEffects[aId] = newEffect
+				self:PrintDebug("ccActive", zo_strformat("Added new active effect <<1>> at time <<2>>", aName, time))
 			end
 			return
 		elseif not err then
@@ -350,6 +406,7 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 				if check.res == res and check.tracked and not self.constants.exceptions[aId] then
 					-- self:PrintDebug("ccCache", "Caching cc result")
 					local isSubeffect = false
+					local mainEffects = {}
 					for eId, entry in pairs(self.activeEffects) do
 						-- self:PrintDebug("ccActive", "Checking for active effects at time: "..time)
 						if entry.time == time then
@@ -359,7 +416,9 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 								entry.subeffects = {}
 							end
 							table.insert(entry.subeffects, aId)
+							self:PrintDebug("ccActive", zo_strformat("Added new subeffect <<4>> to ability <<1>> - <<2>> at time <<3>>", eId, self:CropZOSString(GetAbilityName(eId), "ability"), time, aName))
 							isSubeffect = true
+							table.insert(mainEffects, eId)
 							-- self:PrintDebug("ccActive", "Adding effect "..aId.." to subeffects for effect "..eId)
 						end
 					end
@@ -373,10 +432,11 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 						["cacheId"] = 0,
 						["isSubeffect"] = isSubeffect,
 					}
+					if next(mainEffects) then newAbility.mainEffects = mainEffects end
 					local inList, num = self:AbilityInList(aId, self.ccActive)
 					if not inList then
 						-- if not self:TypeInList(newAbility.type) then
-						if not self.ccVariables[ccType].active then
+						if not self.ccVariables[ccType].active and self.SV.sound[self.ccVariables[ccType].name].enabled then
 							check.playSound = true
 						end
 						table.insert(self.ccActive, newAbility)
@@ -417,10 +477,10 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 	if not (unitTag == "player" or unitName == self.currentCharacterName) or self.status.alive == 0 or (self.status.dead ~= 0 and self.status.dead <= time) then
 		return
 	elseif self.SV.ignored[aId] or self.constants.ignore[aId] then
-		self:PrintDebug("ignoreList", "Ignored CC from ignore-list "..aId..": "..self:CropZOSString(eName))
+		self:PrintDebug("ignoreList", "Ignored CC from ignore-list "..aId..": "..self:CropZOSString(eName, "ability"))
 		return
 	else
-		local eName = self:CropZOSString(eName)
+		local eName = self:CropZOSString(eName, "ability")
 		local playCCSound = false
 		local ccChanged = false
 		
@@ -506,7 +566,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,unitTag,beginTime,e
 					-- IGNORE CC CHAT LINKS --
 					--------------------------
 					if self.SV.settings.ccIgnoreLinks then
-						self:PrintIgnoreLink(name, newAbility.id)
+						self:PrintIgnoreLink(eName, newAbility.id)
 					end
 				end
 			end
