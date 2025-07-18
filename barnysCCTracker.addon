@@ -1,8 +1,8 @@
 ## Title: |c2a52beb|rarnys|c2a52beCC|rTracker
 ## Description: Tracker for incoming CC with icons and optional warning sounds
 ## Author: |c2a52beb|rarny
-## Version: 1.1.1
-## AddOnVersion: 010101
+## Version: 1.1.2
+## AddOnVersion: 010102
 ## APIVersion: 101046
 ## SavedVariables: CCTrackerSV
 ## DependsOn: LibAddonMenu-2.0>=40 libAddonKeybinds>=5 LibNotification>=15
