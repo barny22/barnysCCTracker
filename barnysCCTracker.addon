@@ -3,7 +3,7 @@
 ## Author: |c2a52beb|rarny
 ## Version: 1.1.2
 ## AddOnVersion: 010102
-## APIVersion: 101046
+## APIVersion: 101048
 ## SavedVariables: CCTrackerSV
 ## DependsOn: LibAddonMenu-2.0>=40 libAddonKeybinds>=5 LibNotification>=15
 ## OptionalDependsOn: LibChatMessage>=113
