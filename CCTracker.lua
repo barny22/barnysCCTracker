@@ -389,6 +389,11 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 				self:PrintDebug("ccActive", zo_strformat("Added new active effect <<1>> at time <<2>>", aName, time))
 			end
 			return
+			
+			-- adding timers to combat events if there is an effect gained with duration
+		elseif res == ACTION_RESULT_EFFECT_GAINED_DURATION and self.activeEffects[aId] and self:AbilityInList(aId, self.ccActive) then
+			_, num = self:AbilityInList(aId, self.ccActive)
+			self.ccActive[num].endTime = self.ccActive[num].startTime + hVal			
 		elseif not err then
 			if res == ACTION_RESULT_SNARED and not (self:AbilityInList(aId, self.constants.definiteSnares) or self:AbilityInList(aId, self.SV.actualSnares)) and CCTracker:IsRoot(aId) then
 				res = 2480
