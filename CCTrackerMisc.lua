@@ -141,7 +141,14 @@ CCTracker.constants = CCTracker.constants or {
 		-- [41952] = "Cower",
 		},
 	["ignore"] = {
+		[194570] = "IA - entering IA",
+		[194571] = "IA - advancing to next arena",
+		[193049] = "IA - leaving IA",
+		[194634] = "IA - leaving IA",
+		[211431] = "IA - entering special arena",
 		[202995] = "IA - choosing vision/verse",
+		[203101] = "IA - choosing vision/verse",
+		[203124] = "IA - choosing vision/verse",
 		[203125] = "IA - choosing vision/verse",
 		[166794] = "DSR - Raging Current",
 		[167949] = "DSR - Raging Current",
@@ -163,6 +170,8 @@ CCTracker.constants = CCTracker.constants or {
 		-- [80298] = "Goldcoast MQ - Travel to Anvil",
 		[57993] = "ICP - Flesh granade",
 		-- [39358] = "Fighters Guild - Destroying Mortuum Vivicus",
+	},
+	["specialCC"] = {
 	},
 }
 	--------------------------
@@ -223,6 +232,13 @@ function CCTracker:ClearCCThatIsNotBuff()
 			CCTracker:PrintDebug("enabled", "Zone was changed. Cleared all active CC effects that are not debuffs at time: "..time)
 		end
 	-- end
+end
+
+function CCTracker:IsSpecialIgnore(aId)
+	if self.status.zoneId == 976 and aId == 119292 then
+		return true
+	end
+	return false
 end
 
 -- function CCTracker:TypeInList(cachedType)
