@@ -214,22 +214,22 @@ function CCTracker:AbilityInList(aId, list)--, cacheId)
 end
 
 function CCTracker:ClearCCThatIsNotBuff()
-	-- if NonContiguousCount(CCTracker.ccActive) then
+	-- if NonContiguousCount(self.ccActive) then
 		local ccChanged = false
 		local time = GetFrameTimeMilliseconds()
 		local cache = {}
-		for _, entry in ipairs(CCTracker.ccActive) do
+		for _, entry in ipairs(self.ccActive) do
 			if entry.endTime ~= 0 or entry.startTime == time then
 				table.insert(cache, entry)
 			else
 				ccChanged = true
-				if entry.isSubeffect then CCTracker:ClearSubeffects(entry.id, time) end
+				if entry.isSubeffect then self:ClearSubeffects(entry.id, time) end
 			end
 		end
 		if ccChanged then
-			CCTracker.ccActive = cache
-			CCTracker:CCChanged()
-			CCTracker:PrintDebug("enabled", "Zone was changed. Cleared all active CC effects that are not debuffs at time: "..time)
+			self.ccActive = cache
+			self:CCChanged()
+			self:PrintDebug("enabled", "Zone was changed. Cleared all active CC effects that are not debuffs at time: "..time)
 		end
 	-- end
 end
@@ -290,12 +290,12 @@ function CCTracker:CreateActiveCCString()
 			stringOfAllActiveCC = tostring(stringOfAllActiveCC.."\n"..self.menu.ccList.active.id[i].." "..entry)
 		end
 	end
-	CCTracker.UI.liveCCWindow.controls.tlwLabel:SetText(stringOfAllActiveCC)
+	self.UI.liveCCWindow.controls.tlwLabel:SetText(stringOfAllActiveCC)
 	self:ResizeLiveCCWindow()
 end
 
 function CCTracker:ResizeLiveCCWindow()
-	local window = CCTracker.UI.liveCCWindow.controls
+	local window = self.UI.liveCCWindow.controls
 	local height = window.tlwLabel:GetHeight()
 	local width = window.tlwLabel:GetWidth() + 8
 	
@@ -343,20 +343,20 @@ end
 	---- CC active ----
 	-------------------
 function CCTracker:ClearAllCC()
-	if NonContiguousCount(CCTracker.ccActive) > 0 then
+	if NonContiguousCount(self.ccActive) > 0 then
 		local time = GetFrameTimeMilliseconds()
-		for i = #CCTracker.ccActive, 1, -1 do
-			local entry = CCTracker.ccActive[i]
-			if entry.isSubeffect then CCTracker:ClearSubeffects(entry.id, time) end
-			CCTracker.ccActive[i] = nil
+		for i = #self.ccActive, 1, -1 do
+			local entry = self.ccActive[i]
+			if entry.isSubeffect then self:ClearSubeffects(entry.id, time) end
+			self.ccActive[i] = nil
 		end
-		CCTracker:CCChanged()
+		self:CCChanged()
 	end
 end
 
 function CCTracker:ClearOutdatedActiveEffects(time)
 	for eId, entry in pairs(self.activeEffects) do
-		if entry.time ~= time and (not entry.subeffects or (entry.subeffects and not next(entry.subeffects))) then
+		if entry.time ~= time then
 			self.activeEffects[eId] = nil
 			-- self:PrintDebug("ccActive", "Clearing active effect "..eId.." - "..self:CropZOSString(GetAbilityName(eId), "ability"))
 		end
@@ -460,7 +460,7 @@ function CCTracker:RolldodgeDetected()
 	end
 	self.ccActive = newActive
 	self:CCChanged()
-	zo_callLater(function() CCTracker:ClearSnareCache() end, 1)
+	zo_callLater(function() self:ClearSnareCache() end, 1)
 	-- self:PrintDebug("enabled", "Found a dodgeRoll, you lucky guy")
 end
 
@@ -560,7 +560,7 @@ end
 	
 function CCTracker.menu.CreateMenuIconsPath(ControlName)
 	local number
-	for i, entry in ipairs(barnysCCTrackerOptions.controlsToRefresh) do
+	for i, entry in ipairs(barnysselfOptions.controlsToRefresh) do
 		if ControlName == entry.data.name then
 			number = i
 			return number
@@ -629,11 +629,11 @@ function CCTracker.menu.CreateListOfActiveCC()
 			if entry then
 				local abilityString = tostring("|t20:20:"..GetAbilityIcon(entry.id).."|t "..CCTracker:CropZOSString(GetAbilityName(entry.id), "ability")..", "..CCTracker.ccVariables[entry.type].name)
 				CCTracker.menu.ccList.active.string[i] = abilityString
-				if entry.cacheId and entry.cacheId ~= 0 then
-					CCTracker.menu.ccList.active.id[i] = entry.cacheId
-				else
+				-- if entry.cacheId and entry.cacheId ~= 0 then
+					-- CCTracker.menu.ccList.active.id[i] = entry.cacheId
+				-- else
 					CCTracker.menu.ccList.active.id[i] = entry.id
-				end
+				-- end
 				CCTracker.menu.ccList.active.type[i] = CCTracker.ccVariables[entry.type].name
 			end
 		end
@@ -731,31 +731,31 @@ end
 
 function CCTracker:HandleIgnoreLinks(link, button, text, color, linkType, name, id, zone)
     if linkType ~= "CC_ABILITY_IGNORE_LINK" then
-		-- CCTracker.debug:Print("Not my kind of link")
+		-- self.debug:Print("Not my kind of link")
         return
     end
 	local aId = tonumber(id)
     if button then
-		if CCTracker.SV.ignored[aId] then 
-			CCTracker.debug:Print("Ability is already ignored")
+		if self.SV.ignored[aId] then 
+			self.debug:Print("Ability is already ignored")
 			return true -- link has been handled
 		end
-		CCTracker.SV.ignored[aId] = tostring(name.." - "..zone.." - added manually")
-		CCTracker.debug:Print("CC ability "..name.." will be ignored in the future.")
-		for i, entry in ipairs(CCTracker.ccActive) do
+		self.SV.ignored[aId] = tostring(name.." - "..zone.." - added manually")
+		self.debug:Print("CC ability "..name.." will be ignored in the future.")
+		for i, entry in ipairs(self.ccActive) do
 			if entry.id == aId or (entry.cacheId and entry.cacheId == aId) then
-				table.remove(CCTracker.ccActive, i)
+				table.remove(self.ccActive, i)
 			end
 		end
-		CCTracker.UI.ApplyIcons()
-		CCTracker.menu.UpdateLists()
+		self.UI.ApplyIcons()
+		self.menu.UpdateLists()
     end
     return true -- link has been handled
 end
 
 function CCTracker:InitLinkHandler()
-    LINK_HANDLER:RegisterCallback(LINK_HANDLER.LINK_CLICKED_EVENT, CCTracker.HandleIgnoreLinks, self)
-    LINK_HANDLER:RegisterCallback(LINK_HANDLER.LINK_MOUSE_UP_EVENT, CCTracker.HandleIgnoreLinks, self)
+    LINK_HANDLER:RegisterCallback(LINK_HANDLER.LINK_CLICKED_EVENT, self.HandleIgnoreLinks, self)
+    LINK_HANDLER:RegisterCallback(LINK_HANDLER.LINK_MOUSE_UP_EVENT, self.HandleIgnoreLinks, self)
 end
 
 function CCTracker:PrintIgnoreLink(name, id)
@@ -789,7 +789,7 @@ local function BetaNotification(provider)
 	local msg = {
 	dataType = NOTIFICATIONS_REQUEST_DATA,
 	secsSinceRequest = ZO_NormalizeSecondsSince(0),
-	note = "If you encounter any unwanted 'features' pls report them in the ESOUI 'Comment' section (You can find the link in the menu metadata).\nAccepting this message will disable it.",
+	note = "If you encounter any unwanted 'features' pls report them in the ESOUI 'Comment' section (You can find the link in the menu metadata).\nAccepting this message will disable it until a new version is detected.",
 	message = "You are currently using CCTracker's beta version",
 	heading = identifier,
 	texture = "/esoui/art/miscellaneous/eso_icon_warning.dds",
@@ -802,7 +802,7 @@ local function BetaNotification(provider)
 	data = {}, -- Place any custom data you want to store here
     }
 	
-	-- CCTracker:PrintDebug("enabled", "You're currently using CCTracker's beta version")
+	-- CCTracker:PrintDebug("enabled", "You're currently using self's beta version")
 	
 	return msg
 end
@@ -817,7 +817,7 @@ local function NewVersionAlert(provider)
 	local msg = {
 	dataType = NOTIFICATIONS_ALERT_DATA,
 	secsSinceRequest = ZO_NormalizeSecondsSince(0),
-	note = "Your new version is: "..CCTracker.versionCheck.."\nSometimes due to updates some values in your saved vars have been reset and you need to adjust your options. I apologize for the inconvenience.",
+	note = "Your new version is: "..CCTracker.versionCheck.."\nDue to updates some values in your saved vars might have been reset and you need to adjust your options. Apologies for the inconvenience.",
 	message = "You are now using CCTracker version "..CCTracker.versionCheck.."\nCheck the changelog for new features. Dismiss to disable this message.",
 	heading = identifier,
 	texture = "/esoui/art/journal/u26_progress_digsite_checked_complete.dds",
@@ -839,13 +839,14 @@ function CCTracker:CreateNotifications()
 	local provider = self.msg:CreateProvider()
 	local msg
 	
-	if self.beta and self.SV.showBetaMessage then
-		msg = BetaNotification(provider)
+	if self.versionCheck ~= self.SV.lastAddOnVersion then
+		self.SV.showBetaMessage = true
+		msg = NewVersionAlert(provider)
 		table.insert(provider.notifications, msg)
 	end
 	
-	if self.versionCheck ~= self.SV.lastAddOnVersion then
-		msg = NewVersionAlert(provider)
+	if self.beta and self.SV.showBetaMessage then
+		msg = BetaNotification(provider)
 		table.insert(provider.notifications, msg)
 	end
 	

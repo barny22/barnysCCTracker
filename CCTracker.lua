@@ -7,7 +7,7 @@ CCTracker = {
 	["version"] = {
 		["patch"] = 1,
 		["major"] = 1,
-		["minor"] = 1,
+		["minor"] = 2,
 	},
 	["beta"] = beta,
 	["menu"] = {},
@@ -59,12 +59,12 @@ function CCTracker:Init()
 	if self.started then return end
 	
 	if LibChatMessage then
-		CCTracker.debug = LibChatMessage("|c2a52beb|rarnys|c2a52beCC|rTracker", "|c2a52beBCC|r")
-		CCTracker:HandleLibChatMessage()
+		self.debug = LibChatMessage("|c2a52beb|rarnys|c2a52beCC|rTracker", "|c2a52beBCC|r")
+		self:HandleLibChatMessage()
 		LibChatMessage:RegisterCustomChatLink("CC_ABILITY_IGNORE_LINK", function(linkStyle, linkType, name, id, zone, displayText)
 			return ZO_LinkHandler_CreateLinkWithBrackets(displayText, nil, "CC_ABILITY_IGNORE_LINK", name, id, zone)
 		end)
-		CCTracker:InitLinkHandler()
+		self:InitLinkHandler()
 	else 
 		self:SetAllDebugFalse()
 	end
@@ -164,7 +164,7 @@ function CCTracker:Register()
 		self.name.."CombatEvents",
 		EVENT_COMBAT_EVENT,
 		function(...)
-			CCTracker:HandleCombatEvents(...)
+			self:HandleCombatEvents(...)
 		end
 	)
 	EM:AddFilterForEvent(
@@ -177,7 +177,7 @@ function CCTracker:Register()
 		self.name.."EffectsChanged",
 		EVENT_EFFECT_CHANGED,
 		function(...)
-			CCTracker:HandleEffectsChanged(...)
+			self:HandleEffectsChanged(...)
 		end
 	)
 	EM:AddFilterForEvent(
@@ -205,11 +205,11 @@ function CCTracker:Register()
 			self.status.zoneId = GetUnitZoneIndex("player")
 			
 			
-			if NonContiguousCount(CCTracker.ccActive) then
+			if NonContiguousCount(self.ccActive) then
 				if zName ~= self.status.zone then
-					CCTracker:ClearCCThatIsNotBuff()
+					self:ClearCCThatIsNotBuff()
 				elseif sZName ~= self.status.subzone then
-					CCTracker:ClearCCThatIsNotBuff()
+					self:ClearCCThatIsNotBuff()
 				end
 			end
 			
@@ -229,10 +229,10 @@ function CCTracker:Register()
 		self.name.."PlayerDead",
 		EVENT_PLAYER_DEAD,
 		function()
-			CCTracker.status.alive = 0
-			CCTracker.status.dead = GetFrameTimeMilliseconds()
+			self.status.alive = 0
+			self.status.dead = GetFrameTimeMilliseconds()
 			-- Clear all CC when player dies
-			CCTracker:ClearAllCC()
+			self:ClearAllCC()
 		end
 	)
 	EM:RegisterForEvent(
@@ -240,18 +240,18 @@ function CCTracker:Register()
 		EVENT_WEAPON_PAIR_LOCK_CHANGED,
 		function(e, isLocked)
 			--clear knockbacks if not isLocked
-			if CCTracker.ccVariables[17].active and not isLocked then
+			if self.ccVariables[17].active and not isLocked then
 				local cache = {}
 				local time = GetFrameTimeMilliseconds()
-				for _, entry in ipairs(CCTracker.ccActive) do
+				for _, entry in ipairs(self.ccActive) do
 					if entry.type ~= 17 then
 						table.insert(cache, entry)
 					elseif entry.isSubeffect then
 						self:ClearSubeffects(entry.id, time)					
 					end
 				end
-				CCTracker.ccActive = cache
-				CCTracker:CCChanged()
+				self.ccActive = cache
+				self:CCChanged()
 				-- self:PrintDebug("enabled", "Eliminated knockbacks")
 			end
 		end
@@ -289,7 +289,7 @@ function CCTracker:RegisterPVEEvents()
 			self.name.."TrialEndCCDelete",
 			EVENT_RAID_TRIAL_COMPLETE,
 			function()
-				CCTracker:ClearAllCC()
+				self:ClearAllCC()
 			end
 		)
 		self.PVEEventsRegistered = true
@@ -348,10 +348,10 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 	
 		aName = self:CropZOSString(aName, "ability")
 		
-		if aId == self.constants.breakFree and self.currentCharacterName == self:CropZOSString(sName, "name") and self:DoesBreakFreeWork() then			-- remove stuns, fear and charm if player breaks free
+		if aId == self.constants.breakFree and self:DoesBreakFreeWork() then			-- remove stuns, fear and charm if player breaks free
 			self:BreakFreeDetected()
 			return
-		elseif aId == self.constants.rollDodge.abilityId and self.currentCharacterName == self:CropZOSString(sName, "name") and res == ACTION_RESULT_EFFECT_GAINED then	-- remove roots when player uses dodgeroll
+		elseif aId == self.constants.rollDodge.abilityId and res == ACTION_RESULT_EFFECT_GAINED then	-- remove roots when player uses dodgeroll
 			self:RolldodgeDetected()
 			return
 		end	
@@ -392,6 +392,9 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 					self:CCChanged()
 					self:PrintDebug("ccActive", "Removing ability "..aName.." from ccActive list")
 					return
+				else
+					self.activeEffects[aId] = nil
+					return
 				end
 			end
 		elseif res == ACTION_RESULT_EFFECT_GAINED then
@@ -417,7 +420,7 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 				)
 			end
 		elseif not err then
-			if res == ACTION_RESULT_SNARED and not (self:AbilityInList(aId, self.constants.definiteSnares) or self:AbilityInList(aId, self.SV.actualSnares)) and CCTracker:IsRoot(aId) then
+			if res == ACTION_RESULT_SNARED and not (self:AbilityInList(aId, self.constants.definiteSnares) or self:AbilityInList(aId, self.SV.actualSnares)) and self:IsRoot(aId) then
 				res = 2480
 				if self.status.immunityToImmobilization then
 					self:PrintDebug("roots", "actualSnares", "Someone tried to root you, when you were immune to immobilization. What a foolish rookie mistake, it's probably just a snare though.")
@@ -456,14 +459,14 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 						["type"] = ccType,
 						["startTime"] = time,
 						["endTime"] = 0,
-						["cacheId"] = 0,
+						-- ["cacheId"] = 0,
 						["isSubeffect"] = isSubeffect,
 					}
 					if next(mainEffects) then newAbility.mainEffects = mainEffects end
 					local inList, num = self:AbilityInList(aId, self.ccActive)
 					if not inList then
 						-- if not self:TypeInList(newAbility.type) then
-						if not self.ccVariables[ccType].active and self.SV.sound[self.ccVariables[ccType].name].enabled then
+						if not self.ccVariables[ccType].active and (self.SV.sound[self.ccVariables[ccType].name].enabled or (self.SV.sound.MuteOnHardCC and self.ccVariables[ccType].isHardCC)) then
 							check.playSound = true
 						end
 						table.insert(self.ccActive, newAbility)
@@ -514,7 +517,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,_,beginTime,endTime
 		-- self:ClearOutdatedLists(time, "Effect changed")
 		
 		if IsUnitDeadOrReincarnating("player") then
-			CCTracker:ClearAllCC()
+			self:ClearAllCC()
 			return
 		elseif changeType == EFFECT_RESULT_FADED or changeType == EFFECT_RESULT_ITERATION_END --[[or changeType == EFFECT_RESULT_TRANSFER]] then
 			if aId == self.constants.rollDodge.buffId then
@@ -586,6 +589,8 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,_,beginTime,endTime
 					if not self.ccVariables[abilityType].active then
 						if self.SV.sound[self.ccVariables[abilityType].name].enabled then
 							self.ccVariables[abilityType].playSound = true
+							playCCSound = true
+						elseif self.SV.sound.MuteOnHardCC and self.ccVariables[abilityType].isHardCC then
 							playCCSound = true
 						end
 						ccChanged = true
