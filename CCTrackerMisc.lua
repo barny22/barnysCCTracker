@@ -7,44 +7,11 @@ CCTracker.DEFAULT_SAVED_VARS = {
 	["lastAddOnVersion"] = 0,
 	["global"] = true,
 	["UI"] = {
-		["xOffsets"] = {
-			["Charm"] = 500,
-			["Disoriented"] = 0,
-			["Fear"] = 50,
-			["Knockback"] = 100,
-			["Levitating"] = 150,
-			["Offbalance"] = 200,
-			["Silence"] = 250,
-			["Snare"] = 300,
-			["Stagger"] = 350,
-			["Stun"] = 400,
-			["Root"] = 450,
-		},
-		["yOffsets"] = {
-			["Charm"] = 0,
-			["Disoriented"] = 0,
-			["Fear"] = 0,
-			["Knockback"] = 0,
-			["Levitating"] = 0,
-			["Offbalance"] = 0,
-			["Silence"] = 0,
-			["Snare"] = 0,
-			["Stagger"] = 0,
-			["Stun"] = 0,
-			["Root"] = 0,
-		},
+		["xOffsets"] = {},
+		["yOffsets"] = {},
 		["sizes"] = {
-			["Charm"] = 50,
-			["Disoriented"] = 50,
-			["Fear"] = 50,
-			["Knockback"] = 50,
-			["Levitating"] = 50,
-			["Offbalance"] = 50,
-			["Silence"] = 50,
-			["Snare"] = 50,
-			["Stagger"] = 50,
-			["Stun"] = 50,
-			["Root"] = 50,
+			["oneForAll"] = true,
+			["size"] = 50,
 		},
 		["debugWindow"] = {
 			["xOffset"] = 50,
@@ -53,61 +20,28 @@ CCTracker.DEFAULT_SAVED_VARS = {
 			["width"] = 50,
 		},
 		["size"] = 50,
-		["alpha"] = 100,
+		["alpha"] = {
+			["oneForAll"] = true,
+			["alpha"] = 100,
+		},
+		["timers"] = {
+			["oneForAll"] = true,
+			["showTimer"] = true,
+			["timerColor"] = {1, 1, 1, 1},
+			["timerAnchor"] = "ICON",
+			["showTimerBar"] = true,
+			["timerBarColor"] = {1, 1, 1, 0.7},
+			["timerBarOrientation"] = "LEFT",
+		},
 	},
 	["settings"] = {
-		["tracked"] = {
-		},
+		["tracked"] = {},
 		["unlocked"] = true,
 		["sample"] = false,
 		["ccIgnoreLinks"] = false,
 	},
 	["sound"] = {
 		["MuteOnHardCC"] = false,
-		["Charm"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Disoriented"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Fear"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Knockback"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Levitating"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Offbalance"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Silence"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Snare"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Stagger"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Stun"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Root"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
 	},
 	["ignored"] = {},
 	["additionalRoots"] = {},
@@ -124,6 +58,47 @@ CCTracker.DEFAULT_SAVED_VARS = {
 		["activeCCList"] = false,
 	},
 }
+
+CCTracker.CC_VARIABLES = {
+		["charm"] = {["icon"] = "/esoui/art/icons/ability_u34_sea_witch_mindcontrol.dds", ["res"] = 3510, ["name"] = "Charm", ["isHardCC"] = true,}, --ACTION_RESULT_CHARMED
+		[32] = {["icon"] = "/esoui/art/icons/ability_debuff_disorient.dds", ["res"] = 2340, ["name"] = "Disoriented", ["isHardCC"] = false,}, --ABILITY_TYPE_DISORIENT
+		[27] = {["icon"] = "/esoui/art/icons/ability_debuff_fear.dds", ["res"] = 2320, ["name"] = "Fear", ["isHardCC"] = true,}, --ABILITY_TYPE_FEAR
+		[17] = {["icon"] = "/esoui/art/icons/ability_debuff_knockback.dds", ["res"] = 2475, ["name"] = "Knockback", ["isHardCC"] = true,}, --ABILITY_TYPE_KNOCKBACK
+		[48] = {["icon"] = "/esoui/art/icons/ability_debuff_levitate.dds", ["res"] = 2400, ["name"] = "Levitating", ["isHardCC"] = true,}, --ABILITY_TYPE_LEVITATE
+		[53] = {["icon"] = "/esoui/art/icons/ability_debuff_offbalance.dds", ["res"] = 2440, ["name"] = "Offbalance", ["isHardCC"] = false,}, --ABILITY_TYPE_OFFBALANCE
+		["root"] = {["icon"] = "/esoui/art/icons/ability_debuff_root.dds", ["res"] = 2480, ["name"] = "Root", ["isHardCC"] = false,}, --ACTION_RESULT_ROOTED
+		[11] = {["icon"] = "/esoui/art/icons/ability_debuff_silence.dds", ["res"] = 2010, ["name"] = "Silence", ["isHardCC"] = false,}, --ABILITY_TYPE_SILENCE
+		[10] = {["icon"] = "/esoui/art/icons/ability_debuff_snare.dds", ["res"] = 2025, ["name"] = "Snare", ["isHardCC"] = false,}, --ABILITY_TYPE_SNARE
+		[33] = {["icon"] = "/esoui/art/icons/ability_debuff_stagger.dds", ["res"] = 2470, ["name"] = "Stagger", ["isHardCC"] = false,}, --ABILITY_TYPE_STAGGER
+		[9] = {["icon"] = "/esoui/art/icons/ability_debuff_stun.dds", ["res"] = 2020, ["name"] = "Stun", ["isHardCC"] = true,}, --ABILITY_TYPE_STUN
+	}
+	
+	-- populate default sv
+do
+	local i = 0
+	local defaultSize = 50
+	local defaultAlpha = 100
+	for _, entry in pairs(CCTracker.CC_VARIABLES) do
+		CCTracker.DEFAULT_SAVED_VARS.UI.xOffsets[entry.name] = i*defaultSize
+		CCTracker.DEFAULT_SAVED_VARS.UI.yOffsets[entry.name] = 0
+		CCTracker.DEFAULT_SAVED_VARS.UI.sizes[entry.name] = defaultSize
+		CCTracker.DEFAULT_SAVED_VARS.UI.alpha[entry.name] = defaultAlpha
+		CCTracker.DEFAULT_SAVED_VARS.UI.timers[entry.name] = {
+			showTimer = true,
+			timerColor = {1, 1, 1, 1},
+			timerAnchor = "ICON",
+			showTimerBar = true,
+			timerBarColor = {1, 1, 1, 0.7},
+			timerBarOrientation = "LEFT",
+		}
+		CCTracker.DEFAULT_SAVED_VARS.settings.tracked[entry.name] = false
+		CCTracker.DEFAULT_SAVED_VARS.sound[entry.name] = {
+			enabled = false,
+			sound = "General_Alert_Error",
+		}
+		i = i + 1
+	end
+end
 
 	-------------------
 	---- Constants ----
@@ -272,6 +247,7 @@ function CCTracker:CCChanged(playSound)
 	self.UI.ApplyIcons()
 	-- self:PrintDebug("ccActive", "CC changed, doing stuff")
 	self.menu.CreateListOfActiveCC()
+	self:UpdateTimers()
 	
 	self:RestoreAudioVolume()
 	if playSound then
@@ -280,6 +256,89 @@ function CCTracker:CCChanged(playSound)
 	
 	if self.SV.debug.activeCCList then self:CreateActiveCCString() end
 end
+
+----------------------
+-- CC Timer updater --
+----------------------
+
+local function RegisterTimerUpdater()	
+	EVENT_MANAGER:RegisterForUpdate(
+        CCTracker.name.."UpdateTimers",
+        1000 / 60,
+        function(...) CCTracker:UpdateTimers() end
+    )
+	CCTracker.updaterRegistered = true
+end
+
+local function UnregisterTimerUpdater()	
+	EVENT_MANAGER:UnregisterForUpdate(
+        CCTracker.name.."UpdateTimers")
+	
+	CCTracker.updaterRegistered = false
+end
+
+function CCTracker:UpdateTimers()
+	local updaterNeeded = false
+	if self.ccActive and next(self.ccActive) then
+		for _, entry in pairs(self.ccActive) do
+			local name = self.ccVariables[entry.type].name
+			local sv = self.SV.UI.timers.oneForAll and self.SV.UI.timers or self.SV.UI.timers[name]
+			if entry.duration and entry.duration > 0 then
+				local timeRemaining = (entry.endTime - GetFrameTimeMilliseconds())/1000
+				if sv.showTimer then
+					if timeRemaining > 60 then
+						self.UI.indicator[name].controls.timer:SetText(string.format("%dm", math.floor(timeRemaining/60)))
+						self.UI.indicator[name].controls.timer:SetHidden(false)
+						updaterNeeded = true
+					elseif timeRemaining > 10 then
+						self.UI.indicator[name].controls.timer:SetText(string.format("%ds", math.floor(timeRemaining)))
+						self.UI.indicator[name].controls.timer:SetHidden(false)
+						updaterNeeded = true
+					elseif timeRemaining > 0 then
+						self.UI.indicator[name].controls.timer:SetText(string.format("%.1fs", timeRemaining))
+						self.UI.indicator[name].controls.timer:SetHidden(false)
+						updaterNeeded = true
+					else 
+						self.UI.indicator[name].controls.timer:SetHidden(true)
+					end
+				end
+				if sv.showTimerBar and timeRemaining > 0 then
+					self.UI.indicator[name].controls.timerBar:SetValue(timeRemaining/(entry.duration/1000))
+					self.UI.indicator[name].controls.timerBar:SetHidden(false)
+					self.UI.indicator[name].controls.timerBarBackdrop:SetHidden(false)
+					self.UI.indicator[name].controls.timerBarGloss:SetHidden(false)
+					updaterNeeded = true
+				else
+					self.UI.indicator[name].controls.timerBar:SetHidden(true)
+					self.UI.indicator[name].controls.timerBarBackdrop:SetHidden(true)
+					self.UI.indicator[name].controls.timerBarGloss:SetHidden(true)
+				end
+			else
+				self.UI.indicator[name].controls.timer:SetHidden(true)
+				self.UI.indicator[name].controls.timerBar:SetHidden(true)
+				self.UI.indicator[name].controls.timerBarBackdrop:SetHidden(true)
+				self.UI.indicator[name].controls.timerBarGloss:SetHidden(true)
+			end
+		end
+	else
+		for _, entry in pairs(self.ccVariables) do
+			self.UI.indicator[entry.name].controls.timer:SetHidden(true)
+			self.UI.indicator[entry.name].controls.timerBar:SetHidden(true)
+			self.UI.indicator[entry.name].controls.timerBarBackdrop:SetHidden(true)
+			self.UI.indicator[entry.name].controls.timerBarGloss:SetHidden(true)
+		end
+	end
+	
+	if updaterNeeded and not self.updaterRegistered then
+		RegisterTimerUpdater()
+	elseif not updaterNeeded and self.updaterRegistered then
+		UnregisterTimerUpdater()	
+	end
+end
+
+--------------------
+-- Live CC Window --
+--------------------
 
 function CCTracker:CreateActiveCCString()
 	local stringOfAllActiveCC
@@ -328,6 +387,8 @@ function CCTracker:ClearOutdatedLists(time, client)
 	if self.activeEffects and next(self.activeEffects) then
 		self:ClearOutdatedActiveEffects(time)
 	end
+	
+	self:UpdateTimers()
 end
 
 function CCTracker:IsInPvPZone()
@@ -358,7 +419,7 @@ function CCTracker:ClearOutdatedActiveEffects(time)
 	for eId, entry in pairs(self.activeEffects) do
 		if entry.time ~= time then
 			self.activeEffects[eId] = nil
-			-- self:PrintDebug("ccActive", "Clearing active effect "..eId.." - "..self:CropZOSString(GetAbilityName(eId), "ability"))
+			self:PrintDebug("ccActive", "Clearing active effect "..eId.." - "..self:CropZOSString(GetAbilityName(eId), "ability"))
 		end
 	end
 end
@@ -560,7 +621,7 @@ end
 	
 function CCTracker.menu.CreateMenuIconsPath(ControlName)
 	local number
-	for i, entry in ipairs(barnysselfOptions.controlsToRefresh) do
+	for i, entry in ipairs(barnysCCTrackerOptions.controlsToRefresh) do
 		if ControlName == entry.data.name then
 			number = i
 			return number

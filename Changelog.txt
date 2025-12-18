@@ -1,5 +1,6 @@
-2025.11.08 v1.1.2
+2025.12.18 v1.1.2
 + Adding endTimers to combat Events if they gained a duration
++ Adding visual timers to cc effects
 + Adding stun ignores for entering and leaving IA
 ! Finally added filters for events
 ! Changing clearing of CC when there is an endTimer

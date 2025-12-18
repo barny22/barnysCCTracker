@@ -46,6 +46,11 @@ local function OnAddOnLoaded(eventCode, addOnName)
 		CCTracker.SV = ZO_SavedVars:NewAccountWide("CCTrackerSV", 1, nil, CCTracker.DEFAULT_SAVED_VARS, worldName)
 		CCTracker.SV.global = true
 	end
+	if type(CCTracker.SV.UI.alpha) == "number" then
+		local num = CCTracker.SV.UI.alpha
+		CCTracker.SV.UI = CCTracker.DEFAULT_SAVED_VARS.UI
+		CCTracker.SV.UI.alpha.alpha = num
+	end
 	CCTracker:Init()
 end
  
@@ -118,19 +123,12 @@ function CCTracker:Init()
 	self.ccAdded = {["combatEvents"] = 0, ["effectsChanged"] = 0, ["endTimeUpdated"] = 0,}
 	
 	self.currentCharacterName = self:CropZOSString(GetUnitName("player"), "name")
-	self.ccVariables = {
-		["charm"] = {["icon"] = "/esoui/art/icons/ability_u34_sea_witch_mindcontrol.dds", ["tracked"] = self.SV.settings.tracked.Charm, ["res"] = 3510, ["active"] = false, ["name"] = "Charm", ["isHardCC"] = true,}, --ACTION_RESULT_CHARMED
-		[32] = {["icon"] = "/esoui/art/icons/ability_debuff_disorient.dds", ["tracked"] = self.SV.settings.tracked.Disoriented, ["res"] = 2340, ["active"] = false, ["name"] = "Disoriented", ["isHardCC"] = false,}, --ABILITY_TYPE_DISORIENT
-		[27] = {["icon"] = "/esoui/art/icons/ability_debuff_fear.dds", ["tracked"] = self.SV.settings.tracked.Fear, ["res"] = 2320, ["active"] = false, ["name"] = "Fear", ["isHardCC"] = true,}, --ABILITY_TYPE_FEAR
-		[17] = {["icon"] = "/esoui/art/icons/ability_debuff_knockback.dds", ["tracked"] = self.SV.settings.tracked.Knockback, ["res"] = 2475, ["active"] = false, ["name"] = "Knockback", ["isHardCC"] = true,}, --ABILITY_TYPE_KNOCKBACK
-		[48] = {["icon"] = "/esoui/art/icons/ability_debuff_levitate.dds", ["tracked"] = self.SV.settings.tracked.Levitating, ["res"] = 2400, ["active"] = false, ["name"] = "Levitating", ["isHardCC"] = true,}, --ABILITY_TYPE_LEVITATE
-		[53] = {["icon"] = "/esoui/art/icons/ability_debuff_offbalance.dds", ["tracked"] = self.SV.settings.tracked.Offbalance, ["res"] = 2440, ["active"] = false, ["name"] = "Offbalance", ["isHardCC"] = false,}, --ABILITY_TYPE_OFFBALANCE
-		["root"] = {["icon"] = "/esoui/art/icons/ability_debuff_root.dds", ["tracked"] = self.SV.settings.tracked.Root, ["res"] = 2480, ["active"] = false, ["name"] = "Root", ["isHardCC"] = false,}, --ACTION_RESULT_ROOTED
-		[11] = {["icon"] = "/esoui/art/icons/ability_debuff_silence.dds", ["tracked"] = self.SV.settings.tracked.Silence, ["res"] = 2010, ["active"] = false, ["name"] = "Silence", ["isHardCC"] = false,}, --ABILITY_TYPE_SILENCE
-		[10] = {["icon"] = "/esoui/art/icons/ability_debuff_snare.dds", ["tracked"] = self.SV.settings.tracked.Snare, ["res"] = 2025, ["active"] = false, ["name"] = "Snare", ["isHardCC"] = false,}, --ABILITY_TYPE_SNARE
-		[33] = {["icon"] = "/esoui/art/icons/ability_debuff_stagger.dds", ["tracked"] = self.SV.settings.tracked.Stagger, ["res"] = 2470, ["active"] = false, ["name"] = "Stagger", ["isHardCC"] = false,}, --ABILITY_TYPE_STAGGER
-		[9] = {["icon"] = "/esoui/art/icons/ability_debuff_stun.dds", ["tracked"] = self.SV.settings.tracked.Stun, ["res"] = 2020, ["active"] = false, ["name"] = "Stun", ["isHardCC"] = true,}, --ABILITY_TYPE_STUN
-	}
+	self.ccVariables = self.CC_VARIABLES
+	
+	for aType, entry in pairs(self.ccVariables) do
+		entry.tracked = self.SV.settings.tracked[entry.name]
+		entry.active = false
+	end
 	
 	self.UI = self:BuildUI()
 	
@@ -414,6 +412,9 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 			if inList then
 				local endTime = self.ccActive[num].startTime + hVal
 				self.ccActive[num].endTime = endTime
+				self.ccActive[num].duration = endTime - self.ccActive[num].startTime
+				self:UpdateTimers()
+				self:CCChanged()
 				-- calling clearing of said CC after it ended
 				zo_callLater(function() self:ClearOutdatedLists(endTime, "CombatEvent") end,
 					hVal
@@ -519,7 +520,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,_,beginTime,endTime
 		if IsUnitDeadOrReincarnating("player") then
 			self:ClearAllCC()
 			return
-		elseif changeType == EFFECT_RESULT_FADED or changeType == EFFECT_RESULT_ITERATION_END --[[or changeType == EFFECT_RESULT_TRANSFER]] then
+		elseif changeType == EFFECT_RESULT_FADED then
 			if aId == self.constants.rollDodge.buffId then
 				self.status.immunityToImmobilization = false
 				return
@@ -530,7 +531,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,_,beginTime,endTime
 				table.remove(self.ccActive, num)
 				ccChanged = true
 			end
-		elseif changeType == EFFECT_RESULT_GAINED or changeType == EFFECT_RESULT_FULL_REFRESH or changeType == EFFECT_RESULT_ITERATION_BEGIN --[[or changeType == EFFECT_RESULT_UPDATED]] then
+		elseif changeType == EFFECT_RESULT_GAINED or changeType == EFFECT_RESULT_FULL_REFRESH or changeType == EFFECT_RESULT_UPDATED then
 			if aId == self.constants.rollDodge.buffId then
 				self.status.immunityToImmobilization = true
 				return
@@ -538,6 +539,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,_,beginTime,endTime
 			local inList, num = self:AbilityInList(aId, self.ccActive)
 			if inList then
 				self.ccActive[num].endTime = endTime*1000
+				self.ccActive[num].duration = self.ccActive[num].endTime - self.ccActive[num].startTime
 				self:PrintDebug("ccActive", "Adjusting endTime of ability "..aId.." - "..eName)
 				self.ccAdded.endTimeUpdated = self.ccAdded.endTimeUpdated + 1
 				self:PrintDebug("ccAdded", "Updated endTime of "..self.ccAdded.endTimeUpdated.." cc abilities")
@@ -565,7 +567,8 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,_,beginTime,endTime
 						["id"] = aId,
 						["type"] = abilityType,
 						["startTime"] = time,
-						["endTime"] = ending*1000
+						["endTime"] = ending*1000,
+						["duration"] = ending*1000 - time,
 					}
 					-- if self.ccCache and next(self.ccCache) then
 						-- for i = #self.ccCache, 1, -1 do
@@ -602,6 +605,7 @@ function CCTracker:HandleEffectsChanged(_,changeType,_,eName,_,beginTime,endTime
 					
 					-- calling clearing of said CC after it ended
 					if ending ~= 0 then
+						self:UpdateTimers()
 						zo_callLater(function() self:ClearOutdatedLists(endTime*1000, "Effect changed") end,
 							(endTime-beginTime)*1000
 						)

@@ -5,63 +5,7 @@ CCTracker.menu = CCTracker.menu or {}
 CCTracker.menu.icons = {}
 
 CCTracker.menu.constants = {
-	["CC"] = {
-		{
-			["Name"] = "Charm",
-			["Icon"] = "/esoui/art/icons/ability_u34_sea_witch_mindcontrol.dds",
-			["Id"] = "charm" --2340
-		},
-		{
-			["Name"] = "Disoriented",
-			["Icon"] = "/esoui/art/icons/ability_debuff_disorient.dds",
-			["Id"] = 32 --2340
-		},
-		{
-			["Name"] = "Fear",
-			["Icon"] = "/esoui/art/icons/ability_debuff_fear.dds",
-			["Id"] = 27 --2320
-		},
-		{
-			["Name"] = "Knockback",
-			["Icon"] = "/esoui/art/icons/ability_debuff_knockback.dds",
-			["Id"] =  17 --2475
-		}, 
-		{
-			["Name"] = "Levitating",
-			["Icon"] = "/esoui/art/icons/ability_debuff_levitate.dds",
-			["Id"] = 48 --2400
-		},
-		{
-			["Name"] = "Offbalance",
-			["Icon"] = "/esoui/art/icons/ability_debuff_offbalance.dds",
-			["Id"] =  53 --2440
-		},
-		{
-			["Name"] = "Root",
-			["Icon"] = "/esoui/art/icons/ability_debuff_root.dds",
-			["Id"] = "root" --2480
-		},
-		{
-			["Name"] = "Silence",
-			["Icon"] = "/esoui/art/icons/ability_debuff_silence.dds",
-			["Id"] = 11 --2010
-		},
-		{
-			["Name"] = "Snare",
-			["Icon"] = "/esoui/art/icons/ability_debuff_snare.dds",
-			["Id"] = 10 --2025
-		},
-		{
-			["Name"] = "Stagger",
-			["Icon"] = "/esoui/art/icons/ability_debuff_stagger.dds",
-			["Id"] = 33 --2470
-		},
-		{
-			["Name"] = "Stun",
-			["Icon"] = "/esoui/art/icons/ability_debuff_stun.dds",
-			["Id"] = 9 --2020
-		},
-	},
+	["CC"] = {},
 	["SoundList"] = {
 		"Ability_Companion_Ultimate_Ready_Sound",
 		"Achievement_Awarded",
@@ -86,13 +30,168 @@ CCTracker.menu.constants = {
 		"Tribute_AgentDamaged",
 		"UI_U40_EA_AvatarVision_Acquired",
 	},
+	["timerAnchors"] = {
+		"ICON",
+		"TIMER BAR",
+	},
+	["timerBarOrientation"] = {
+		"LEFT",
+		"RIGHT",
+	},
 }
 
-local function CreateCCCheckboxes()
-	local position
-	for i, entry in ipairs(CCTracker.menu.options) do
-		if entry.name == "CC to track" then position = i break end
+local function PopulateConstants()
+	for Id, entry in pairs(CCTracker.CC_VARIABLES) do
+		local constants = {
+			Name = entry.name,
+			Icon = entry.icon,
+			Id = Id,
+		}
+		
+		table.insert(CCTracker.menu.constants.CC, constants)
+		table.sort(CCTracker.menu.constants.CC, function(a, b)
+				return a.Name < b.Name 
+			end
+		)
 	end
+end
+
+local function FindEntryPosition(name, searchTable)
+	for i, entry in ipairs(searchTable) do
+		if entry.name == name then
+			return i
+		end
+	end
+	return 0
+end
+
+local function Sizes()
+	local submenu = FindEntryPosition("UI", CCTracker.menu.options)
+	local position = FindEntryPosition("Individual sizes", CCTracker.menu.options[submenu].controls)
+	for i = 1, #CCTracker.menu.constants.CC do
+		local control = {
+			type = "slider",
+			name = "|t20:20:"..CCTracker.menu.constants.CC[i].Icon.."|t "..CCTracker.menu.constants.CC[i].Name.." icon size",
+			disabled = function() return not CCTracker.SV.settings.tracked[CCTracker.menu.constants.CC[i].Name] end,
+			width = "half",
+			default = 50,
+			min = 20,
+			max = 200,
+			step = 1,
+			getFunc = function() return CCTracker.SV.UI.sizes[CCTracker.menu.constants.CC[i].Name] end,
+			setFunc = function(value)
+				CCTracker.SV.UI.sizes[CCTracker.menu.constants.CC[i].Name] = value
+				CCTracker.UI.ApplySize(CCTracker.menu.constants.CC[i].Name)
+			end,
+		}
+		table.insert(CCTracker.menu.options[submenu].controls[position].controls, control)
+	end
+end
+
+local function Alpha()
+	local submenu = FindEntryPosition("UI", CCTracker.menu.options)
+	local position = FindEntryPosition("Individual alpha values", CCTracker.menu.options[submenu].controls)
+	for i = 1, #CCTracker.menu.constants.CC do
+		local control = {
+			type = "slider",
+			name = "|t20:20:"..CCTracker.menu.constants.CC[i].Icon.."|t "..CCTracker.menu.constants.CC[i].Name.."icon alpha",
+			tooltip = "CC icon is too prominent for your liking? Simply adjust alpha with this slider to make it disappear.",
+			disabled = function() return not CCTracker.SV.settings.tracked[CCTracker.menu.constants.CC[i].Name] end,
+			width = "half",
+			default = 100,
+			min = 0,
+			max = 100,
+			step = 1,
+			getFunc = function() return CCTracker.SV.UI.alpha.alpha end,
+			setFunc = function(value)
+				CCTracker.SV.UI.alpha[CCTracker.menu.constants.CC[i].Name] = value
+				CCTracker.UI.indicator[CCTracker.menu.constants.CC[i].Name].controls.icon:SetAlpha(value/100)
+				CCTracker.UI.indicator[CCTracker.menu.constants.CC[i].Name].controls.frame:SetAlpha(value/100)
+			end,
+		}
+		table.insert(CCTracker.menu.options[submenu].controls[position].controls, control)
+	end
+end
+
+local function Timers()
+	local submenu = FindEntryPosition("Timers", CCTracker.menu.options)
+	local position = FindEntryPosition("Individual setups", CCTracker.menu.options[submenu].controls)
+	for i = 1, #CCTracker.menu.constants.CC do
+		local name = CCTracker.menu.constants.CC[i].Name
+		local sv = CCTracker.SV.UI.timers[name]
+		local control = {
+			type = "submenu",
+			name = "|t20:20:"..CCTracker.menu.constants.CC[i].Icon.."|t "..name,
+			disabled = function() return not CCTracker.SV.settings.tracked[name] end,
+			controls = {
+				{
+					type = "checkbox",
+					name = "Show timer bar",
+					tooltip = "Show status bar for time remaining",
+					width = "half",
+					getFunc = function() return sv.showTimerBar end,
+					setFunc = function(value) sv.showTimerBar = value end,
+				},
+				{	
+					type = "dropdown",
+					name = "Timer bar orientation",
+					choices = CCTracker.menu.constants.timerBarOrientation,
+					disabled = function() return not sv.showTimerBar end,
+					getFunc = function() return sv.timerBarOrientation end,
+					setFunc = function(value)
+						sv.timerBarOrientation = value
+						CCTracker.UI.ApplyTimerAnchors(name)
+					end,
+					width = "half",
+				},
+				{
+					type = "colorpicker",
+					name = "Bar color",
+					disabled = function() return not sv.showTimerBar end,
+					getFunc = function() return unpack(sv.timerBarColor) end,
+					setFunc = function(r, g, b, a)
+						sv.timerBarColor = {r, g, b, a}
+						CCTracker.UI.indicator[name].controls.timerBar:SetColor(r, g, b, a)
+					end,
+				},
+				{
+					type = "checkbox",
+					name = "Show time remaining",
+					width = "half",
+					getFunc = function() return sv.showTimer end,
+					setFunc = function(value) sv.showTimer = value end,
+				},
+				{	
+					type = "dropdown",
+					name = "Show timer on:",
+					tooltip = "You can chose to show the timer on either the icon or the timer bar",
+					disabled = function() return not (sv.showTimer and sv.showTimerBar) end,
+					choices = CCTracker.menu.constants.timerAnchors,	
+					getFunc = function() return sv.timerAnchor end,
+					setFunc = function(value)
+						sv.timerAnchor = value
+						CCTracker.UI.ApplyTimerAnchors(name)
+					end,
+					width = "half",
+				},
+				{
+					type = "colorpicker",
+					name = "Timer color",
+					disabled = function() return not sv.showTimer end,
+					getFunc = function() return unpack(sv.timerColor) end,
+					setFunc = function(r, g, b, a)
+						sv.timerColor = {r, g, b, a}
+						CCTracker.UI.indicator[name].controls.timer:SetColor(r, g, b, a)
+					end,
+				},
+			},
+		}
+		table.insert(CCTracker.menu.options[submenu].controls[position].controls, control)
+	end
+end
+
+local function CreateCCCheckboxes()
+	local position = FindEntryPosition("CC to track", CCTracker.menu.options)
 	for i = 1, #CCTracker.menu.constants.CC do
 		local control = {}
 		control.type = "checkbox"
@@ -121,10 +220,7 @@ end
 
 local function CreateSoundControls()
 	CCTracker.menu.constants.sound = CCTracker.menu.constants.CC 							-- Copy constants.CC table
-	local position
-	for i, entry in ipairs(CCTracker.menu.options) do
-		if entry.name == "Sound" then position = i break end
-	end
+	local position = FindEntryPosition("Sound", CCTracker.menu.options)
 	for i = 1, #CCTracker.menu.constants.sound do
 		-- Enabled checkbox
 		local control1 = {}
@@ -159,6 +255,14 @@ local function CreateSoundControls()
 		end
 		table.insert(CCTracker.menu.options[position].controls, control2)
 	end
+end
+
+local function CreateAdditionalMenuEntries()
+	Sizes()
+	Alpha()
+	Timers()
+	CreateCCCheckboxes()
+	CreateSoundControls()
 end
 
 function CCTracker.menu.CreateIcons(panel)					-- Thanks to DakJaniels who came up with this solution
@@ -197,6 +301,7 @@ function CCTracker.menu.CreateIcons(panel)					-- Thanks to DakJaniels who came 
 end
 
 function CCTracker:BuildMenu()
+	PopulateConstants()
 	
 	CALLBACK_MANAGER:RegisterCallback("LAM-PanelControlsCreated", function(panel)
 		if panel == barnysCCTrackerOptions then self.menu.CreateIcons(panel) end
@@ -308,35 +413,70 @@ function CCTracker:BuildMenu()
 					end,
 				},
 				{
+					type = "divider",
+				},
+				{
+					type = "checkbox",
+					name = "Use one size for all icons",
+					getFunc = function() return self.SV.UI.sizes.oneForAll end,
+					setFunc = function(value) self.SV.UI.sizes.oneForAll = value end,
+				},
+				{
 					type = "slider",
 					name = "Icon size",
-					warning = "If you change this ALL icons are being resized to the given size! ALL individual sizes will be overwritten!",
+					disabled = function() return not self.SV.UI.sizes.oneForAll end,
 					default = 50,
 					min = 20,
 					max = 200,
 					step = 1,
-					getFunc = function() return self.SV.UI.size end,
+					getFunc = function() return self.SV.UI.sizes.size end,
 					setFunc = function(value)
-						self.SV.UI.size = value
+						self.SV.UI.sizes.size = value
 						for _, entry in pairs(self.ccVariables) do
-							self.SV.UI.sizes[entry.name] = value
 							self.UI.ApplySize(entry.name)
 						end
 					end,
 				},
 				{
+					type = "submenu",
+					name = "Individual sizes",
+					disabled = function() return self.SV.UI.sizes.oneForAll end,
+					controls = {
+					},
+				},
+				{
+					type = "divider",
+				},
+				{
+					type = "checkbox",
+					name = "Use global alpha",
+					getFunc = function() return self.SV.UI.alpha.oneForAll end,
+					setFunc = function(value) self.SV.UI.alpha.oneForAll = value end,
+				},
+				{
 					type = "slider",
 					name = "Icon alpha",
-					tooltip = "The CC icons are too prominent for you? Simply adjust alpha with this slider to make them disappear.",
+					tooltip = "CC icons are too prominent for your liking? Simply adjust alpha with this slider to make them disappear.",
+					disabled = function() return not self.SV.UI.alpha.oneForAll end,
 					default = 100,
 					min = 0,
 					max = 100,
 					step = 1,
-					getFunc = function() return self.SV.UI.alpha end,
+					getFunc = function() return self.SV.UI.alpha.alpha end,
 					setFunc = function(value)
-						self.SV.UI.alpha = value
+						self.SV.UI.alpha.alpha = value
 						self.UI.ApplyAlpha()
 					end,
+				},
+				{
+					type = "submenu",
+					name = "Individual alpha values",
+					disabled = function() return self.SV.UI.alpha.oneForAll end,
+					controls = {
+					},
+				},
+				{
+					type = "divider"
 				},
 			},
 		},
@@ -344,6 +484,116 @@ function CCTracker:BuildMenu()
 			type = "submenu",
 			name = "CC to track",
 			controls = {},
+		},
+		{
+			type = "submenu",
+			name = "Timers",
+			tooltip = "Activate timers for CC to know when it ends and if it's worth cleansing",
+			controls = {
+				{
+					type = "checkbox",
+					name = "Use general configuration",
+					getFunc = function() return self.SV.UI.timers.oneForAll end,
+					setFunc = function(value)
+						self.SV.UI.timers.oneForAll = value
+						if value then
+							for _, entry in pairs(self.menu.constants.CC) do
+								self.UI.ApplyTimerAnchors(entry.Name)
+								self.UI.indicator[entry.name].controls.timerBar:SetColor(unpack(self.SV.UI.timers.timerBarColor))
+								self.UI.indicator[entry.name].controls.timer:SetColor(unpack(self.SV.UI.timers.timerColor))
+							end
+						else
+							for _, entry in pairs(self.menu.constants.CC) do
+								self.UI.ApplyTimerAnchors(entry.Name)
+								self.UI.indicator[entry.name].controls.timerBar:SetColor(unpack(self.SV.UI.timers[entry.name].timerBarColor))
+								self.UI.indicator[entry.name].controls.timer:SetColor(unpack(self.SV.UI.timers[entry.name].timerColor))
+							end
+						end
+					end,
+				},
+				{
+					type = "submenu",
+					name = "General setup",
+					disabled = function() return not self.SV.UI.timers.oneForAll end,
+					controls = {
+						{
+							type = "checkbox",
+							name = "Show timer bar",
+							tooltip = "Show status bar for time remaining",
+							width = "half",
+							getFunc = function() return self.SV.UI.timers.showTimerBar end,
+							setFunc = function(value) self.SV.UI.timers.showTimerBar = value end,
+						},
+						{	
+							type = "dropdown",
+							name = "Timer bar orientation",
+							choices = CCTracker.menu.constants.timerBarOrientation,
+							disabled = function() return not self.SV.UI.timers.showTimerBar end,
+							getFunc = function() return self.SV.UI.timers.timerBarOrientation end,
+							setFunc = function(value)
+								self.SV.UI.timers.timerBarOrientation = value
+								for _, entry in pairs(self.menu.constants.CC) do
+									CCTracker.UI.ApplyTimerAnchors(entry.Name)
+								end
+							end,
+							width = "half",
+						},
+						{
+							type = "colorpicker",
+							name = "Bar color",
+							disabled = function() return not self.SV.UI.timers.showTimerBar end,
+							getFunc = function() return unpack(self.SV.UI.timers.timerBarColor) end,
+							setFunc = function(r, g, b, a)
+								self.SV.UI.timers.timerBarColor = {r, g, b, a}
+								for _, entry in pairs(self.menu.constants.CC) do
+									CCTracker.UI.indicator[entry.Name].controls.timerBar:SetColor(r, g, b, a)
+								end
+							end,
+						},
+						{
+							type = "checkbox",
+							name = "Show time remaining",
+							width = "half",
+							getFunc = function() return self.SV.UI.timers.showTimer end,
+							setFunc = function(value) self.SV.UI.timers.showTimer = value end,
+						},
+						{	
+							type = "dropdown",
+							name = "Show timer on:",
+							tooltip = "You can chose to show the timer on either the icon or the timer bar",
+							disabled = function() return not (self.SV.UI.timers.showTimer and self.SV.UI.timers.showTimerBar) end,
+							choices = CCTracker.menu.constants.timerAnchors,	
+							getFunc = function() return self.SV.UI.timers.timerAnchor end,
+							setFunc = function(value)
+								self.SV.UI.timers.timerAnchor = value
+								for _, entry in pairs(self.menu.constants.CC) do
+									CCTracker.UI.ApplyTimerAnchors(entry.Name)
+								end
+							end,
+							width = "half",
+						},
+						{
+							type = "colorpicker",
+							name = "Timer color",
+							disabled = function() return not self.SV.UI.timers.showTimer end,
+							getFunc = function() return unpack(self.SV.UI.timers.timerColor) end,
+							setFunc = function(r, g, b, a)
+								self.SV.UI.timers.timerColor = {r, g, b, a}
+								for _, entry in pairs(self.menu.constants.CC) do
+									CCTracker.UI.indicator[entry.Name].controls.timer:SetColor(r, g, b, a)
+								end
+							end,
+						},
+					},
+				},
+				{
+					type = "submenu",
+					name = "Individual setups",
+					disabled = function() return self.SV.UI.timers.oneForAll end,
+					controls = {
+					},
+				},
+			},
 		},
 		{
 			type = "submenu",
@@ -694,8 +944,7 @@ function CCTracker:BuildMenu()
 		},
 	}
 	
-	CreateCCCheckboxes()
-	CreateSoundControls()
+	CreateAdditionalMenuEntries()
 	self.menu.panel = LAM:RegisterAddonPanel(self.name.."Options", self.menu.metadata)
     LAM:RegisterOptionControls(self.name.."Options", self.menu.options)
 end
