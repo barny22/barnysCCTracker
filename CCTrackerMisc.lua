@@ -286,11 +286,11 @@ function CCTracker:UpdateTimers()
 			if entry.duration and entry.duration > 0 then
 				local timeRemaining = (entry.endTime - GetFrameTimeMilliseconds())/1000
 				if sv.showTimer then
-					if timeRemaining > 60 then
-						self.UI.indicator[name].controls.timer:SetText(string.format("%dm", math.floor(timeRemaining/60)))
+					if timeRemaining >= 59.5 then
+						self.UI.indicator[name].controls.timer:SetText(string.format("%dm", zo_round(timeRemaining/60)))
 						self.UI.indicator[name].controls.timer:SetHidden(false)
 						updaterNeeded = true
-					elseif timeRemaining > 10 then
+					elseif timeRemaining >= 10 then
 						self.UI.indicator[name].controls.timer:SetText(string.format("%ds", math.floor(timeRemaining)))
 						self.UI.indicator[name].controls.timer:SetHidden(false)
 						updaterNeeded = true

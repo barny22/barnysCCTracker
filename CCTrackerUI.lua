@@ -10,10 +10,12 @@ function CCTracker:BuildUI()
 	local indicator = {}
 	
 	local function GetIndicator(name, iconPath)
+		local size = self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name]
+		local timerBarY = self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size/3 or self.SV.UI.sizes[name]/3
 		
 		local tlw = WM:CreateTopLevelWindow(self.name..name.."Frame")
 		tlw:SetDimensionConstraints(10, 10, 200, 200)
-		tlw:SetDimensions(self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name], self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name])
+		tlw:SetDimensions(size, size)
 		tlw:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, self.SV.UI.xOffsets[name], self.SV.UI.yOffsets[name])
 		tlw:SetDrawTier(DT_HIGH)
 		tlw:SetClampedToScreen(self.SV.settings.unlocked)
@@ -51,7 +53,7 @@ function CCTracker:BuildUI()
 		
 		local tlwShadow = WM:CreateControl(self.name..name.."FrameBG", tlw, CT_BACKDROP)
 		tlwShadow:SetAnchorFill()
-		tlwShadow:SetDimensions(self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name], self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name])
+		tlwShadow:SetDimensions(size, size)
 		tlwShadow:SetEdgeColor(0,0,0,0)
 		tlwShadow:SetEdgeTexture(nil,1,1,0,0)
 		tlwShadow:SetCenterColor(0.5,0.5,0.5,0.75)
@@ -74,20 +76,20 @@ function CCTracker:BuildUI()
 		timer:SetDrawTier(DT_HIGH)
 		timer:SetColor(unpack(self.SV.UI.timers.oneForAll and self.SV.UI.timers.timerColor or self.SV.UI.timers[name].timerColor))
 		timer:SetAlpha(1)
-		timer:SetFont("$(MEDIUM_FONT)|"..(self.SV.UI.timers.oneForAll and self.SV.UI.sizes.size*0.6 or self.SV.UI.sizes[name]*0.6).."|outline")
+		timer:SetFont("$(MEDIUM_FONT)|"..(size*0.6).."|outline")
 		timer:SetHidden(true)
 		
 		local timerBarBackdrop = WINDOW_MANAGER:CreateControl(self.name..name.."TimerBarBackdrop", tlw, CT_BACKDROP)
 		timerBarBackdrop:SetDrawTier(DT_HIGH)
 		timerBarBackdrop:SetCenterColor(0.06, 0.06, 0.06, 0.7)
-		timerBarBackdrop:SetEdgeTexture("/esoui/art/miscellaneous/borderedinsettransparent_edgefile.dds", 128, 16, self.SV.UI.timers.oneForAll and self.SV.UI.sizes.size/10 or self.SV.UI.sizes[name]/10)
-		timerBarBackdrop:SetDimensions(self.SV.UI.timers.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name], self.SV.UI.timers.oneForAll and self.SV.UI.sizes.size/3 or self.SV.UI.sizes[name]/3)
+		timerBarBackdrop:SetEdgeTexture("/esoui/art/miscellaneous/borderedinsettransparent_edgefile.dds", 128, 16, size/10)
+		timerBarBackdrop:SetDimensions(size, size/3)
 		timerBarBackdrop:SetHidden(true)
 		
 		local timerBar = WINDOW_MANAGER:CreateControl(self.name..name.."TimerBar", timerBarBackdrop, CT_STATUSBAR)
 		timerBar:SetDrawTier(DT_HIGH)
 		timerBar:SetColor(unpack(self.SV.UI.timers.oneForAll and self.SV.UI.timers.timerBarColor or self.SV.UI.timers[name].timerBarColor))
-		timerBar:SetDimensions(self.SV.UI.timers.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name], self.SV.UI.timers.oneForAll and self.SV.UI.sizes.size/3 or self.SV.UI.sizes[name]/3)
+		timerBar:SetDimensions(0.965*size, timerBarY-0.035*size)
 		timerBar:SetHidden(true)
 		
 		local timerBarGloss = WINDOW_MANAGER:CreateControl(self.name..name.."TimerBarGloss", timerBarBackdrop, CT_TEXTURE)
@@ -238,35 +240,37 @@ function CCTracker:BuildUI()
 	-- indicator.SetUnlocked = SetUnlocked
 	
 	local function ApplyTimerAnchors(name)
+		local size = self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name]
+		local timerBarY = self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size/3 or self.SV.UI.sizes[name]/3
 		indicator[name].controls.timer:ClearAnchors()
 		indicator[name].controls.timerBar:ClearAnchors()
 		indicator[name].controls.timerBarBackdrop:ClearAnchors()
-		indicator[name].controls.timerBarBackdrop:SetAnchor(TOP, indicator[name].controls.tlw, BOTTOM, 0, self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size*0.05 or self.SV.UI.sizes[name]*0.05)
+		indicator[name].controls.timerBarBackdrop:SetAnchor(TOP, indicator[name].controls.tlw, BOTTOM, 0, size*0.05)
 		if self.SV.UI.timers.oneForAll then
 			if self.SV.UI.timers.timerAnchor == "ICON" or not self.SV.UI.timers.showTimerBar then
-				indicator[name].controls.timer:SetFont("$(MEDIUM_FONT)|"..(self.SV.UI.sizes.size*0.6).."|outline")
+				indicator[name].controls.timer:SetFont("$(MEDIUM_FONT)|"..(size*0.6).."|outline")
 				indicator[name].controls.timer:SetAnchor(CENTER, indicator[name].controls.tlw, CENTER, 0, 0)
 			else
-				indicator[name].controls.timer:SetFont("$(MEDIUM_FONT)|"..(self.SV.UI.sizes.size*0.25).."|outline")
+				indicator[name].controls.timer:SetFont("$(MEDIUM_FONT)|"..(size*0.25).."|outline")
 				indicator[name].controls.timer:SetAnchor(CENTER, indicator[name].controls.timerBar, CENTER, 0, 0)
 			end
 			if self.SV.UI.timers.timerBarOrientation == "LEFT" then
-				indicator[name].controls.timerBar:SetAnchor(LEFT, indicator[name].controls.timerBarBackdrop, LEFT, 0, 0)
+				indicator[name].controls.timerBar:SetAnchor(LEFT, indicator[name].controls.timerBarBackdrop, LEFT, size*0.015, 0)
 			else
-				indicator[name].controls.timerBar:SetAnchor(RIGHT, indicator[name].controls.timerBarBackdrop, RIGHT, 0, 0)
+				indicator[name].controls.timerBar:SetAnchor(RIGHT, indicator[name].controls.timerBarBackdrop, RIGHT, -size*0.015, 0)
 			end
 		else
 			if self.SV.UI.timers[name].timerAnchor == "ICON" or not self.SV.UI.timers[name].showTimerBar then
-				indicator[name].controls.timer:SetFont("$(MEDIUM_FONT)|"..(self.SV.UI.sizes[name]*0.6).."|outline")
+				indicator[name].controls.timer:SetFont("$(MEDIUM_FONT)|"..(size*0.6).."|outline")
 				indicator[name].controls.timer:SetAnchor(CENTER, indicator[name].controls.tlw, CENTER, 0, 0)
 			else
-				indicator[name].controls.timer:SetFont("$(MEDIUM_FONT)|"..(self.SV.UI.sizes[name]*0.25).."|outline")
+				indicator[name].controls.timer:SetFont("$(MEDIUM_FONT)|"..(size*0.25).."|outline")
 				indicator[name].controls.timer:SetAnchor(CENTER, indicator[name].controls.timerBar, CENTER, 0, 0)
 			end
 			if self.SV.UI.timers[name].timerBarOrientation == "LEFT" then
-				indicator[name].controls.timerBar:SetAnchor(LEFT, indicator[name].controls.timerBarBackdrop, LEFT, 0, 0)
+				indicator[name].controls.timerBar:SetAnchor(LEFT, indicator[name].controls.timerBarBackdrop, LEFT, size*0.015, 0)
 			else
-				indicator[name].controls.timerBar:SetAnchor(RIGHT, indicator[name].controls.timerBarBackdrop, RIGHT, 0, 0)
+				indicator[name].controls.timerBar:SetAnchor(RIGHT, indicator[name].controls.timerBarBackdrop, RIGHT, -size*0.015, 0)
 			end
 		end
 	end
@@ -276,17 +280,16 @@ function CCTracker:BuildUI()
 	end
 	
 	local function ApplySize(name)
-		indicator[name].controls.tlw:SetDimensions(self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name], self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name])
-		indicator[name].controls.tlwShadow:SetDimensions(self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name], self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name])
-		indicator[name].controls.frame:SetDimensions(self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name], self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name])
-		indicator[name].controls.icon:SetDimensions(self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name], self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name])
-		if self.SV.UI.sizes.oneForAll then
-			indicator[name].controls.tlwLabel:SetFont("$(MEDIUM_FONT)|"..(self.SV.UI.sizes.size/5).."|outline")
-		else
-			indicator[name].controls.tlwLabel:SetFont("$(MEDIUM_FONT)|"..(self.SV.UI.sizes[name]/5).."|outline")
-		end
-		indicator[name].controls.timerBarBackdrop:SetDimensions(self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name], self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size/3 or self.SV.UI.sizes[name]/3)
-		indicator[name].controls.timerBarBackdrop:SetEdgeTexture("/esoui/art/miscellaneous/borderedinsettransparent_edgefile.dds", 128, 16, self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size/10 or self.SV.UI.sizes[name]/10)
+		local size = self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name]
+		local timerBarY = self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size/3 or self.SV.UI.sizes[name]/3
+		indicator[name].controls.tlw:SetDimensions(size, size)
+		indicator[name].controls.tlwShadow:SetDimensions(size, size)
+		indicator[name].controls.frame:SetDimensions(size, size)
+		indicator[name].controls.icon:SetDimensions(size, size)
+		indicator[name].controls.tlwLabel:SetFont("$(MEDIUM_FONT)|"..(size/5).."|outline")
+		indicator[name].controls.timerBarBackdrop:SetDimensions(size, size/3)
+		indicator[name].controls.timerBarBackdrop:SetEdgeTexture("/esoui/art/miscellaneous/borderedinsettransparent_edgefile.dds", 128, 16, size/10)
+		indicator[name].controls.timerBar:SetDimensions(0.965*size, timerBarY-0.035*size)
 		ApplyTimerAnchors(name)
 	end
 	-- indicator.ApplySize = ApplySize
