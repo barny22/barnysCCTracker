@@ -303,6 +303,13 @@ function CCTracker:UpdateTimers()
 					else 
 						self.UI.indicator[name].controls.timer:SetHidden(true)
 					end
+					if sv.timerAnchor == "ICON" then
+						local size = sv.sizes.oneForAll and sv.sizes.size or sv.sizes[name]
+						for i = math.floor(size*0.6), 1, -1 do
+							self.UI.indicator[name].controls.timer:SetFont("$(MEDIUM_FONT)|"..i.."|outline")
+							if self.UI.indicator[name].controls.timer:GetWidth() < size*0.95 then break end
+						end
+					end
 				end
 				if sv.showTimerBar and timeRemaining > 0 then
 					self.UI.indicator[name].controls.timerBar:SetValue(timeRemaining/(entry.duration/1000))
