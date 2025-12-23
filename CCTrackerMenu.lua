@@ -522,7 +522,12 @@ function CCTracker:BuildMenu()
 							tooltip = "Show status bar for time remaining",
 							width = "half",
 							getFunc = function() return self.SV.UI.timers.showTimerBar end,
-							setFunc = function(value) self.SV.UI.timers.showTimerBar = value end,
+							setFunc = function(value)
+								self.SV.UI.timers.showTimerBar = value
+								if not value and self.SV.UI.timers.timerAnchor == "TIMER BAR" and self.SV.UI.timers.showTimer then
+									self.SV.UI.timers.timerAnchor = "ICON"
+								end
+							end,
 						},
 						{	
 							type = "dropdown",
@@ -555,7 +560,12 @@ function CCTracker:BuildMenu()
 							name = "Show time remaining",
 							width = "half",
 							getFunc = function() return self.SV.UI.timers.showTimer end,
-							setFunc = function(value) self.SV.UI.timers.showTimer = value end,
+							setFunc = function(value)
+								self.SV.UI.timers.showTimer = value
+								if value and self.SV.UI.timers.timerAnchor == "TIMER BAR" and not self.SV.UI.timers.showTimerBar then
+									self.SV.UI.timers.timerAnchor = "ICON"
+								end
+							end,
 						},
 						{	
 							type = "dropdown",
