@@ -289,7 +289,7 @@ function CCTracker:UpdateTimers()
 					if timeRemaining >= 60 then
 						local minutes = math.floor(timeRemaining/60)
 						local seconds = math.floor(timeRemaining-minutes*60)
-						self.UI.indicator[name].controls.timer:SetText(string.format("%d:%02d", minutes, seconds)) string.format(
+						self.UI.indicator[name].controls.timer:SetText(string.format("%d:%02d", minutes, seconds))
 						self.UI.indicator[name].controls.timer:SetHidden(false)
 						updaterNeeded = true
 					elseif timeRemaining >= 10 then
