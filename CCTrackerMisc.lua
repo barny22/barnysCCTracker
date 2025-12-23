@@ -304,10 +304,10 @@ function CCTracker:UpdateTimers()
 						self.UI.indicator[name].controls.timer:SetHidden(true)
 					end
 					if sv.timerAnchor == "ICON" then
-						local size = sv.sizes.oneForAll and sv.sizes.size or sv.sizes[name]
+						local size = self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name]
 						for i = math.floor(size*0.6), 1, -1 do
 							self.UI.indicator[name].controls.timer:SetFont("$(MEDIUM_FONT)|"..i.."|outline")
-							if self.UI.indicator[name].controls.timer:GetWidth() < size*0.95 then break end
+							if self.UI.indicator[name].controls.timer:GetWidth() < size*0.9 then break end
 						end
 					end
 				end
