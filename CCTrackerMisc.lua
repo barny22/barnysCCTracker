@@ -909,14 +909,14 @@ function CCTracker:CreateNotifications()
 	local provider = self.msg:CreateProvider()
 	local msg
 	
-	if self.versionCheck ~= self.SV.lastAddOnVersion then
-		self.SV.showBetaMessage = true
-		msg = NewVersionAlert(provider)
+	if self.beta and self.SV.showBetaMessage then
+		msg = BetaNotification(provider)
 		table.insert(provider.notifications, msg)
 	end
 	
-	if self.beta and self.SV.showBetaMessage then
-		msg = BetaNotification(provider)
+	if self.versionCheck ~= self.SV.lastAddOnVersion then
+		self.SV.showBetaMessage = true
+		msg = NewVersionAlert(provider)
 		table.insert(provider.notifications, msg)
 	end
 	

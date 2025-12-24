@@ -141,6 +141,8 @@ function CCTracker:Init()
 	
 	self:CheckForCCRegister()
 	
+	if self.versionCheck ~= self.SV.lastAddonVersion then self.SV.showBetaMessage = true end
+	
 	self:CreateNotifications()
 end
 
