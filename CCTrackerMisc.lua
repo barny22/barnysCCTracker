@@ -915,7 +915,6 @@ function CCTracker:CreateNotifications()
 	end
 	
 	if self.versionCheck ~= self.SV.lastAddOnVersion then
-		self.SV.showBetaMessage = true
 		msg = NewVersionAlert(provider)
 		table.insert(provider.notifications, msg)
 	end
