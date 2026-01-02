@@ -474,6 +474,7 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 						end
 						table.insert(self.ccActive, newAbility)
 						self:PrintDebug("ccActive", "New cc from combat events "..aName.." - ID: "..aId.." - "..check.name)
+						
 						self.ccAdded.combatEvents = self.ccAdded.combatEvents + 1
 						self:PrintDebug("ccAdded", "So far I've added "..self.ccAdded.combatEvents.." cc abilities from combatEvents and "..self.ccAdded.effectsChanged.." from effectsChanged")
 						if check.playSound then self:CCChanged(check.playSound) end
