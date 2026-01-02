@@ -299,6 +299,8 @@ function CCTracker:BuildUI()
 			entry.active = false
 			self.UI.indicator[entry.name].controls.frame:SetHidden(true)
 			self.UI.indicator[entry.name].controls.icon:SetHidden(true)
+			self.UI.indicator[entry.name].controls.timerBarBackdrop:SetHidden(true)
+			self.UI.indicator[entry.name].controls.timer:SetHidden(true)
 		end
 		-- self:PrintDebug("enabled", "CC icons hidden")
 		
@@ -306,6 +308,8 @@ function CCTracker:BuildUI()
 			self.ccVariables[entry.type].active = true
 			self.UI.indicator[self.ccVariables[entry.type].name].controls.frame:SetHidden(false)
 			self.UI.indicator[self.ccVariables[entry.type].name].controls.icon:SetHidden(false)
+			self.UI.indicator[self.ccVariables[entry.type].name].controls.timerBarBackdrop:SetHidden(false)
+			self.UI.indicator[self.ccVariables[entry.type].name].controls.timer:SetHidden(false)
 		end
 		-- self:PrintDebug("enabled", "CC icons are shown")
 	end
