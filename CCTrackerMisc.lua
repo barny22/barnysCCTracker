@@ -7,44 +7,11 @@ CCTracker.DEFAULT_SAVED_VARS = {
 	["lastAddOnVersion"] = 0,
 	["global"] = true,
 	["UI"] = {
-		["xOffsets"] = {
-			["Charm"] = 500,
-			["Disoriented"] = 0,
-			["Fear"] = 50,
-			["Knockback"] = 100,
-			["Levitating"] = 150,
-			["Offbalance"] = 200,
-			["Silence"] = 250,
-			["Snare"] = 300,
-			["Stagger"] = 350,
-			["Stun"] = 400,
-			["Root"] = 450,
-		},
-		["yOffsets"] = {
-			["Charm"] = 0,
-			["Disoriented"] = 0,
-			["Fear"] = 0,
-			["Knockback"] = 0,
-			["Levitating"] = 0,
-			["Offbalance"] = 0,
-			["Silence"] = 0,
-			["Snare"] = 0,
-			["Stagger"] = 0,
-			["Stun"] = 0,
-			["Root"] = 0,
-		},
+		["xOffsets"] = {},
+		["yOffsets"] = {},
 		["sizes"] = {
-			["Charm"] = 50,
-			["Disoriented"] = 50,
-			["Fear"] = 50,
-			["Knockback"] = 50,
-			["Levitating"] = 50,
-			["Offbalance"] = 50,
-			["Silence"] = 50,
-			["Snare"] = 50,
-			["Stagger"] = 50,
-			["Stun"] = 50,
-			["Root"] = 50,
+			["oneForAll"] = true,
+			["size"] = 50,
 		},
 		["debugWindow"] = {
 			["xOffset"] = 50,
@@ -53,61 +20,28 @@ CCTracker.DEFAULT_SAVED_VARS = {
 			["width"] = 50,
 		},
 		["size"] = 50,
-		["alpha"] = 100,
+		["alpha"] = {
+			["oneForAll"] = true,
+			["alpha"] = 100,
+		},
+		["timers"] = {
+			["oneForAll"] = true,
+			["showTimer"] = true,
+			["timerColor"] = {1, 1, 1, 1},
+			["timerAnchor"] = "ICON",
+			["showTimerBar"] = true,
+			["timerBarColor"] = {1, 1, 1, 0.7},
+			["timerBarOrientation"] = "LEFT",
+		},
 	},
 	["settings"] = {
-		["tracked"] = {
-		},
+		["tracked"] = {},
 		["unlocked"] = true,
 		["sample"] = false,
 		["ccIgnoreLinks"] = false,
 	},
 	["sound"] = {
 		["MuteOnHardCC"] = false,
-		["Charm"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Disoriented"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Fear"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Knockback"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Levitating"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Offbalance"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Silence"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Snare"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Stagger"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Stun"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
-		["Root"] = {
-			["enabled"] = false,
-			["sound"] = "General_Alert_Error",
-		},
 	},
 	["ignored"] = {},
 	["additionalRoots"] = {},
@@ -125,6 +59,47 @@ CCTracker.DEFAULT_SAVED_VARS = {
 	},
 }
 
+CCTracker.CC_VARIABLES = {
+		["charm"] = {["icon"] = "/esoui/art/icons/ability_u34_sea_witch_mindcontrol.dds", ["res"] = 3510, ["name"] = "Charm", ["isHardCC"] = true,}, --ACTION_RESULT_CHARMED
+		[32] = {["icon"] = "/esoui/art/icons/ability_debuff_disorient.dds", ["res"] = 2340, ["name"] = "Disoriented", ["isHardCC"] = false,}, --ABILITY_TYPE_DISORIENT
+		[27] = {["icon"] = "/esoui/art/icons/ability_debuff_fear.dds", ["res"] = 2320, ["name"] = "Fear", ["isHardCC"] = true,}, --ABILITY_TYPE_FEAR
+		[17] = {["icon"] = "/esoui/art/icons/ability_debuff_knockback.dds", ["res"] = 2475, ["name"] = "Knockback", ["isHardCC"] = true,}, --ABILITY_TYPE_KNOCKBACK
+		[48] = {["icon"] = "/esoui/art/icons/ability_debuff_levitate.dds", ["res"] = 2400, ["name"] = "Levitating", ["isHardCC"] = true,}, --ABILITY_TYPE_LEVITATE
+		[53] = {["icon"] = "/esoui/art/icons/ability_debuff_offbalance.dds", ["res"] = 2440, ["name"] = "Offbalance", ["isHardCC"] = false,}, --ABILITY_TYPE_OFFBALANCE
+		["root"] = {["icon"] = "/esoui/art/icons/ability_debuff_root.dds", ["res"] = 2480, ["name"] = "Root", ["isHardCC"] = false,}, --ACTION_RESULT_ROOTED
+		[11] = {["icon"] = "/esoui/art/icons/ability_debuff_silence.dds", ["res"] = 2010, ["name"] = "Silence", ["isHardCC"] = false,}, --ABILITY_TYPE_SILENCE
+		[10] = {["icon"] = "/esoui/art/icons/ability_debuff_snare.dds", ["res"] = 2025, ["name"] = "Snare", ["isHardCC"] = false,}, --ABILITY_TYPE_SNARE
+		[33] = {["icon"] = "/esoui/art/icons/ability_debuff_stagger.dds", ["res"] = 2470, ["name"] = "Stagger", ["isHardCC"] = false,}, --ABILITY_TYPE_STAGGER
+		[9] = {["icon"] = "/esoui/art/icons/ability_debuff_stun.dds", ["res"] = 2020, ["name"] = "Stun", ["isHardCC"] = true,}, --ABILITY_TYPE_STUN
+	}
+	
+	-- populate default sv
+do
+	local i = 0
+	local defaultSize = 50
+	local defaultAlpha = 100
+	for _, entry in pairs(CCTracker.CC_VARIABLES) do
+		CCTracker.DEFAULT_SAVED_VARS.UI.xOffsets[entry.name] = i*defaultSize
+		CCTracker.DEFAULT_SAVED_VARS.UI.yOffsets[entry.name] = 0
+		CCTracker.DEFAULT_SAVED_VARS.UI.sizes[entry.name] = defaultSize
+		CCTracker.DEFAULT_SAVED_VARS.UI.alpha[entry.name] = defaultAlpha
+		CCTracker.DEFAULT_SAVED_VARS.UI.timers[entry.name] = {
+			showTimer = true,
+			timerColor = {1, 1, 1, 1},
+			timerAnchor = "ICON",
+			showTimerBar = true,
+			timerBarColor = {1, 1, 1, 0.7},
+			timerBarOrientation = "LEFT",
+		}
+		CCTracker.DEFAULT_SAVED_VARS.settings.tracked[entry.name] = false
+		CCTracker.DEFAULT_SAVED_VARS.sound[entry.name] = {
+			enabled = false,
+			sound = "General_Alert_Error",
+		}
+		i = i + 1
+	end
+end
+
 	-------------------
 	---- Constants ----
 	-------------------
@@ -141,7 +116,14 @@ CCTracker.constants = CCTracker.constants or {
 		-- [41952] = "Cower",
 		},
 	["ignore"] = {
+		[194570] = "IA - entering IA",
+		[194571] = "IA - advancing to next arena",
+		[193049] = "IA - leaving IA",
+		[194634] = "IA - leaving IA",
+		[211431] = "IA - entering special arena",
 		[202995] = "IA - choosing vision/verse",
+		[203101] = "IA - choosing vision/verse",
+		[203124] = "IA - choosing vision/verse",
 		[203125] = "IA - choosing vision/verse",
 		[166794] = "DSR - Raging Current",
 		[167949] = "DSR - Raging Current",
@@ -163,6 +145,8 @@ CCTracker.constants = CCTracker.constants or {
 		-- [80298] = "Goldcoast MQ - Travel to Anvil",
 		[57993] = "ICP - Flesh granade",
 		-- [39358] = "Fighters Guild - Destroying Mortuum Vivicus",
+	},
+	["specialCC"] = {
 	},
 }
 	--------------------------
@@ -205,24 +189,31 @@ function CCTracker:AbilityInList(aId, list)--, cacheId)
 end
 
 function CCTracker:ClearCCThatIsNotBuff()
-	-- if NonContiguousCount(CCTracker.ccActive) then
+	-- if NonContiguousCount(self.ccActive) then
 		local ccChanged = false
 		local time = GetFrameTimeMilliseconds()
 		local cache = {}
-		for _, entry in ipairs(CCTracker.ccActive) do
+		for _, entry in ipairs(self.ccActive) do
 			if entry.endTime ~= 0 or entry.startTime == time then
 				table.insert(cache, entry)
 			else
 				ccChanged = true
-				if entry.isSubeffect then CCTracker:ClearSubeffects(entry.id, time) end
+				if entry.isSubeffect then self:ClearSubeffects(entry.id, time) end
 			end
 		end
 		if ccChanged then
-			CCTracker.ccActive = cache
-			CCTracker:CCChanged()
-			CCTracker:PrintDebug("enabled", "Zone was changed. Cleared all active CC effects that are not debuffs at time: "..time)
+			self.ccActive = cache
+			self:CCChanged()
+			self:PrintDebug("enabled", "Zone was changed. Cleared all active CC effects that are not debuffs at time: "..time)
 		end
 	-- end
+end
+
+function CCTracker:IsSpecialIgnore(aId)
+	if self.status.zoneId == 976 and aId == 119292 then
+		return true
+	end
+	return false
 end
 
 -- function CCTracker:TypeInList(cachedType)
@@ -256,6 +247,7 @@ function CCTracker:CCChanged(playSound)
 	self.UI.ApplyIcons()
 	-- self:PrintDebug("ccActive", "CC changed, doing stuff")
 	self.menu.CreateListOfActiveCC()
+	self:UpdateTimers()
 	
 	self:RestoreAudioVolume()
 	if playSound then
@@ -264,6 +256,98 @@ function CCTracker:CCChanged(playSound)
 	
 	if self.SV.debug.activeCCList then self:CreateActiveCCString() end
 end
+
+----------------------
+-- CC Timer updater --
+----------------------
+
+local function RegisterTimerUpdater()	
+	EVENT_MANAGER:RegisterForUpdate(
+        CCTracker.name.."UpdateTimers",
+        1000 / 60,
+        function(...) CCTracker:UpdateTimers() end
+    )
+	CCTracker.updaterRegistered = true
+end
+
+local function UnregisterTimerUpdater()	
+	EVENT_MANAGER:UnregisterForUpdate(
+        CCTracker.name.."UpdateTimers")
+	
+	CCTracker.updaterRegistered = false
+end
+
+function CCTracker:UpdateTimers()
+	local updaterNeeded = false
+	if self.ccActive and next(self.ccActive) then
+		for _, entry in pairs(self.ccActive) do
+			local name = self.ccVariables[entry.type].name
+			local sv = self.SV.UI.timers.oneForAll and self.SV.UI.timers or self.SV.UI.timers[name]
+			if entry.duration and entry.duration > 0 then
+				local timeRemaining = (entry.endTime - GetFrameTimeMilliseconds())/1000
+				if sv.showTimer then
+					if timeRemaining >= 60 then
+						local minutes = math.floor(timeRemaining/60)
+						local seconds = math.floor(timeRemaining-minutes*60)
+						self.UI.indicator[name].controls.timer:SetText(string.format("%d:%02d", minutes, seconds))
+						self.UI.indicator[name].controls.timer:SetHidden(false)
+						updaterNeeded = true
+					elseif timeRemaining >= 10 then
+						self.UI.indicator[name].controls.timer:SetText(string.format("%ds", math.floor(timeRemaining)))
+						self.UI.indicator[name].controls.timer:SetHidden(false)
+						updaterNeeded = true
+					elseif timeRemaining > 0 then
+						self.UI.indicator[name].controls.timer:SetText(string.format("%.1fs", timeRemaining))
+						self.UI.indicator[name].controls.timer:SetHidden(false)
+						updaterNeeded = true
+					else 
+						self.UI.indicator[name].controls.timer:SetHidden(true)
+					end
+					if sv.timerAnchor == "ICON" then
+						local size = self.SV.UI.sizes.oneForAll and self.SV.UI.sizes.size or self.SV.UI.sizes[name]
+						for i = math.floor(size*0.6), 1, -1 do
+							self.UI.indicator[name].controls.timer:SetFont("$(MEDIUM_FONT)|"..i.."|outline")
+							if self.UI.indicator[name].controls.timer:GetWidth() < size*0.9 then break end
+						end
+					end
+				end
+				if sv.showTimerBar and timeRemaining > 0 then
+					self.UI.indicator[name].controls.timerBar:SetValue(timeRemaining/(entry.duration/1000))
+					self.UI.indicator[name].controls.timerBar:SetHidden(false)
+					self.UI.indicator[name].controls.timerBarBackdrop:SetHidden(false)
+					self.UI.indicator[name].controls.timerBarGloss:SetHidden(false)
+					updaterNeeded = true
+				else
+					self.UI.indicator[name].controls.timerBar:SetHidden(true)
+					self.UI.indicator[name].controls.timerBarBackdrop:SetHidden(true)
+					self.UI.indicator[name].controls.timerBarGloss:SetHidden(true)
+				end
+			else
+				self.UI.indicator[name].controls.timer:SetHidden(true)
+				self.UI.indicator[name].controls.timerBar:SetHidden(true)
+				self.UI.indicator[name].controls.timerBarBackdrop:SetHidden(true)
+				self.UI.indicator[name].controls.timerBarGloss:SetHidden(true)
+			end
+		end
+	else
+		for _, entry in pairs(self.ccVariables) do
+			self.UI.indicator[entry.name].controls.timer:SetHidden(true)
+			self.UI.indicator[entry.name].controls.timerBar:SetHidden(true)
+			self.UI.indicator[entry.name].controls.timerBarBackdrop:SetHidden(true)
+			self.UI.indicator[entry.name].controls.timerBarGloss:SetHidden(true)
+		end
+	end
+	
+	if updaterNeeded and not self.updaterRegistered then
+		RegisterTimerUpdater()
+	elseif not updaterNeeded and self.updaterRegistered then
+		UnregisterTimerUpdater()	
+	end
+end
+
+--------------------
+-- Live CC Window --
+--------------------
 
 function CCTracker:CreateActiveCCString()
 	local stringOfAllActiveCC
@@ -274,12 +358,12 @@ function CCTracker:CreateActiveCCString()
 			stringOfAllActiveCC = tostring(stringOfAllActiveCC.."\n"..self.menu.ccList.active.id[i].." "..entry)
 		end
 	end
-	CCTracker.UI.liveCCWindow.controls.tlwLabel:SetText(stringOfAllActiveCC)
+	self.UI.liveCCWindow.controls.tlwLabel:SetText(stringOfAllActiveCC)
 	self:ResizeLiveCCWindow()
 end
 
 function CCTracker:ResizeLiveCCWindow()
-	local window = CCTracker.UI.liveCCWindow.controls
+	local window = self.UI.liveCCWindow.controls
 	local height = window.tlwLabel:GetHeight()
 	local width = window.tlwLabel:GetWidth() + 8
 	
@@ -312,6 +396,8 @@ function CCTracker:ClearOutdatedLists(time, client)
 	if self.activeEffects and next(self.activeEffects) then
 		self:ClearOutdatedActiveEffects(time)
 	end
+	
+	self:UpdateTimers()
 end
 
 function CCTracker:IsInPvPZone()
@@ -327,22 +413,22 @@ end
 	---- CC active ----
 	-------------------
 function CCTracker:ClearAllCC()
-	if NonContiguousCount(CCTracker.ccActive) > 0 then
+	if NonContiguousCount(self.ccActive) > 0 then
 		local time = GetFrameTimeMilliseconds()
-		for i = #CCTracker.ccActive, 1, -1 do
-			local entry = CCTracker.ccActive[i]
-			if entry.isSubeffect then CCTracker:ClearSubeffects(entry.id, time) end
-			CCTracker.ccActive[i] = nil
+		for i = #self.ccActive, 1, -1 do
+			local entry = self.ccActive[i]
+			if entry.isSubeffect then self:ClearSubeffects(entry.id, time) end
+			self.ccActive[i] = nil
 		end
-		CCTracker:CCChanged()
+		self:CCChanged()
 	end
 end
 
 function CCTracker:ClearOutdatedActiveEffects(time)
 	for eId, entry in pairs(self.activeEffects) do
-		if entry.time ~= time and (not entry.subeffects or (entry.subeffects and not next(entry.subeffects))) then
+		if entry.time ~= time then
 			self.activeEffects[eId] = nil
-			-- self:PrintDebug("ccActive", "Clearing active effect "..eId.." - "..self:CropZOSString(GetAbilityName(eId), "ability"))
+			self:PrintDebug("ccActive", "Clearing active effect "..eId.." - "..self:CropZOSString(GetAbilityName(eId), "ability"))
 		end
 	end
 end
@@ -444,7 +530,7 @@ function CCTracker:RolldodgeDetected()
 	end
 	self.ccActive = newActive
 	self:CCChanged()
-	zo_callLater(function() CCTracker:ClearSnareCache() end, 1)
+	zo_callLater(function() self:ClearSnareCache() end, 1)
 	-- self:PrintDebug("enabled", "Found a dodgeRoll, you lucky guy")
 end
 
@@ -613,11 +699,11 @@ function CCTracker.menu.CreateListOfActiveCC()
 			if entry then
 				local abilityString = tostring("|t20:20:"..GetAbilityIcon(entry.id).."|t "..CCTracker:CropZOSString(GetAbilityName(entry.id), "ability")..", "..CCTracker.ccVariables[entry.type].name)
 				CCTracker.menu.ccList.active.string[i] = abilityString
-				if entry.cacheId and entry.cacheId ~= 0 then
-					CCTracker.menu.ccList.active.id[i] = entry.cacheId
-				else
+				-- if entry.cacheId and entry.cacheId ~= 0 then
+					-- CCTracker.menu.ccList.active.id[i] = entry.cacheId
+				-- else
 					CCTracker.menu.ccList.active.id[i] = entry.id
-				end
+				-- end
 				CCTracker.menu.ccList.active.type[i] = CCTracker.ccVariables[entry.type].name
 			end
 		end
@@ -715,31 +801,31 @@ end
 
 function CCTracker:HandleIgnoreLinks(link, button, text, color, linkType, name, id, zone)
     if linkType ~= "CC_ABILITY_IGNORE_LINK" then
-		-- CCTracker.debug:Print("Not my kind of link")
+		-- self.debug:Print("Not my kind of link")
         return
     end
 	local aId = tonumber(id)
     if button then
-		if CCTracker.SV.ignored[aId] then 
-			CCTracker.debug:Print("Ability is already ignored")
+		if self.SV.ignored[aId] then 
+			self.debug:Print("Ability is already ignored")
 			return true -- link has been handled
 		end
-		CCTracker.SV.ignored[aId] = tostring(name.." - "..zone.." - added manually")
-		CCTracker.debug:Print("CC ability "..name.." will be ignored in the future.")
-		for i, entry in ipairs(CCTracker.ccActive) do
+		self.SV.ignored[aId] = tostring(name.." - "..zone.." - added manually")
+		self.debug:Print("CC ability "..name.." will be ignored in the future.")
+		for i, entry in ipairs(self.ccActive) do
 			if entry.id == aId or (entry.cacheId and entry.cacheId == aId) then
-				table.remove(CCTracker.ccActive, i)
+				table.remove(self.ccActive, i)
 			end
 		end
-		CCTracker.UI.ApplyIcons()
-		CCTracker.menu.UpdateLists()
+		self.UI.ApplyIcons()
+		self.menu.UpdateLists()
     end
     return true -- link has been handled
 end
 
 function CCTracker:InitLinkHandler()
-    LINK_HANDLER:RegisterCallback(LINK_HANDLER.LINK_CLICKED_EVENT, CCTracker.HandleIgnoreLinks, self)
-    LINK_HANDLER:RegisterCallback(LINK_HANDLER.LINK_MOUSE_UP_EVENT, CCTracker.HandleIgnoreLinks, self)
+    LINK_HANDLER:RegisterCallback(LINK_HANDLER.LINK_CLICKED_EVENT, self.HandleIgnoreLinks, self)
+    LINK_HANDLER:RegisterCallback(LINK_HANDLER.LINK_MOUSE_UP_EVENT, self.HandleIgnoreLinks, self)
 end
 
 function CCTracker:PrintIgnoreLink(name, id)
@@ -773,7 +859,7 @@ local function BetaNotification(provider)
 	local msg = {
 	dataType = NOTIFICATIONS_REQUEST_DATA,
 	secsSinceRequest = ZO_NormalizeSecondsSince(0),
-	note = "If you encounter any unwanted 'features' pls report them in the ESOUI 'Comment' section (You can find the link in the menu metadata).\nAccepting this message will disable it.",
+	note = "If you encounter any unwanted 'features' pls report them in the ESOUI 'Comment' section (You can find the link in the menu metadata).\nAccepting this message will disable it until a new version is detected.",
 	message = "You are currently using CCTracker's beta version",
 	heading = identifier,
 	texture = "/esoui/art/miscellaneous/eso_icon_warning.dds",
@@ -786,7 +872,7 @@ local function BetaNotification(provider)
 	data = {}, -- Place any custom data you want to store here
     }
 	
-	-- CCTracker:PrintDebug("enabled", "You're currently using CCTracker's beta version")
+	-- CCTracker:PrintDebug("enabled", "You're currently using self's beta version")
 	
 	return msg
 end
@@ -801,7 +887,7 @@ local function NewVersionAlert(provider)
 	local msg = {
 	dataType = NOTIFICATIONS_ALERT_DATA,
 	secsSinceRequest = ZO_NormalizeSecondsSince(0),
-	note = "Your new version is: "..CCTracker.versionCheck.."\nSometimes due to updates some values in your saved vars have been reset and you need to adjust your options. I apologize for the inconvenience.",
+	note = "Your new version is: "..CCTracker.versionCheck.."\nDue to updates some values in your saved vars might have been reset and you need to adjust your options. Apologies for the inconvenience.",
 	message = "You are now using CCTracker version "..CCTracker.versionCheck.."\nCheck the changelog for new features. Dismiss to disable this message.",
 	heading = identifier,
 	texture = "/esoui/art/journal/u26_progress_digsite_checked_complete.dds",

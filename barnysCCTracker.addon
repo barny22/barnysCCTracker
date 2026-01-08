@@ -1,11 +1,11 @@
 ## Title: |c2a52beb|rarnys|c2a52beCC|rTracker
 ## Description: Tracker for incoming CC with icons and optional warning sounds
 ## Author: |c2a52beb|rarny
-## Version: 1.1.1
-## AddOnVersion: 010101
-## APIVersion: 101046
+## Version: 1.1.2
+## AddOnVersion: 010102
+## APIVersion: 101048
 ## SavedVariables: CCTrackerSV
-## DependsOn: LibAddonMenu-2.0>=40 libAddonKeybinds>=5 LibNotification>=15
+## DependsOn: LibAddonMenu-2.0>=41 libAddonKeybinds>=5 LibNotification>=15
 ## OptionalDependsOn: LibChatMessage>=113
 
 ; This Add-on is not created by, affiliated with or sponsored by ZeniMax
