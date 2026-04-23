@@ -3,10 +3,10 @@
 ## Author: |c2a52beb|rarny
 ## Version: 1.1.2
 ## AddOnVersion: 010102
-## APIVersion: 101048
+## APIVersion: 101049
 ## SavedVariables: CCTrackerSV
-## DependsOn: LibAddonMenu-2.0>=41 libAddonKeybinds>=5 LibNotification>=15
-## OptionalDependsOn: LibChatMessage>=113
+## DependsOn: LibAddonMenu-2.0>=41 libAddonKeybinds>=6 LibNotification>=15
+## OptionalDependsOn: LibChatMessage>=118
 
 ; This Add-on is not created by, affiliated with or sponsored by ZeniMax
 ; Media Inc. or its affiliates. The Elder Scrolls® and related logos are
