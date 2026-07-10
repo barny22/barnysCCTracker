@@ -336,6 +336,12 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 		-- self:PrintDebug("actualSnares", "Root in list "..aId..": "..aName.." - "..res)
 	-- end
 	
+	-- special CC abilities
+	if self.constants.specialCC[aId] then
+		res = self.constants.specialCC[aId]
+		err = false
+	end
+	
 	local time = GetFrameTimeMilliseconds()
 		
 	if self.status.alive == 0 or (self.status.dead ~= 0 and self.status.dead <= time) then

@@ -128,6 +128,11 @@ CCTracker.constants = CCTracker.constants or {
 		[203125] = "IA - choosing vision/verse",
 		[166794] = "DSR - Raging Current",
 		[167949] = "DSR - Raging Current",
+		[259205] = "Hideyhole",
+		[261613] = "Hideyhole",
+		[261629] = "Hideyhole",
+		[261624] = "Hideyhole",
+		[261608] = "Hideyhole",
 		[37139] = "Mount",
 		[36434] = "Mount",
 		[36419] = "Dismount",
@@ -148,6 +153,8 @@ CCTracker.constants = CCTracker.constants or {
 		-- [39358] = "Fighters Guild - Destroying Mortuum Vivicus",
 	},
 	["specialCC"] = {
+		[127792] = ACTION_RESULT_STUNNED,
+		[28888] = ACTION_RESULT_STUNNED,
 	},
 }
 	--------------------------
