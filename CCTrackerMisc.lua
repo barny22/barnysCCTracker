@@ -95,6 +95,7 @@ do
 		CCTracker.DEFAULT_SAVED_VARS.sound[entry.name] = {
 			enabled = false,
 			sound = "General_Alert_Error",
+			volume = 1,
 		}
 		i = i + 1
 	end
@@ -787,7 +788,9 @@ function CCTracker:PlayCCSound()
 				self:PrintDebug("audioMute", "Hard cc. Setting audio volume to 0")
 				SetSetting(SETTING_TYPE_AUDIO, AUDIO_SETTING_AUDIO_VOLUME, 0)
 			elseif entry.playSound then
-				PlaySound(self.SV.sound[entry.name].sound)
+				for i = 1, math.max(self.SV.sound[entry.name].volume, 1) do
+					PlaySound(self.SV.sound[entry.name].sound)
+				end
 				-- self.debug:Print("Playing sound for "..entry.name)
 				entry.playSound = false
 			end
