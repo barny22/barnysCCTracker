@@ -354,7 +354,7 @@ function CCTracker:HandleCombatEvents	(_, res,  err,	aName, _, _, sName, _, tNam
 	
 		aName = self:CropZOSString(aName, "ability")
 		
-		if aId == self.constants.breakFree and self:DoesBreakFreeWork() then			-- remove stuns, fear and charm if player breaks free
+		if aId == self.constants.breakFree and self:DoesBreakFreeWork() then			-- remove stuns, knockbacks, fear and charm if player breaks free
 			self:BreakFreeDetected()
 			return
 		elseif aId == self.constants.rollDodge.abilityId and res == ACTION_RESULT_EFFECT_GAINED then	-- remove roots when player uses dodgeroll

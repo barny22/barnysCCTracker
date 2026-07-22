@@ -126,8 +126,9 @@ CCTracker.constants = CCTracker.constants or {
 		[203101] = "IA - choosing vision/verse",
 		[203124] = "IA - choosing vision/verse",
 		[203125] = "IA - choosing vision/verse",
-		[166794] = "DSR - Raging Current",
-		[167949] = "DSR - Raging Current",
+		[166794] = "DSR - raging current",
+		[167949] = "DSR - raging current",
+		[131323] = "Werewolf transformation root",
 		[259205] = "Hideyhole",
 		[261613] = "Hideyhole",
 		[261629] = "Hideyhole",
@@ -143,7 +144,7 @@ CCTracker.constants = CCTracker.constants or {
 		[72712] = "Hideyhole",
 		[75747] = "Hideyhole",
 		[28549] = "RollDodge",
-		[39518] = "Vampire Initiation",
+		[39518] = "Vampire initiation",
 		[14646] = "Revive (Snare)",
 		[14644] = "Revive (Stun)",
 		-- [40602] = "MQ - Returning home after final quest",
@@ -491,7 +492,7 @@ end
 function CCTracker:BreakFreeDetected()
 	local newActive = {}
 	for _, entry in ipairs(self.ccActive) do
-		if not (entry.type == "charm" or entry.type == 9 or entry.type == 27) then
+		if not (entry.type == "charm" or entry.type == 9 or entry.type == 27 or entry.type == 17) then
 			table.insert(newActive, entry)
 		end
 	end
